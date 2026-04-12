@@ -34,6 +34,10 @@
   --color-icon-folder: #dcb67a;
   --color-icon-chevron: #999999;
 
+  /* Pill Tabs */
+  --color-bg-pill-active: #ffffff;
+  --color-bg-pill-hover: rgba(0, 0, 0, 0.05);
+
   /* Misc */
   --color-guide-line: #e4e4e4;
   --color-blockquote-text: #6a737d;
@@ -96,6 +100,10 @@
   --color-icon-active: #cccccc;
   --color-icon-folder: #dcb67a;
   --color-icon-chevron: #808080;
+
+  /* Pill Tabs */
+  --color-bg-pill-active: #2d2d2d;
+  --color-bg-pill-hover: rgba(255, 255, 255, 0.06);
 
   /* Misc */
   --color-guide-line: #3c3c3c;

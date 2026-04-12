@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
+import { Plus, X } from 'lucide-react';
 
 export interface TabInfo {
   id: string;
@@ -13,23 +14,24 @@ interface TerminalTabBarProps {
   onNew: () => void;
 }
 
-const TAB_BAR_HEIGHT = 36;
+const TAB_BAR_HEIGHT = 40;
 
 const styles = {
   tabBar: {
     display: 'flex',
     alignItems: 'center',
     height: TAB_BAR_HEIGHT,
-    borderBottom: '1px solid var(--color-border-primary)',
     backgroundColor: 'var(--color-bg-secondary)',
-    paddingLeft: 8, // small breathing room (traffic lights handled by title bar)
+    paddingLeft: 8,
+    paddingRight: 8,
     userSelect: 'none' as const,
     WebkitAppRegion: 'drag' as const,
     flexShrink: 0,
   },
   tabList: {
     display: 'flex',
-    alignItems: 'stretch',
+    alignItems: 'center',
+    gap: 6,
     height: '100%',
     overflow: 'hidden',
     flex: 1,
@@ -39,20 +41,22 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    padding: '0 12px',
+    height: 28,
+    padding: '4px 12px',
     fontSize: 12,
-    color: 'var(--color-text-tertiary)',
+    color: 'var(--color-text-muted)',
     cursor: 'pointer',
-    borderRight: '1px solid var(--color-border-primary)',
     backgroundColor: 'transparent',
-    transition: 'background-color 0.1s',
+    borderRadius: 8,
+    border: 'none',
+    transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease',
     position: 'relative' as const,
     whiteSpace: 'nowrap' as const,
   },
   tabActive: {
     color: 'var(--color-text-primary)',
-    backgroundColor: 'var(--color-bg-primary)',
-    borderBottom: '2px solid var(--color-accent-primary)',
+    backgroundColor: 'var(--color-bg-pill-active)',
+    boxShadow: '0 1px 3px var(--color-shadow)',
   },
   tabName: {
     pointerEvents: 'none' as const,
@@ -63,15 +67,20 @@ const styles = {
     justifyContent: 'center',
     width: 18,
     height: 18,
-    borderRadius: 4,
+    borderRadius: '50%',
     border: 'none',
     backgroundColor: 'transparent',
     color: 'var(--color-text-muted)',
-    fontSize: 14,
-    lineHeight: 1,
     cursor: 'pointer',
     padding: 0,
     flexShrink: 0,
+    opacity: 0,
+    pointerEvents: 'none' as const,
+    transition: 'opacity 120ms ease, background-color 0.15s ease',
+  },
+  closeBtnVisible: {
+    opacity: 1,
+    pointerEvents: 'auto' as const,
   },
   newBtn: {
     display: 'flex',
@@ -83,10 +92,10 @@ const styles = {
     border: 'none',
     backgroundColor: 'transparent',
     color: 'var(--color-text-tertiary)',
-    fontSize: 18,
     cursor: 'pointer',
-    borderRadius: 4,
+    borderRadius: 8,
     flexShrink: 0,
+    transition: 'background-color 0.15s ease',
     WebkitAppRegion: 'no-drag' as const,
   },
 };
@@ -98,6 +107,44 @@ const TerminalTabBar: React.FC<TerminalTabBarProps> = ({
   onClose,
   onNew,
 }) => {
+  const closeBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+  const handleTabMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>, tabId: string, isActive: boolean) => {
+    const el = e.currentTarget;
+    if (!isActive) {
+      el.style.backgroundColor = 'var(--color-bg-pill-hover)';
+      el.style.color = 'var(--color-text-tertiary)';
+    }
+    // Show close button on hover
+    const btn = closeBtnRefs.current.get(tabId);
+    if (btn && !isActive) {
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+    }
+  }, []);
+
+  const handleTabMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>, tabId: string, isActive: boolean) => {
+    const el = e.currentTarget;
+    if (!isActive) {
+      el.style.backgroundColor = 'transparent';
+      el.style.color = 'var(--color-text-muted)';
+    }
+    // Hide close button when not hovering (non-active tabs)
+    const btn = closeBtnRefs.current.get(tabId);
+    if (btn && !isActive) {
+      btn.style.opacity = '0';
+      btn.style.pointerEvents = 'none';
+    }
+  }, []);
+
+  const handleTabMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.transform = 'scale(0.97)';
+  }, []);
+
+  const handleTabMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.transform = 'scale(1)';
+  }, []);
+
   return (
     <div style={styles.tabBar}>
       <div style={styles.tabList}>
@@ -111,24 +158,33 @@ const TerminalTabBar: React.FC<TerminalTabBarProps> = ({
                 ...(isActive ? styles.tabActive : {}),
               }}
               onClick={() => onSelect(tab.id)}
+              onMouseEnter={(e) => handleTabMouseEnter(e, tab.id, isActive)}
+              onMouseLeave={(e) => handleTabMouseLeave(e, tab.id, isActive)}
+              onMouseDown={handleTabMouseDown}
+              onMouseUp={handleTabMouseUp}
             >
               <span style={styles.tabName}>{tab.name}</span>
               <button
-                style={styles.closeBtn}
+                ref={(el) => {
+                  if (el) closeBtnRefs.current.set(tab.id, el);
+                  else closeBtnRefs.current.delete(tab.id);
+                }}
+                style={{
+                  ...styles.closeBtn,
+                  ...(isActive ? styles.closeBtnVisible : {}),
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onClose(tab.id);
                 }}
                 onMouseEnter={(e) => {
-                  (e.target as HTMLElement).style.backgroundColor = 'var(--color-bg-hover)';
-                  (e.target as HTMLElement).style.color = 'var(--color-text-secondary)';
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-bg-hover)';
                 }}
                 onMouseLeave={(e) => {
-                  (e.target as HTMLElement).style.backgroundColor = 'transparent';
-                  (e.target as HTMLElement).style.color = 'var(--color-text-muted)';
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
                 }}
               >
-                ×
+                <X size={14} strokeWidth={2} />
               </button>
             </div>
           );
@@ -138,14 +194,14 @@ const TerminalTabBar: React.FC<TerminalTabBarProps> = ({
         style={styles.newBtn}
         onClick={onNew}
         onMouseEnter={(e) => {
-          (e.target as HTMLElement).style.backgroundColor = 'var(--color-bg-hover)';
+          (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-bg-hover)';
         }}
         onMouseLeave={(e) => {
-          (e.target as HTMLElement).style.backgroundColor = 'transparent';
+          (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
         }}
         title="New Terminal"
       >
-        +
+        <Plus size={16} strokeWidth={2} />
       </button>
     </div>
   );
