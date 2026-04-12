@@ -9,11 +9,17 @@ interface FilePreviewPanelProps {
   visible?: boolean;
 }
 
+const MD_ONLY_KEY = 'file-tree-md-only';
+
 const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, visible = true }) => {
   const [rootPath, setRootPath] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [loadingFile, setLoadingFile] = useState(false);
+  const [mdOnly, setMdOnly] = useState<boolean>(() => {
+    const stored = localStorage.getItem(MD_ONLY_KEY);
+    return stored === null ? true : stored === 'true';
+  });
   const rootPathRef = useRef(rootPath);
   rootPathRef.current = rootPath;
   const prevVisibleRef = useRef(visible);
@@ -51,6 +57,28 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
       });
     }
   }, [visible, activeSessionId]);
+
+  // Listen for terminal CWD changes and auto-update file tree
+  useEffect(() => {
+    if (!visible) return;
+    const unsubscribe = window.terminalApi.onCwdChanged((data) => {
+      if (data.id === activeSessionId && data.cwd !== rootPathRef.current) {
+        setRootPath(data.cwd);
+        setSelectedFile(null);
+        setFileContent(null);
+      }
+    });
+    return unsubscribe;
+  }, [activeSessionId, visible]);
+
+  // Toggle mdOnly filter with localStorage persistence
+  const handleToggleMdOnly = useCallback(() => {
+    setMdOnly((prev) => {
+      const next = !prev;
+      localStorage.setItem(MD_ONLY_KEY, String(next));
+      return next;
+    });
+  }, []);
 
   // Manual refresh: re-fetch terminal CWD and update rootPath
   const handleRefresh = useCallback(async () => {
@@ -113,6 +141,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             selectedFile={selectedFile}
             onSelectFile={handleSelectFile}
             onRefresh={handleRefresh}
+            mdOnly={mdOnly}
+            onToggleMdOnly={handleToggleMdOnly}
           />
         ) : (
           <div

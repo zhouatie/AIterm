@@ -2,9 +2,7 @@
 
 ## Purpose
 嵌入式终端能力，负责 PTY 会话的创建/销毁、输入输出传输、尺寸同步以及基于 xterm.js 的终端 UI 渲染。
-
 ## Requirements
-
 ### Requirement: 创建终端会话
 系统 SHALL 支持通过 IPC 创建一个终端会话，在主进程中 spawn 一个 PTY 进程并连接到用户默认 shell。
 
@@ -78,3 +76,19 @@ PTY 进程的 stdout 输出 SHALL 通过 IPC 传输到渲染进程，并由 xter
 #### Scenario: 多实例独立运行
 - **WHEN** 同一面板内存在多个终端实例
 - **THEN** 每个实例 SHALL 拥有独立的 xterm.js 实例、PTY 会话和滚动缓冲区，互不干扰
+
+### Requirement: 终端 CWD 变化通知
+当 PTY 会话的工作目录发生变化时，系统 SHALL 向渲染进程推送通知事件。
+
+#### Scenario: CWD 变化检测
+- **WHEN** PTY 进程产生输出数据
+- **THEN** 主进程 SHALL 以节流方式检查该 PTY 会话的实际工作目录（通过 OS 级查询），若 CWD 与上次已知值不同，SHALL 向渲染进程发送 `terminal:cwdChanged` 事件，包含 `{ id: string, cwd: string }`
+
+#### Scenario: 节流检测频率
+- **WHEN** PTY 进程在短时间内产生大量输出
+- **THEN** CWD 检测 SHALL 被节流为不超过每秒一次，避免过度调用 `lsof` 或类似系统命令
+
+#### Scenario: 渲染进程监听接口
+- **WHEN** 渲染进程需要监听终端 CWD 变化
+- **THEN** `terminalApi` SHALL 暴露 `onCwdChanged(callback)` 方法，返回取消监听函数
+

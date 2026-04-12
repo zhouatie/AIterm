@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { execFile, execFileSync } from 'node:child_process';
@@ -10,6 +10,7 @@ import {
   disposeSession,
   disposeAllSessions,
   getSessionLiveCwd,
+  checkAndUpdateCwd,
 } from './pty-manager';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -93,6 +94,23 @@ ipcMain.handle(
           data,
         });
       }
+    });
+
+    // Throttled CWD change detection on PTY output
+    let cwdCheckScheduled = false;
+    session.ptyProcess.onData(() => {
+      if (cwdCheckScheduled) return;
+      cwdCheckScheduled = true;
+      setTimeout(async () => {
+        cwdCheckScheduled = false;
+        const newCwd = await checkAndUpdateCwd(session.id);
+        if (newCwd && mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('terminal:cwdChanged', {
+            id: session.id,
+            cwd: newCwd,
+          });
+        }
+      }, 1000);
     });
 
     // Notify renderer when PTY exits
@@ -328,6 +346,85 @@ function buildTreeFromPaths(rootPath: string, relativePaths: string[]): ScanTree
   return bucketToNodes(root, rootPath);
 }
 
+// Common large directories to exclude when scanning all files
+const EXCLUDED_DIRS = ['node_modules', '.git', 'dist', 'build', 'out', '.next', '.cache', '__pycache__', '.tox', 'target'];
+
+/**
+ * Scan ALL files using `fd` — single subprocess, respects .gitignore automatically.
+ * Excludes common large directories.
+ */
+function scanAllWithFd(rootPath: string): Promise<ScanTreeNode[]> {
+  return new Promise((resolve, reject) => {
+    const fd = fdPath as string;
+    const excludeArgs = EXCLUDED_DIRS.flatMap((d) => ['--exclude', d]);
+    execFile(
+      fd,
+      ['--type', 'f', '--no-hidden', ...excludeArgs],
+      { cwd: rootPath, timeout: 10000, maxBuffer: 10 * 1024 * 1024 },
+      (error, stdout) => {
+        if (error && !stdout) {
+          reject(error);
+          return;
+        }
+        const lines = (stdout || '').trim().split('\n').filter(Boolean);
+        resolve(buildTreeFromPaths(rootPath, lines));
+      },
+    );
+  });
+}
+
+/**
+ * Fallback scan ALL files using Node.js fs — recursive traversal with git check-ignore.
+ * Excludes hidden files, gitignored files, and common large directories.
+ */
+async function scanAllWithNodeFs(rootPath: string): Promise<ScanTreeNode[]> {
+  const excludedSet = new Set(EXCLUDED_DIRS);
+
+  async function scanDir(dirPath: string): Promise<ScanTreeNode[]> {
+    const rawEntries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+    const names = rawEntries.map((e) => e.name);
+    const ignored = await getGitIgnoredNames(dirPath, names);
+
+    const dirs: ScanTreeNode[] = [];
+    const files: ScanTreeNode[] = [];
+
+    for (const entry of rawEntries) {
+      if (entry.name.startsWith('.')) continue;
+      if (ignored.has(entry.name)) continue;
+      if (excludedSet.has(entry.name)) continue;
+      const entryPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        const children = await scanDir(entryPath);
+        if (children.length > 0) {
+          dirs.push({
+            name: entry.name,
+            path: entryPath,
+            isDirectory: true,
+            children,
+          });
+        }
+      } else if (entry.isFile()) {
+        files.push({
+          name: entry.name,
+          path: entryPath,
+          isDirectory: false,
+        });
+      }
+    }
+
+    dirs.sort((a, b) => a.name.localeCompare(b.name));
+    files.sort((a, b) => a.name.localeCompare(b.name));
+    return [...dirs, ...files];
+  }
+
+  try {
+    return await scanDir(rootPath);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Scan using `fd` — single subprocess, respects .gitignore automatically.
  */
@@ -414,6 +511,33 @@ ipcMain.handle('fs:scan-md-files', async (_event, { rootPath: dirPath }: { rootP
       }
     } else {
       tree = await scanWithNodeFs(resolved);
+    }
+    return { tree };
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+});
+
+// fs:show-in-folder — reveal a file/directory in the system file manager
+ipcMain.on('fs:show-in-folder', (_event, { filePath: targetPath }: { filePath: string }) => {
+  const resolved = path.resolve(targetPath);
+  shell.showItemInFolder(resolved);
+});
+
+// fs:scan-all-files — scan all files under a directory (excluding common large dirs), return tree structure
+ipcMain.handle('fs:scan-all-files', async (_event, { rootPath: dirPath }: { rootPath: string }) => {
+  try {
+    const resolved = path.resolve(dirPath);
+    let tree: ScanTreeNode[];
+    if (fdPath) {
+      try {
+        tree = await scanAllWithFd(resolved);
+      } catch {
+        // fd failed for this directory, fall back to Node.js
+        tree = await scanAllWithNodeFs(resolved);
+      }
+    } else {
+      tree = await scanAllWithNodeFs(resolved);
     }
     return { tree };
   } catch (err) {

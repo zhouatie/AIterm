@@ -10,6 +10,7 @@ export interface TerminalApi {
   onExit(
     callback: (data: { id: string; exitCode: number; signal?: number }) => void,
   ): () => void;
+  onCwdChanged(callback: (data: { id: string; cwd: string }) => void): () => void;
 }
 
 export interface DirEntry {
@@ -30,6 +31,8 @@ export interface FileApi {
   readDir(dirPath: string): Promise<{ entries?: DirEntry[]; error?: string }>;
   readFile(filePath: string): Promise<{ content?: string; error?: string }>;
   scanMdFiles(rootPath: string): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
+  scanAllFiles(rootPath: string): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
+  showInFolder(filePath: string): void;
 }
 
 contextBridge.exposeInMainWorld('terminalApi', {
@@ -75,6 +78,17 @@ contextBridge.exposeInMainWorld('terminalApi', {
       ipcRenderer.removeListener('terminal:exit', listener);
     };
   },
+
+  onCwdChanged: (callback: (data: { id: string; cwd: string }) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: { id: string; cwd: string },
+    ) => callback(data);
+    ipcRenderer.on('terminal:cwdChanged', listener);
+    return () => {
+      ipcRenderer.removeListener('terminal:cwdChanged', listener);
+    };
+  },
 } satisfies TerminalApi);
 
 contextBridge.exposeInMainWorld('fileApi', {
@@ -86,4 +100,10 @@ contextBridge.exposeInMainWorld('fileApi', {
 
   scanMdFiles: (rootPath: string) =>
     ipcRenderer.invoke('fs:scan-md-files', { rootPath }),
+
+  scanAllFiles: (rootPath: string) =>
+    ipcRenderer.invoke('fs:scan-all-files', { rootPath }),
+
+  showInFolder: (filePath: string) =>
+    ipcRenderer.send('fs:show-in-folder', { filePath }),
 } satisfies FileApi);

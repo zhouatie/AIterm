@@ -9,6 +9,7 @@ export interface PtySession {
   id: string;
   ptyProcess: pty.IPty;
   cwd: string;
+  lastKnownCwd: string;
 }
 
 const sessions = new Map<string, PtySession>();
@@ -30,7 +31,7 @@ export function createSession(cols: number, rows: number): PtySession {
     env: { ...process.env } as Record<string, string>,
   });
 
-  const session: PtySession = { id, ptyProcess, cwd };
+  const session: PtySession = { id, ptyProcess, cwd, lastKnownCwd: cwd };
   sessions.set(id, session);
   return session;
 }
@@ -83,6 +84,22 @@ async function getProcessCwd(pid: number): Promise<string | null> {
     }
   } catch {
     // Detection failed — fall through to null
+  }
+  return null;
+}
+
+/**
+ * Check if the CWD of a session has changed. If so, update lastKnownCwd and return the new CWD.
+ * Returns null if unchanged or session not found.
+ */
+export async function checkAndUpdateCwd(id: string): Promise<string | null> {
+  const session = sessions.get(id);
+  if (!session) return null;
+
+  const liveCwd = await getSessionLiveCwd(id);
+  if (liveCwd && liveCwd !== session.lastKnownCwd) {
+    session.lastKnownCwd = liveCwd;
+    return liveCwd;
   }
   return null;
 }

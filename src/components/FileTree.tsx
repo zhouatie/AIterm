@@ -5,6 +5,7 @@ import {
   Folder,
   FolderOpen,
   FileText,
+  Files,
   ChevronsDownUp,
   ChevronsUpDown,
   RefreshCw,
@@ -27,6 +28,8 @@ interface FileTreeProps {
   selectedFile: string | null;
   onSelectFile: (filePath: string) => void;
   onRefresh: () => void;
+  mdOnly: boolean;
+  onToggleMdOnly: () => void;
 }
 
 // --- Helpers ---
@@ -81,7 +84,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
   }, [onClose]);
 
   // Adjust position if near viewport edges
-  const menuHeight = CONTEXT_MENU_ITEM_HEIGHT * 2 + 8; // 2 items + padding
+  const menuHeight = CONTEXT_MENU_ITEM_HEIGHT * 4 + 8 + 1; // 4 items + padding + separator
   let adjustedX = menu.x;
   let adjustedY = menu.y;
   if (menu.x + CONTEXT_MENU_WIDTH > window.innerWidth) {
@@ -90,6 +93,16 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
   if (menu.y + menuHeight > window.innerHeight) {
     adjustedY = menu.y - menuHeight;
   }
+
+  const handleCopyFileName = async () => {
+    const fileName = menu.nodePath.split('/').pop() || menu.nodePath;
+    try {
+      await navigator.clipboard.writeText(fileName);
+    } catch {
+      // Clipboard write failed silently
+    }
+    onClose();
+  };
 
   const handleCopyRelativePath = async () => {
     const relativePath = menu.nodePath.startsWith(rootPath + '/')
@@ -109,6 +122,11 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
     } catch {
       // Clipboard write failed silently
     }
+    onClose();
+  };
+
+  const handleShowInFolder = () => {
+    window.fileApi.showInFolder(menu.nodePath);
     onClose();
   };
 
@@ -143,6 +161,18 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
     >
       <div
         style={menuItemStyle}
+        onClick={handleCopyFileName}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#f0f0f0';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+      >
+        Copy Filename
+      </div>
+      <div
+        style={menuItemStyle}
         onClick={handleCopyRelativePath}
         onMouseEnter={(e) => {
           e.currentTarget.style.backgroundColor = '#f0f0f0';
@@ -165,6 +195,19 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
       >
         Copy Absolute Path
       </div>
+      <div style={{ height: 1, backgroundColor: '#e0e0e0', margin: '4px 0' }} />
+      <div
+        style={menuItemStyle}
+        onClick={handleShowInFolder}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#f0f0f0';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+      >
+        Reveal in Finder
+      </div>
     </div>
   );
 };
@@ -176,9 +219,11 @@ interface ToolbarProps {
   onCollapseAll: () => void;
   allExpanded: boolean;
   onRefresh: () => void;
+  mdOnly: boolean;
+  onToggleMdOnly: () => void;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpanded, onRefresh }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpanded, onRefresh, mdOnly, onToggleMdOnly }) => {
   const ToggleIcon = allExpanded ? ChevronsDownUp : ChevronsUpDown;
   const toggleAction = allExpanded ? onCollapseAll : onExpandAll;
   const title = allExpanded ? 'Collapse All' : 'Expand All';
@@ -207,6 +252,9 @@ const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpand
     e.currentTarget.style.color = ICON_COLOR;
   };
 
+  const FilterIcon = mdOnly ? FileText : Files;
+  const filterTitle = mdOnly ? 'Showing Markdown only — click to show all files' : 'Showing all files — click to show Markdown only';
+
   return (
     <div
       style={{
@@ -219,6 +267,15 @@ const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpand
         flexShrink: 0,
       }}
     >
+      <button
+        onClick={onToggleMdOnly}
+        title={filterTitle}
+        style={buttonStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <FilterIcon size={14} />
+      </button>
       <button
         onClick={onRefresh}
         title="Refresh"
@@ -417,13 +474,13 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
 // --- Main FileTree ---
 
-const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFile, onRefresh }) => {
+const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFile, onRefresh, mdOnly, onToggleMdOnly }) => {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
-  // Load entire tree when rootPath changes (using scanMdFiles)
+  // Load entire tree when rootPath or mdOnly changes
   useEffect(() => {
     if (!rootPath) return;
     let cancelled = false;
@@ -431,7 +488,11 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
     setAllExpanded(false);
     setContextMenu(null);
 
-    window.fileApi.scanMdFiles(rootPath).then((result) => {
+    const scanFn = mdOnly
+      ? window.fileApi.scanMdFiles(rootPath)
+      : window.fileApi.scanAllFiles(rootPath);
+
+    scanFn.then((result) => {
       if (!cancelled) {
         if (result.tree) {
           setNodes(toTreeNodes(result.tree));
@@ -445,7 +506,7 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
     return () => {
       cancelled = true;
     };
-  }, [rootPath]);
+  }, [rootPath, mdOnly]);
 
   // Deep update a node in the tree by path
   const updateNode = useCallback(
@@ -518,6 +579,8 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
           onCollapseAll={handleCollapseAll}
           allExpanded={allExpanded}
           onRefresh={onRefresh}
+          mdOnly={mdOnly}
+          onToggleMdOnly={onToggleMdOnly}
         />
         <div
           style={{
@@ -543,6 +606,8 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
         onCollapseAll={handleCollapseAll}
         allExpanded={allExpanded}
         onRefresh={onRefresh}
+        mdOnly={mdOnly}
+        onToggleMdOnly={onToggleMdOnly}
       />
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {nodes.length === 0 ? (
@@ -556,7 +621,7 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
               color: '#999',
             }}
           >
-            No Markdown files found
+            {mdOnly ? 'No Markdown files found' : 'No files found'}
           </div>
         ) : (
           nodes.map((node, idx) => (
