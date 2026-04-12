@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "9857e4f22257f1a23f2555a811be64916f1e6126",
+  "prompts": {
+    "59fe1c035c637199": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e1a264dffeELkI9Zzgy22R9A",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 155,
+      "total_deletions": 0,
+      "accepted_lines": 155,
+      "overriden_lines": 0
+    }
+  }
+}
