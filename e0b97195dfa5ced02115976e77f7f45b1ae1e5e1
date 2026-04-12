@@ -1,0 +1,23 @@
+src/main.ts
+  ea2c2ce75c469966 70-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "e0b97195dfa5ced02115976e77f7f45b1ae1e5e1",
+  "prompts": {
+    "ea2c2ce75c469966": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ebde593ffefKZHCLt0Qkfnbi",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
