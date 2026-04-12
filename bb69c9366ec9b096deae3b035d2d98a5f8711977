@@ -1,0 +1,25 @@
+src/index.css
+  83f8c82fd10034e9 41-45,113-117,167-194,273-274,287-288
+src/components/CodePreview.tsx
+  83f8c82fd10034e9 38-39,67-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "bb69c9366ec9b096deae3b035d2d98a5f8711977",
+  "prompts": {
+    "83f8c82fd10034e9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27def41deffeVnlgmDZ9i5yshK",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 46,
+      "total_deletions": 3,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    }
+  }
+}
