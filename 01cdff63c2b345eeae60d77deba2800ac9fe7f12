@@ -1,0 +1,25 @@
+src/components/TerminalInstance.tsx
+  b744b36f022c09b0 126-128
+src/components/TerminalPanel.tsx
+  b744b36f022c09b0 97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "01cdff63c2b345eeae60d77deba2800ac9fe7f12",
+  "prompts": {
+    "b744b36f022c09b0": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ec87c53ffe1daQZ76y5x6wqM",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
