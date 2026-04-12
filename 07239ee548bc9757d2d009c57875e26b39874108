@@ -1,0 +1,42 @@
+src/main.ts
+  63d27c9fd748bd51 290,298,319,322-325,327-333,337-338,342-352,354,356,360-364,391,421,426,431,436,441-442,469,496,501,506,511,516-518
+src/components/FileTree.tsx
+  63d27c9fd748bd51 22,44
+src/preload.ts
+  63d27c9fd748bd51 27
+openspec/specs/file-preview/spec.md
+  63d27c9fd748bd51 11,91,109-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "07239ee548bc9757d2d009c57875e26b39874108",
+  "prompts": {
+    "59fe1c035c637199": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e1a264dffeELkI9Zzgy22R9A",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "63d27c9fd748bd51": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27dfc37a2ffeuOEwgR90A6JaKL",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 70,
+      "total_deletions": 34,
+      "accepted_lines": 58,
+      "overriden_lines": 0
+    }
+  }
+}
