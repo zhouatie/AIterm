@@ -1,0 +1,111 @@
+src/components/MarkdownPreview.tsx
+  93df86d8df2ecb3c 25
+src/utils/file-types.ts
+  93df86d8df2ecb3c 1-88
+src/components/CodePreview.tsx
+  93df86d8df2ecb3c 1-76
+package.json
+  93df86d8df2ecb3c 34,55
+src/components/FilePreviewPanel.tsx
+  93df86d8df2ecb3c 4,6,180-181
+openspec/specs/file-preview/spec.md
+  eddd1b8838fd2358 42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "f93baf4a6ab78665f5054d75d1ff982edbdc1547",
+  "prompts": {
+    "2f5331d7ed23c123": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e7499d3ffeFTy7P0E5hT25Gj",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1572,
+      "total_deletions": 73,
+      "accepted_lines": 1529,
+      "overriden_lines": 14
+    },
+    "4ea44e5c435dadd4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27edc069effe74tGu1AnMl86bT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "56183c44e3425a6f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28014c8e6ffe0t5hmw9Ah0LxBf",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 179,
+      "total_deletions": 8,
+      "accepted_lines": 179,
+      "overriden_lines": 0
+    },
+    "7311ca3fd5bee82a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e97da08ffeRfBCvmPl11H70l",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 533,
+      "total_deletions": 18,
+      "accepted_lines": 265,
+      "overriden_lines": 0
+    },
+    "93df86d8df2ecb3c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e70a595ffeLeambh2Bu16l7d",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 496,
+      "total_deletions": 72,
+      "accepted_lines": 425,
+      "overriden_lines": 0
+    },
+    "d0e687716fcd1d8c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e76e893ffeG3nY7d97JEZBsy",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 693,
+      "total_deletions": 67,
+      "accepted_lines": 681,
+      "overriden_lines": 0
+    },
+    "eddd1b8838fd2358": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e362189ffeKH3g9rlq7E86ej",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 135,
+      "total_deletions": 1,
+      "accepted_lines": 135,
+      "overriden_lines": 0
+    }
+  }
+}
