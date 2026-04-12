@@ -1,0 +1,38 @@
+src/components/TerminalTabBar.tsx
+  2f5331d7ed23c123 25
+src/App.tsx
+  2f5331d7ed23c123 43-45,100-101,106-118,120-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "beb82fb4c23145f8b95c9d41c185f73dbd253421",
+  "prompts": {
+    "2f5331d7ed23c123": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e7499d3ffeFTy7P0E5hT25Gj",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 47,
+      "total_deletions": 33,
+      "accepted_lines": 46,
+      "overriden_lines": 0
+    },
+    "bebe59c85e6eb164": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ea4d8eaffeT0C4R0UnZfCKT5",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 620,
+      "overriden_lines": 0
+    }
+  }
+}
