@@ -5,10 +5,23 @@ export interface TerminalApi {
   input(id: string, data: string): void;
   resize(id: string, cols: number, rows: number): void;
   dispose(id: string): Promise<void>;
+  getCwd(id: string): Promise<{ cwd: string | null }>;
   onOutput(callback: (data: { id: string; data: string }) => void): () => void;
   onExit(
     callback: (data: { id: string; exitCode: number; signal?: number }) => void,
   ): () => void;
+}
+
+export interface DirEntry {
+  name: string;
+  isDirectory: boolean;
+  isFile: boolean;
+  containsMarkdown?: boolean;
+}
+
+export interface FileApi {
+  readDir(dirPath: string): Promise<{ entries?: DirEntry[]; error?: string }>;
+  readFile(filePath: string): Promise<{ content?: string; error?: string }>;
 }
 
 contextBridge.exposeInMainWorld('terminalApi', {
@@ -23,6 +36,9 @@ contextBridge.exposeInMainWorld('terminalApi', {
 
   dispose: (id: string) =>
     ipcRenderer.invoke('terminal:dispose', { id }),
+
+  getCwd: (id: string) =>
+    ipcRenderer.invoke('terminal:getCwd', { id }),
 
   onOutput: (callback: (data: { id: string; data: string }) => void) => {
     const listener = (
@@ -52,3 +68,11 @@ contextBridge.exposeInMainWorld('terminalApi', {
     };
   },
 } satisfies TerminalApi);
+
+contextBridge.exposeInMainWorld('fileApi', {
+  readDir: (dirPath: string) =>
+    ipcRenderer.invoke('fs:readdir', { dirPath }),
+
+  readFile: (filePath: string) =>
+    ipcRenderer.invoke('fs:readfile', { filePath }),
+} satisfies FileApi);

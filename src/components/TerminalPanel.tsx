@@ -1,172 +1,110 @@
-import React, { useEffect, useRef } from 'react';
-import { Terminal } from '@xterm/xterm';
-import { FitAddon } from '@xterm/addon-fit';
-import { WebLinksAddon } from '@xterm/addon-web-links';
-import '@xterm/xterm/css/xterm.css';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import TerminalTabBar, { TAB_BAR_HEIGHT } from './TerminalTabBar';
+import type { TabInfo } from './TerminalTabBar';
+import TerminalInstance from './TerminalInstance';
 
-const TERMINAL_BG = '#ffffff';
+interface TerminalTab extends TabInfo {
+  sessionId: string;
+}
 
-const TerminalPanel: React.FC = () => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const terminalRef = useRef<Terminal | null>(null);
-    const fitAddonRef = useRef<FitAddon | null>(null);
-    const sessionIdRef = useRef<string | null>(null);
+interface TerminalPanelProps {
+  onActiveSessionChange?: (sessionId: string) => void;
+}
 
-    useEffect(() => {
-        console.log(
-            '[TerminalPanel] useEffect fired, container:',
-            containerRef.current,
-        );
-        if (!containerRef.current) return;
+const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) => {
+  const counterRef = useRef(1);
+  const [tabs, setTabs] = useState<TerminalTab[]>([]);
+  const [activeTabId, setActiveTabId] = useState<string>('');
+  const initializedRef = useRef(false);
 
-        // Create xterm.js instance
-        const terminal = new Terminal({
-            cursorBlink: true,
-            fontSize: 14,
-            fontFamily:
-                '"JetBrainsMono Nerd Font", Menlo, Monaco, "Courier New", monospace',
-            theme: {
-                background: TERMINAL_BG,
-                foreground: '#1e1e1e',
-                cursor: '#000000',
-                selectionBackground: '#add6ff',
-                black: '#000000',
-                red: '#cd3131',
-                green: '#00bc00',
-                yellow: '#949800',
-                blue: '#0451a5',
-                magenta: '#bc05bc',
-                cyan: '#0598bc',
-                white: '#555555',
-                brightBlack: '#666666',
-                brightRed: '#cd3131',
-                brightGreen: '#14ce14',
-                brightYellow: '#b5ba00',
-                brightBlue: '#0451a5',
-                brightMagenta: '#bc05bc',
-                brightCyan: '#0598bc',
-                brightWhite: '#a5a5a5',
-            },
-            scrollback: 10000,
-            allowProposedApi: true,
-        });
-        terminalRef.current = terminal;
+  // Create a new tab: spawn PTY and add to state
+  const createTab = useCallback(async () => {
+    try {
+      const { id: sessionId } = await window.terminalApi.create(80, 24);
+      const num = counterRef.current++;
+      const tab: TerminalTab = {
+        id: sessionId,
+        name: `Terminal ${num}`,
+        sessionId,
+      };
+      setTabs((prev) => [...prev, tab]);
+      setActiveTabId(tab.id);
+    } catch (err) {
+      console.error('[TerminalPanel] Failed to create tab:', err);
+    }
+  }, []);
 
-        // Load addons
-        const fitAddon = new FitAddon();
-        fitAddonRef.current = fitAddon;
-        terminal.loadAddon(fitAddon);
-        terminal.loadAddon(new WebLinksAddon());
+  // Initialize with one default tab on mount
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    createTab();
+  }, [createTab]);
 
-        // Mount to DOM
-        terminal.open(containerRef.current);
-        fitAddon.fit();
+  // Notify parent when active session changes
+  useEffect(() => {
+    if (activeTabId) {
+      onActiveSessionChange?.(activeTabId);
+    }
+  }, [activeTabId, onActiveSessionChange]);
 
-        // Create PTY session via IPC
-        const initSession = async () => {
-            try {
-                console.log(
-                    '[TerminalPanel] creating PTY session, cols:',
-                    terminal.cols,
-                    'rows:',
-                    terminal.rows,
-                );
-                const { id } = await window.terminalApi.create(
-                    terminal.cols,
-                    terminal.rows,
-                );
-                console.log('[TerminalPanel] PTY session created:', id);
-                sessionIdRef.current = id;
+  // Handle tab selection
+  const handleSelect = useCallback((id: string) => {
+    setActiveTabId(id);
+  }, []);
 
-                // User input → PTY stdin
-                terminal.onData((data: string) => {
-                    window.terminalApi.input(id, data);
-                });
-            } catch (err) {
-                console.error(
-                    '[TerminalPanel] Failed to create PTY session:',
-                    err,
-                );
-                terminal.writeln(
-                    '\r\n[Error: Failed to create terminal session]',
-                );
-            }
-        };
+  // Handle tab close
+  const handleClose = useCallback(
+    async (id: string) => {
+      // Dispose the PTY session
+      try {
+        await window.terminalApi.dispose(id);
+      } catch {
+        // PTY may already be gone
+      }
 
-        initSession();
+      setTabs((prev) => {
+        const remaining = prev.filter((t) => t.id !== id);
 
-        // PTY stdout → xterm.write
-        const removeOutputListener = window.terminalApi.onOutput(
-            ({ id, data }: { id: string; data: string }) => {
-                if (id === sessionIdRef.current) {
-                    terminal.write(data);
-                }
-            },
-        );
+        if (remaining.length === 0) {
+          // Last tab closed — create a new one
+          createTab();
+          return [];
+        }
 
-        // PTY exit → show message
-        const removeExitListener = window.terminalApi.onExit(
-            ({ id, exitCode }: { id: string; exitCode: number }) => {
-                if (id === sessionIdRef.current) {
-                    terminal.writeln('');
-                    terminal.writeln(
-                        `\r\n[Process exited with code ${exitCode}. Press any key to restart.]`,
-                    );
-                    terminal.onData(() => {
-                        // Restart on any key press
-                        terminal.clear();
-                        initSession();
-                    });
-                }
-            },
-        );
+        // If closing the active tab, switch to adjacent
+        if (id === activeTabId) {
+          const closedIndex = prev.findIndex((t) => t.id === id);
+          const nextIndex = Math.min(closedIndex, remaining.length - 1);
+          setActiveTabId(remaining[nextIndex].id);
+        }
 
-        // Resize handling
-        const handleResize = () => {
-            if (fitAddonRef.current) {
-                fitAddonRef.current.fit();
-            }
-        };
+        return remaining;
+      });
+    },
+    [activeTabId, createTab],
+  );
 
-        // Sync terminal size to PTY when xterm resizes
-        terminal.onResize(({ cols, rows }: { cols: number; rows: number }) => {
-            if (sessionIdRef.current) {
-                window.terminalApi.resize(sessionIdRef.current, cols, rows);
-            }
-        });
-
-        // Watch container size changes
-        const resizeObserver = new ResizeObserver(handleResize);
-        resizeObserver.observe(containerRef.current);
-
-        // Also listen to window resize
-        window.addEventListener('resize', handleResize);
-
-        // Cleanup
-        return () => {
-            resizeObserver.disconnect();
-            window.removeEventListener('resize', handleResize);
-            removeOutputListener();
-            removeExitListener();
-            if (sessionIdRef.current) {
-                window.terminalApi.dispose(sessionIdRef.current);
-            }
-            terminal.dispose();
-        };
-    }, []);
-
-    return (
-        <div
-            ref={containerRef}
-            style={{
-                width: '100%',
-                height: '100%',
-                overflow: 'hidden',
-                padding: 10,
-                backgroundColor: TERMINAL_BG,
-            }}
-        />
-    );
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <TerminalTabBar
+        tabs={tabs}
+        activeTabId={activeTabId}
+        onSelect={handleSelect}
+        onClose={handleClose}
+        onNew={createTab}
+      />
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {tabs.map((tab) => (
+          <TerminalInstance
+            key={tab.sessionId}
+            sessionId={tab.sessionId}
+            isActive={tab.id === activeTabId}
+          />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default TerminalPanel;

@@ -61,11 +61,11 @@ PTY 进程的 stdout 输出 SHALL 通过 IPC 传输到渲染进程，并由 xter
 - **THEN** 系统 SHALL 通知渲染进程会话已结束
 
 ### Requirement: xterm.js 终端 UI
-渲染进程 SHALL 使用 xterm.js 提供终端 UI，支持基本的终端交互体验。
+渲染进程 SHALL 使用 xterm.js 提供终端 UI，支持基本的终端交互体验。每个终端实例 SHALL 作为独立的可实例化组件存在，支持在同一面板内并行存在多个实例。
 
 #### Scenario: 终端面板渲染
-- **WHEN** 终端面板挂载到 DOM
-- **THEN** xterm.js SHALL 初始化并占满面板可用空间
+- **WHEN** 一个终端实例挂载到 DOM
+- **THEN** xterm.js SHALL 初始化并占满其容器的可用空间
 
 #### Scenario: 滚动回看
 - **WHEN** 终端输出超过可视区域
@@ -73,4 +73,8 @@ PTY 进程的 stdout 输出 SHALL 通过 IPC 传输到渲染进程，并由 xter
 
 #### Scenario: 文本选择与复制
 - **WHEN** 用户在终端中用鼠标选择文本
-- **THEN** 选中文本 SHALL 可以通过 ⌘+C 复制到系统剪贴板
+- **THEN** 选中文本 SHALL 可以通过 Cmd+C 复制到系统剪贴板
+
+#### Scenario: 多实例独立运行
+- **WHEN** 同一面板内存在多个终端实例
+- **THEN** 每个实例 SHALL 拥有独立的 xterm.js 实例、PTY 会话和滚动缓冲区，互不干扰
