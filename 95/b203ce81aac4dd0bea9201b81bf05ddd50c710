@@ -1,0 +1,40 @@
+src/index.css
+  14def8aa94ff32de 37-40,104-107
+src/components/TerminalTabBar.tsx
+  14def8aa94ff32de 1-2,17,25-26,33-34,44-45,47,50-52,58-59,70,77-79,81-83,96,98,110-147,161-164,168-175,181,184,187,197,200,204
+openspec/specs/terminal-tabs/spec.md
+  b661d60c91719f0b 17-24,28-46,77-97,99,124-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "95b203ce81aac4dd0bea9201b81bf05ddd50c710",
+  "prompts": {
+    "14def8aa94ff32de": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e187bbdffeac2RdCxFtMc0Rm",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 343,
+      "total_deletions": 45,
+      "accepted_lines": 89,
+      "overriden_lines": 0
+    },
+    "b661d60c91719f0b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27df3ff57ffes3DyzGlQEJVpLe",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 61,
+      "total_deletions": 3,
+      "accepted_lines": 61,
+      "overriden_lines": 0
+    }
+  }
+}
