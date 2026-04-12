@@ -1,0 +1,29 @@
+src/index.css
+  5f888b248539dd12 195-202
+openspec/specs/terminal-tabs/spec.md
+  5f888b248539dd12 48-57,146-157
+openspec/changes/archive/2026-04-12-fix-tab-overflow-scroll/tasks.md
+  5f888b248539dd12 1-19
+src/components/TerminalTabBar.tsx
+  5f888b248539dd12 1,36-37,56,113-149,189,195-198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "df558792360fb60fd68cc5cc277ff0d264043873",
+  "prompts": {
+    "5f888b248539dd12": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27dde14a1ffewoWyAQfeptTXJV",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 281,
+      "total_deletions": 12,
+      "accepted_lines": 95,
+      "overriden_lines": 0
+    }
+  }
+}
