@@ -35,7 +35,8 @@ const CodePreview: React.FC<CodePreviewProps> = ({ content, filePath }) => {
     <div
       style={{
         height: '100%',
-        overflow: 'auto',
+        overflowY: 'auto',
+        overflowX: 'hidden',
       }}
     >
       <SyntaxHighlighter
@@ -63,7 +64,8 @@ const CodePreview: React.FC<CodePreviewProps> = ({ content, filePath }) => {
         codeTagProps={{
           style: {
             fontFamily: 'inherit',
-            whiteSpace: 'pre',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
           },
         }}
       >
