@@ -4,6 +4,8 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
 
+const TERMINAL_BG = '#ffffff';
+
 const TerminalPanel: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<Terminal | null>(null);
@@ -24,11 +26,7 @@ const TerminalPanel: React.FC = () => {
             fontFamily:
                 '"JetBrainsMono Nerd Font", Menlo, Monaco, "Courier New", monospace',
             theme: {
-                // background: '#1e1e1e',
-                // foreground: '#d4d4d4',
-                // cursor: '#d4d4d4',
-                // selectionBackground: '#264f78',
-                background: '#ffffff',
+                background: TERMINAL_BG,
                 foreground: '#1e1e1e',
                 cursor: '#000000',
                 selectionBackground: '#add6ff',
@@ -164,6 +162,8 @@ const TerminalPanel: React.FC = () => {
                 width: '100%',
                 height: '100%',
                 overflow: 'hidden',
+                padding: 10,
+                backgroundColor: TERMINAL_BG,
             }}
         />
     );
