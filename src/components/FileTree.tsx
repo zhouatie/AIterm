@@ -29,6 +29,7 @@ interface FileTreeProps {
   selectedFile: string | null;
   onSelectFile: (filePath: string) => void;
   onRefresh: () => void;
+  refreshKey?: number;
   mdOnly: boolean;
   onToggleMdOnly: () => void;
 }
@@ -476,13 +477,13 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
 // --- Main FileTree ---
 
-const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFile, onRefresh, mdOnly, onToggleMdOnly }) => {
+const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFile, onRefresh, refreshKey, mdOnly, onToggleMdOnly }) => {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
-  // Load entire tree when rootPath or mdOnly changes
+  // Load entire tree when rootPath, mdOnly, or refreshKey changes
   useEffect(() => {
     if (!rootPath) return;
     let cancelled = false;
@@ -503,12 +504,17 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
         }
         setLoading(false);
       }
+    }).catch(() => {
+      if (!cancelled) {
+        setNodes([]);
+        setLoading(false);
+      }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [rootPath, mdOnly]);
+  }, [rootPath, mdOnly, refreshKey]);
 
   // Deep update a node in the tree by path
   const updateNode = useCallback(

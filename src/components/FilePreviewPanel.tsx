@@ -18,6 +18,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [loadingFile, setLoadingFile] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [mdOnly, setMdOnly] = useState<boolean>(() => {
     const stored = localStorage.getItem(MD_ONLY_KEY);
     return stored === null ? true : stored === 'true';
@@ -82,19 +83,17 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     });
   }, []);
 
-  // Manual refresh: re-fetch terminal CWD and update rootPath
+  // Manual refresh: re-fetch terminal CWD and trigger file tree rescan
   const handleRefresh = useCallback(async () => {
     if (!activeSessionId) return;
     try {
       const result = await window.terminalApi.getCwd(activeSessionId);
       if (result.cwd) {
-        // Always update rootPath to trigger file tree reload
-        // (set to empty first to force re-render even if same path)
         if (result.cwd === rootPathRef.current) {
-          setRootPath('');
-          const cwd = result.cwd;
-          queueMicrotask(() => setRootPath(cwd));
+          // Same path — increment refreshKey to force rescan
+          setRefreshKey((k) => k + 1);
         } else {
+          // Path changed — update rootPath which naturally triggers rescan
           setRootPath(result.cwd);
           setSelectedFile(null);
           setFileContent(null);
@@ -141,6 +140,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             selectedFile={selectedFile}
             onSelectFile={handleSelectFile}
             onRefresh={handleRefresh}
+            refreshKey={refreshKey}
             mdOnly={mdOnly}
             onToggleMdOnly={handleToggleMdOnly}
           />
