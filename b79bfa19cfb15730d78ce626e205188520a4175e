@@ -1,0 +1,46 @@
+openspec/specs/electron-shell/spec.md
+  98b8c5357921c011 1-50
+src/components/TerminalPanel.tsx
+  56183c44e3425a6f 24-25,31-50
+openspec/specs/embedded-terminal/spec.md
+  98b8c5357921c011 1-76
+src/main.ts
+  56183c44e3425a6f 25-26
+src/index.css
+  56183c44e3425a6f 12,19-31
+openspec/specs/panel-layout/spec.md
+  98b8c5357921c011 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "b79bfa19cfb15730d78ce626e205188520a4175e",
+  "prompts": {
+    "56183c44e3425a6f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28014c8e6ffe0t5hmw9Ah0LxBf",
+        "model": "unknown"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 37,
+      "total_deletions": 6,
+      "accepted_lines": 38,
+      "overriden_lines": 0
+    },
+    "98b8c5357921c011": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27fd5fe49ffer6i7EZOJEE2pGz",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 165,
+      "total_deletions": 0,
+      "accepted_lines": 165,
+      "overriden_lines": 0
+    }
+  }
+}
