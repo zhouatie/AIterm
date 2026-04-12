@@ -1,0 +1,47 @@
+src/preload.ts
+  4ea44e5c435dadd4 22-28,32,86-88
+src/components/SplitLayout.tsx
+  4ea44e5c435dadd4 12-13,30,97,107,139
+src/components/TerminalTabBar.tsx
+  4ea44e5c435dadd4 25
+src/App.tsx
+  4ea44e5c435dadd4 2,34,40-62,67-71,73-80,99,106,108,112,114-130
+src/components/FilePreviewPanel.tsx
+  4ea44e5c435dadd4 8-9,12,19,21,23,37,39,41-42,44-46,51-53
+src/main.ts
+  4ea44e5c435dadd4 4,253-423,426-429
+  ea2c2ce75c469966 70-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "34859276c8bd85f930be236a2094ffe195b00671",
+  "prompts": {
+    "4ea44e5c435dadd4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27edc069effe74tGu1AnMl86bT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1083,
+      "total_deletions": 397,
+      "accepted_lines": 269,
+      "overriden_lines": 0
+    },
+    "ea2c2ce75c469966": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ebde593ffefKZHCLt0Qkfnbi",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
