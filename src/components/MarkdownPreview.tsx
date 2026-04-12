@@ -22,7 +22,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, filePath }) 
           userSelect: 'none',
         }}
       >
-        Select a Markdown file to preview
+        选择一个文件以预览
       </div>
     );
   }

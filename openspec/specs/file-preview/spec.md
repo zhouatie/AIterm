@@ -23,7 +23,7 @@
 - **THEN** 该文件 SHALL 显示选中高亮状态，高亮颜色 SHALL 使用主题变量而非硬编码值
 
 ### Requirement: Markdown 文件预览
-系统 SHALL 使用 react-markdown 渲染选中的 Markdown 文件内容，支持 GFM 语法和代码高亮。
+系统 SHALL 使用 react-markdown 渲染选中的 Markdown 文件内容，支持 GFM 语法和代码高亮。仅当选中文件的扩展名为 `.md` 时才使用此渲染模式。
 
 #### Scenario: 渲染选中文件
 - **WHEN** 用户在文件树中选中一个 `.md` 文件
@@ -37,17 +37,9 @@
 - **WHEN** Markdown 文件包含带语言标识的代码块（如 ```typescript）
 - **THEN** 预览区 SHALL 对代码块应用语法高亮着色
 
-#### Scenario: 代码高亮适配主题
-- **WHEN** 应用主题模式发生变化
-- **THEN** 代码块的 highlight.js 样式 SHALL 切换到与当前主题匹配的配色方案（浅色主题使用浅色高亮、深色主题使用深色高亮）
-
-#### Scenario: Markdown 正文适配主题
-- **WHEN** 应用主题模式发生变化
-- **THEN** Markdown 预览区的正文文字颜色、背景色、链接颜色、引用块样式等 SHALL 适配当前主题
-
 #### Scenario: 未选中文件时的占位显示
 - **WHEN** 文件预览面板加载但未选中任何文件
-- **THEN** 预览区 SHALL 显示占位提示文本（如"选择一个 Markdown 文件以预览"）
+- **THEN** 预览区 SHALL 显示占位提示文本（如"选择一个文件以预览"）
 
 #### Scenario: 预览区滚动
 - **WHEN** 渲染后的 Markdown 内容超过预览区可视高度
@@ -268,4 +260,19 @@
 #### Scenario: IPC 通道
 - **WHEN** 渲染进程请求在访达中显示某路径
 - **THEN** 主进程 SHALL 提供 `fs:show-in-folder` IPC handler，调用 `shell.showItemInFolder(path)` 执行操作
+
+### Requirement: 文件类型预览路由
+文件预览面板 SHALL 根据选中文件的扩展名自动选择对应的预览组件进行渲染。
+
+#### Scenario: Markdown 文件路由到 Markdown 预览
+- **WHEN** 用户选中一个 `.md` 扩展名的文件
+- **THEN** 系统 SHALL 使用 `MarkdownPreview` 组件渲染文件内容
+
+#### Scenario: 代码文件路由到代码预览
+- **WHEN** 用户选中一个非 `.md` 扩展名的文件
+- **THEN** 系统 SHALL 使用 `CodePreview` 组件渲染文件内容，提供语法高亮
+
+#### Scenario: 切换文件类型时预览组件切换
+- **WHEN** 用户先选中一个 `.md` 文件，再选中一个 `.ts` 文件
+- **THEN** 预览区 SHALL 从 Markdown 渲染模式无缝切换到代码高亮模式
 

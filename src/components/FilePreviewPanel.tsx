@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import FileTree from './FileTree';
 import MarkdownPreview from './MarkdownPreview';
+import CodePreview from './CodePreview';
 import SplitLayout from './SplitLayout';
+import { isMarkdownFile } from '../utils/file-types';
 
 interface FilePreviewPanelProps {
   activeSessionId: string | null;
@@ -175,6 +177,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
         >
           Loading...
         </div>
+      ) : selectedFile && !isMarkdownFile(selectedFile) ? (
+        <CodePreview content={fileContent} filePath={selectedFile} />
       ) : (
         <MarkdownPreview content={fileContent} filePath={selectedFile} />
       )}
