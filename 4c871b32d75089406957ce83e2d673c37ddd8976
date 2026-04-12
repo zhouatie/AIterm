@@ -1,0 +1,40 @@
+src/components/FileTree.tsx
+  5f250a7e4284b945 32,480,486,507-511,517
+src/components/FilePreviewPanel.tsx
+  5f250a7e4284b945 21,86,93-94,96,143
+openspec/specs/file-preview/spec.md
+  a961aa8fc359034f 114,120-122,124-126,132-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "4c871b32d75089406957ce83e2d673c37ddd8976",
+  "prompts": {
+    "5f250a7e4284b945": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ddb2051ffe1TWPq25lNlFOvY",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 155,
+      "total_deletions": 16,
+      "accepted_lines": 15,
+      "overriden_lines": 0
+    },
+    "a961aa8fc359034f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27dcacc5fffeoY4cao54kPwYCZ",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 16,
+      "total_deletions": 4,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}
