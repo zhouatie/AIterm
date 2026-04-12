@@ -40,11 +40,10 @@ const INITIAL_PANELS: PanelDefinition[] = [
 const ICON_COLOR = '#8b8b8b';
 const ICON_COLOR_ACTIVE = '#5a5a5a';
 
+// Height of the dedicated title bar area (houses traffic lights + sidebar toggle)
+const TITLE_BAR_HEIGHT = 38;
+
 const toggleButtonStyle = {
-  position: 'absolute' as const,
-  top: 6,
-  left: 68,
-  zIndex: 1000,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -96,38 +95,55 @@ const AppContent: React.FC = () => {
   return (
     <div
       style={{
-        position: 'relative',
         width: '100vw',
         height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
         backgroundColor: '#ffffff',
       }}
     >
-      {/* Always render both panels — use leftCollapsed to hide/show without remounting */}
-      <SplitLayout
-        left={<FilePreviewPanel activeSessionId={activeSessionId} visible={panelVisible} />}
-        right={<PanelContainer />}
-        defaultLeftPercent={50}
-        shadow
-        leftCollapsed={!panelVisible}
-      />
-
-      {/* Toggle button — fixed in top-left area, right after traffic lights */}
-      <button
-        onClick={togglePanel}
-        title={panelVisible ? 'Hide Sidebar' : 'Show Sidebar'}
-        style={toggleButtonStyle}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#f0f0f0';
-          e.currentTarget.style.color = ICON_COLOR_ACTIVE;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-          e.currentTarget.style.color = ICON_COLOR;
-        }}
+      {/* Title bar — drag region, houses macOS traffic lights + sidebar toggle */}
+      <div
+        style={{
+          height: TITLE_BAR_HEIGHT,
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          // 78px = traffic lights (~64px) + 14px harmonious gap
+          paddingLeft: 78,
+          backgroundColor: '#f5f5f5',
+          borderBottom: '1px solid #e0e0e0',
+          WebkitAppRegion: 'drag',
+        } as React.CSSProperties}
       >
-        {panelVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
-      </button>
+        <button
+          onClick={togglePanel}
+          title={panelVisible ? 'Hide Sidebar' : 'Show Sidebar'}
+          style={toggleButtonStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#f0f0f0';
+            e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = ICON_COLOR;
+          }}
+        >
+          {panelVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+        </button>
+      </div>
+
+      {/* Main content area — left sidebar + right panel */}
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        <SplitLayout
+          left={<FilePreviewPanel activeSessionId={activeSessionId} visible={panelVisible} />}
+          right={<PanelContainer />}
+          defaultLeftPercent={50}
+          shadow
+          leftCollapsed={!panelVisible}
+        />
+      </div>
     </div>
   );
 };

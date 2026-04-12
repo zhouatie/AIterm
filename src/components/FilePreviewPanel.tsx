@@ -129,8 +129,6 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: '#ffffff',
-        // Leave room for macOS traffic lights (hiddenInset title bar)
-        paddingTop: 38,
       }}
     >
       {/* File tree (includes its own toolbar with refresh) */}
