@@ -1,0 +1,56 @@
+openspec/specs/panel-layout/spec.md
+  eddd1b8838fd2358 27-34
+openspec/specs/embedded-terminal/spec.md
+  eddd1b8838fd2358 80-91
+openspec/specs/electron-shell/spec.md
+  eddd1b8838fd2358 19-22,76-93
+src/ThemeContext.tsx
+  2f5331d7ed23c123 80-81
+src/renderer.tsx
+  2f5331d7ed23c123 3,14-18
+src/components/TerminalInstance.tsx
+  2f5331d7ed23c123 5-6,9-60,71,82,152-158
+src/components/MarkdownPreview.tsx
+  2f5331d7ed23c123 20
+src/components/FileTree.tsx
+  2f5331d7ed23c123 166,198,203,361,380,382,390,411,431,595,621
+openspec/specs/theme-system/spec.md
+  eddd1b8838fd2358 1-84
+src/App.tsx
+  2f5331d7ed23c123 2,6,66-73,144-160
+openspec/specs/file-preview/spec.md
+  eddd1b8838fd2358 23,40-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "932e210bd57096940aded21cfe342dc9d776542b",
+  "prompts": {
+    "2f5331d7ed23c123": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e7499d3ffeFTy7P0E5hT25Gj",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1572,
+      "total_deletions": 73,
+      "accepted_lines": 1529,
+      "overriden_lines": 14
+    },
+    "eddd1b8838fd2358": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e362189ffeKH3g9rlq7E86ej",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 135,
+      "total_deletions": 1,
+      "accepted_lines": 135,
+      "overriden_lines": 0
+    }
+  }
+}
