@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Terminal } from '@xterm/xterm';
-import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { useTheme } from '../ThemeContext';
 import type { ITheme } from '@xterm/xterm';
@@ -58,6 +57,53 @@ function getXtermTheme(theme: 'light' | 'dark'): ITheme {
   return theme === 'dark' ? DARK_THEME : LIGHT_THEME;
 }
 
+/**
+ * Custom fit that measures the **actual** scrollbar width instead of using
+ * FitAddon's hardcoded `DEFAULT_SCROLL_BAR_WIDTH` (~14 px).
+ *
+ * On macOS the scrollbar is an overlay that occupies 0 px of layout space,
+ * but FitAddon always subtracts ~14 px when `scrollback > 0`, which causes
+ * the terminal canvas to be narrower than its container.
+ */
+function fitTerminal(terminal: Terminal): void {
+  if (!terminal.element || !terminal.element.parentElement) return;
+
+  // Access private render-service dimensions (same approach as FitAddon)
+  const core = (terminal as any)._core;
+  const dims = core._renderService.dimensions;
+
+  if (dims.css.cell.width === 0 || dims.css.cell.height === 0) return;
+
+  // Measure *real* scrollbar width from the viewport element
+  const viewport = terminal.element.querySelector('.xterm-viewport') as HTMLElement | null;
+  const scrollbarWidth = viewport ? viewport.offsetWidth - viewport.clientWidth : 0;
+
+  const parentStyle = window.getComputedStyle(terminal.element.parentElement);
+  const parentWidth = Math.max(0, parseInt(parentStyle.getPropertyValue('width')));
+  const parentHeight = parseInt(parentStyle.getPropertyValue('height'));
+
+  const elemStyle = window.getComputedStyle(terminal.element);
+  const paddingHor =
+    parseInt(elemStyle.getPropertyValue('padding-right')) +
+    parseInt(elemStyle.getPropertyValue('padding-left'));
+  const paddingVer =
+    parseInt(elemStyle.getPropertyValue('padding-top')) +
+    parseInt(elemStyle.getPropertyValue('padding-bottom'));
+
+  const availableWidth = parentWidth - paddingHor - scrollbarWidth;
+  const availableHeight = parentHeight - paddingVer;
+
+  const cols = Math.max(2, Math.floor(availableWidth / dims.css.cell.width));
+  const rows = Math.max(1, Math.floor(availableHeight / dims.css.cell.height));
+
+  if (isNaN(cols) || isNaN(rows)) return;
+
+  if (terminal.rows !== rows || terminal.cols !== cols) {
+    core._renderService.clear();
+    terminal.resize(cols, rows);
+  }
+}
+
 interface TerminalInstanceProps {
   sessionId: string;
   isActive: boolean;
@@ -66,7 +112,6 @@ interface TerminalInstanceProps {
 const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
   const initializedRef = useRef(false);
   const { theme } = useTheme();
 
@@ -85,13 +130,28 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
     });
     terminalRef.current = terminal;
 
-    const fitAddon = new FitAddon();
-    fitAddonRef.current = fitAddon;
-    terminal.loadAddon(fitAddon);
     terminal.loadAddon(new WebLinksAddon());
 
     terminal.open(containerRef.current);
-    fitAddon.fit();
+
+    // xterm's renderer may not have finished measuring cell dimensions
+    // right after open() (font loading, first paint, etc.).  Poll via
+    // requestAnimationFrame until dimensions are available, then fit.
+    let fitRetries = 0;
+    const MAX_FIT_RETRIES = 30; // ~500 ms at 60 fps
+    const scheduleInitialFit = () => {
+      requestAnimationFrame(() => {
+        if (!terminalRef.current) return;
+        const core = (terminalRef.current as any)._core;
+        const d = core._renderService?.dimensions;
+        if (d && d.css.cell.width > 0 && d.css.cell.height > 0) {
+          fitTerminal(terminalRef.current);
+        } else if (++fitRetries < MAX_FIT_RETRIES) {
+          scheduleInitialFit();
+        }
+      });
+    };
+    scheduleInitialFit();
 
     // User input → PTY stdin
     terminal.onData((data: string) => {
@@ -121,9 +181,12 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
       },
     );
 
-    // Resize handling
+    // Resize handling — use rAF so the browser has finished layout before
+    // we measure container dimensions.
     const handleResize = () => {
-      fitAddonRef.current?.fit();
+      requestAnimationFrame(() => {
+        if (terminalRef.current) fitTerminal(terminalRef.current);
+      });
     };
 
     const resizeObserver = new ResizeObserver(handleResize);
@@ -141,10 +204,10 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
 
   // Re-fit when becoming active (task 1.3)
   useEffect(() => {
-    if (isActive && fitAddonRef.current) {
+    if (isActive && terminalRef.current) {
       // Small delay to ensure the container is visible before fitting
       requestAnimationFrame(() => {
-        fitAddonRef.current?.fit();
+        if (terminalRef.current) fitTerminal(terminalRef.current);
       });
     }
   }, [isActive]);
@@ -164,7 +227,7 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
         visibility: isActive ? 'visible' : 'hidden',
         position: 'absolute',
         top: 0,
-        left: 8,
+        left: 0,
         right: 0,
         bottom: 0,
         pointerEvents: isActive ? 'auto' : 'none',
