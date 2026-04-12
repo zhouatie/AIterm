@@ -7,6 +7,7 @@ import {
   FileText,
   ChevronsDownUp,
   ChevronsUpDown,
+  Loader2,
 } from 'lucide-react';
 import type { DirEntry } from '../preload';
 
@@ -406,7 +407,26 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
 
   if (loading) {
     return (
-      <div style={{ padding: 12, fontSize: 13, color: '#999' }}>Loading...</div>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Toolbar
+          onExpandAll={handleExpandAll}
+          onCollapseAll={handleCollapseAll}
+          allExpanded={allExpanded}
+        />
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Loader2
+            size={20}
+            style={{ color: '#999', animation: 'spin 1s linear infinite' }}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -419,7 +439,16 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
       />
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {nodes.length === 0 ? (
-          <div style={{ padding: 12, fontSize: 13, color: '#999' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              fontSize: 13,
+              color: '#999',
+            }}
+          >
             No Markdown files found
           </div>
         ) : (

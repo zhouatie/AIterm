@@ -86,6 +86,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId }) 
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: '#ffffff',
+        // Leave room for macOS traffic lights (hiddenInset title bar)
+        paddingTop: 38,
       }}
     >
       {/* File tree (includes its own toolbar) */}
@@ -97,7 +99,16 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId }) 
             onSelectFile={handleSelectFile}
           />
         ) : (
-          <div style={{ padding: 12, fontSize: 13, color: '#999' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              fontSize: 13,
+              color: '#999',
+            }}
+          >
             Waiting for terminal...
           </div>
         )}

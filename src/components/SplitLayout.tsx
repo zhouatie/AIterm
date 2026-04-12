@@ -7,6 +7,8 @@ interface SplitLayoutProps {
   minLeftPx?: number;
   minRightPx?: number;
   onResize?: () => void;
+  /** Add a subtle shadow between panes for depth separation */
+  shadow?: boolean;
 }
 
 /**
@@ -22,6 +24,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
   minLeftPx = 200,
   minRightPx = 400,
   onResize,
+  shadow = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [leftPercent, setLeftPercent] = useState(defaultLeftPercent);
@@ -136,6 +139,9 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           flex: 1,
           height: '100%',
           overflow: 'hidden',
+          ...(shadow
+            ? { boxShadow: '-2px 0 6px rgba(0, 0, 0, 0.06)', zIndex: 1 }
+            : {}),
         }}
       >
         {right}

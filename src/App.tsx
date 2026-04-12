@@ -67,6 +67,7 @@ const AppContent: React.FC = () => {
         left={<FilePreviewPanel activeSessionId={activeSessionId} />}
         right={<PanelContainer />}
         defaultLeftPercent={50}
+        shadow
       />
     </div>
   );
