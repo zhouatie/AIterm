@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Plus, X } from 'lucide-react';
 
 export interface TabInfo {
@@ -33,7 +33,8 @@ const styles = {
     alignItems: 'center',
     gap: 6,
     height: '100%',
-    overflow: 'hidden',
+    overflowX: 'auto' as const,
+    overflowY: 'hidden' as const,
     flex: 1,
     WebkitAppRegion: 'no-drag' as const,
   },
@@ -52,6 +53,7 @@ const styles = {
     transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease',
     position: 'relative' as const,
     whiteSpace: 'nowrap' as const,
+    flexShrink: 0,
   },
   tabActive: {
     color: 'var(--color-text-primary)',
@@ -108,6 +110,43 @@ const TerminalTabBar: React.FC<TerminalTabBarProps> = ({
   onNew,
 }) => {
   const closeBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const tabListRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const prevTabCountRef = useRef(tabs.length);
+
+  // Wheel handler: map vertical scroll to horizontal scroll
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const el = tabListRef.current;
+    if (!el) return;
+    if (e.deltaY !== 0) {
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    }
+  }, []);
+
+  // Auto-scroll to rightmost when a new tab is added
+  useEffect(() => {
+    if (tabs.length > prevTabCountRef.current) {
+      const el = tabListRef.current;
+      if (el) {
+        requestAnimationFrame(() => {
+          el.scrollLeft = el.scrollWidth;
+        });
+      }
+    }
+    prevTabCountRef.current = tabs.length;
+  }, [tabs.length]);
+
+  // Auto-scroll active tab into view when it changes
+  useEffect(() => {
+    if (!activeTabId) return;
+    const tabEl = tabRefs.current.get(activeTabId);
+    if (tabEl) {
+      requestAnimationFrame(() => {
+        tabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      });
+    }
+  }, [activeTabId]);
 
   const handleTabMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>, tabId: string, isActive: boolean) => {
     const el = e.currentTarget;
@@ -147,12 +186,16 @@ const TerminalTabBar: React.FC<TerminalTabBarProps> = ({
 
   return (
     <div style={styles.tabBar}>
-      <div style={styles.tabList}>
+      <div className="terminal-tab-list" ref={tabListRef} style={styles.tabList} onWheel={handleWheel}>
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           return (
             <div
               key={tab.id}
+              ref={(el) => {
+                if (el) tabRefs.current.set(tab.id, el);
+                else tabRefs.current.delete(tab.id);
+              }}
               style={{
                 ...styles.tab,
                 ...(isActive ? styles.tabActive : {}),

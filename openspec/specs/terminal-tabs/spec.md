@@ -45,6 +45,16 @@
 - **THEN** 该 Tab SHALL 恢复至 `scale(1.0)`
 - **THEN** 缩放过渡时长 SHALL 为 150ms
 
+#### Scenario: Tab 溢出时横向滚动
+- **WHEN** Tab 数量超出 Tab 栏可视宽度
+- **THEN** Tab 列表容器 SHALL 支持横向滚动，用户可通过鼠标滚轮浏览所有 Tab
+- **THEN** 横向滚动条 SHALL 被隐藏，不可见
+
+#### Scenario: 鼠标滚轮横向滚动
+- **WHEN** 用户在 Tab 列表区域使用鼠标纵向滚轮
+- **THEN** 系统 SHALL 将纵向滚动量映射为横向滚动，实现 Tab 栏横向移动
+- **THEN** 系统 SHALL 阻止该区域的默认纵向滚动行为
+
 ### Requirement: 新建终端 Tab
 用户 SHALL 能够通过点击新建按钮创建新的终端 Tab。
 
@@ -133,3 +143,15 @@
 #### Scenario: 新建按钮悬停
 - **WHEN** 用户鼠标悬停在新建按钮上
 - **THEN** 新建按钮 SHALL 显示背景高亮（`--color-bg-hover`）
+
+### Requirement: Tab 自动滚动到可视区域
+当新建或切换 Tab 时，系统 SHALL 自动将目标 Tab 滚动到可视区域内。
+
+#### Scenario: 新建 Tab 后自动滚动
+- **WHEN** 用户新建一个 Tab
+- **THEN** Tab 列表 SHALL 自动滚动到最右侧，确保新建的 Tab 可见
+
+#### Scenario: 切换到不可见 Tab 时自动滚动
+- **WHEN** 用户点击或通过其他方式切换到一个当前不在可视区域内的 Tab
+- **THEN** 系统 SHALL 将目标 Tab 平滑滚动到可视区域内
+- **THEN** 若目标 Tab 已在可视区域内，SHALL 不产生滚动

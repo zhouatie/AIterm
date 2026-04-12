@@ -192,6 +192,14 @@ html, body {
   background: transparent;
 }
 
+/* --- Tab List: Hide Scrollbar --- */
+.terminal-tab-list {
+  scrollbar-width: none; /* Firefox */
+}
+.terminal-tab-list::-webkit-scrollbar {
+  display: none; /* Chromium / Electron */
+}
+
 /* Spinner animation for loading indicators */
 @keyframes spin {
   from { transform: rotate(0deg); }
