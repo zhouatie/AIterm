@@ -130,7 +130,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           style={{
             width: showAccent ? 2 : 1,
             height: '100%',
-            backgroundColor: showAccent ? '#007fd4' : '#e5e5e5',
+            backgroundColor: showAccent ? 'var(--color-accent-divider)' : 'var(--color-border-secondary)',
             transition: 'background-color 0.15s, width 0.15s',
             borderRadius: showAccent ? 1 : 0,
           }}
@@ -145,7 +145,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           height: '100%',
           overflow: 'hidden',
           ...(shadow
-            ? { boxShadow: '-2px 0 6px rgba(0, 0, 0, 0.06)', zIndex: 1 }
+            ? { boxShadow: '-2px 0 6px var(--color-shadow)', zIndex: 1 }
             : {}),
         }}
       >

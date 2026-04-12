@@ -128,7 +128,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'var(--color-bg-primary)',
       }}
     >
       {/* File tree (includes its own toolbar with refresh) */}
@@ -150,7 +150,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
               justifyContent: 'center',
               height: '100%',
               fontSize: 13,
-              color: '#999',
+              color: 'var(--color-text-muted)',
             }}
           >
             Waiting for terminal...
@@ -169,7 +169,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
-            color: '#999',
+            color: 'var(--color-text-muted)',
             fontSize: 13,
           }}
         >

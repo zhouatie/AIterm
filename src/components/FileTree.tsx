@@ -49,8 +49,8 @@ function toTreeNodes(scanNodes: ScanTreeNode[]): TreeNode[] {
 
 const INDENT_PX = 20;
 const ICON_SIZE = 15;
-const ICON_COLOR = '#8b8b8b';
-const ICON_COLOR_ACTIVE = '#5a5a5a';
+const ICON_COLOR = 'var(--color-icon-default)';
+const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
 const ROW_HEIGHT = 28;
 const CONTEXT_MENU_WIDTH = 180;
 const CONTEXT_MENU_ITEM_HEIGHT = 30;
@@ -136,7 +136,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
     height: CONTEXT_MENU_ITEM_HEIGHT,
     padding: '0 12px',
     fontSize: 12,
-    color: '#333',
+    color: 'var(--color-text-secondary)',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
     borderRadius: 3,
@@ -150,10 +150,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
         left: adjustedX,
         top: adjustedY,
         width: CONTEXT_MENU_WIDTH,
-        backgroundColor: '#ffffff',
-        border: '1px solid #e0e0e0',
+        backgroundColor: 'var(--color-bg-primary)',
+        border: '1px solid var(--color-border-primary)',
         borderRadius: 6,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        boxShadow: '0 2px 8px var(--color-shadow-heavy)',
         padding: '4px 0',
         zIndex: 9999,
         userSelect: 'none',
@@ -175,7 +175,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
         style={menuItemStyle}
         onClick={handleCopyRelativePath}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#f0f0f0';
+          e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
@@ -187,7 +187,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
         style={menuItemStyle}
         onClick={handleCopyAbsolutePath}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#f0f0f0';
+          e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
@@ -243,7 +243,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpand
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = '#f0f0f0';
+    e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
     e.currentTarget.style.color = ICON_COLOR_ACTIVE;
   };
 
@@ -263,7 +263,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpand
         justifyContent: 'flex-end',
         gap: 2,
         padding: '4px 8px',
-        borderBottom: '1px solid #e8e8e8',
+        borderBottom: '1px solid var(--color-border-light)',
         flexShrink: 0,
       }}
     >

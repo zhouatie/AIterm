@@ -37,8 +37,8 @@ const INITIAL_PANELS: PanelDefinition[] = [
   { id: TERMINAL_PANEL_ID, component: ConnectedTerminalPanel },
 ];
 
-const ICON_COLOR = '#8b8b8b';
-const ICON_COLOR_ACTIVE = '#5a5a5a';
+const ICON_COLOR = 'var(--color-icon-default)';
+const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
 
 // Height of the dedicated title bar area (houses traffic lights + sidebar toggle)
 const TITLE_BAR_HEIGHT = 38;
@@ -100,7 +100,7 @@ const AppContent: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'var(--color-bg-primary)',
       }}
     >
       {/* Title bar — drag region, houses macOS traffic lights + sidebar toggle */}
@@ -112,8 +112,8 @@ const AppContent: React.FC = () => {
           alignItems: 'center',
           // 78px = traffic lights (~64px) + 14px harmonious gap
           paddingLeft: 78,
-          backgroundColor: '#f5f5f5',
-          borderBottom: '1px solid #e0e0e0',
+          backgroundColor: 'var(--color-bg-secondary)',
+          borderBottom: '1px solid var(--color-border-primary)',
           WebkitAppRegion: 'drag',
         } as React.CSSProperties}
       >
@@ -122,7 +122,7 @@ const AppContent: React.FC = () => {
           title={panelVisible ? 'Hide Sidebar' : 'Show Sidebar'}
           style={toggleButtonStyle}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#f0f0f0';
+            e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
             e.currentTarget.style.color = ICON_COLOR_ACTIVE;
           }}
           onMouseLeave={(e) => {

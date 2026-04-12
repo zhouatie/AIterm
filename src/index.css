@@ -1,3 +1,130 @@
+/* --- Theme Variables --- */
+:root {
+  /* Backgrounds */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f5f5f5;
+  --color-bg-tertiary: #f0f0f0;
+  --color-bg-hover: #f0f0f0;
+  --color-bg-selected: #e8f0fe;
+  --color-bg-code: #f6f8fa;
+
+  /* Text */
+  --color-text-primary: #1e1e1e;
+  --color-text-secondary: #333333;
+  --color-text-tertiary: #666666;
+  --color-text-muted: #999999;
+  --color-text-heading: #1a1a1a;
+  --color-text-body: #24292e;
+
+  /* Borders */
+  --color-border-primary: #e0e0e0;
+  --color-border-secondary: #e5e5e5;
+  --color-border-light: #e8e8e8;
+  --color-border-heading: #eaecef;
+  --color-border-table: #dfe2e5;
+
+  /* Accent */
+  --color-accent-primary: #0451a5;
+  --color-accent-link: #0366d6;
+  --color-accent-divider: #007fd4;
+
+  /* Icons */
+  --color-icon-default: #8b8b8b;
+  --color-icon-active: #5a5a5a;
+  --color-icon-folder: #dcb67a;
+  --color-icon-chevron: #999999;
+
+  /* Misc */
+  --color-guide-line: #e4e4e4;
+  --color-blockquote-text: #6a737d;
+  --color-blockquote-border: #dfe2e5;
+  --color-hr: #e1e4e8;
+  --color-shadow: rgba(0, 0, 0, 0.06);
+  --color-shadow-heavy: rgba(0, 0, 0, 0.15);
+
+  /* highlight.js */
+  --hljs-color: #24292e;
+  --hljs-bg: #f6f8fa;
+  --hljs-comment: #6a737d;
+  --hljs-keyword: #d73a49;
+  --hljs-number: #005cc5;
+  --hljs-string: #032f62;
+  --hljs-title: #6f42c1;
+  --hljs-type: #6f42c1;
+  --hljs-tag: #22863a;
+  --hljs-regexp: #032f62;
+  --hljs-symbol: #e36209;
+  --hljs-built-in: #005cc5;
+  --hljs-meta: #735c0f;
+  --hljs-deletion-color: #b31d28;
+  --hljs-deletion-bg: #ffeef0;
+  --hljs-addition-color: #22863a;
+  --hljs-addition-bg: #f0fff4;
+}
+
+[data-theme="dark"] {
+  /* Backgrounds */
+  --color-bg-primary: #1e1e1e;
+  --color-bg-secondary: #252526;
+  --color-bg-tertiary: #2d2d2d;
+  --color-bg-hover: #2d2d2d;
+  --color-bg-selected: #094771;
+  --color-bg-code: #2d2d2d;
+
+  /* Text */
+  --color-text-primary: #cccccc;
+  --color-text-secondary: #cccccc;
+  --color-text-tertiary: #aaaaaa;
+  --color-text-muted: #808080;
+  --color-text-heading: #e0e0e0;
+  --color-text-body: #d4d4d4;
+
+  /* Borders */
+  --color-border-primary: #3c3c3c;
+  --color-border-secondary: #3c3c3c;
+  --color-border-light: #333333;
+  --color-border-heading: #3c3c3c;
+  --color-border-table: #3c3c3c;
+
+  /* Accent */
+  --color-accent-primary: #3794ff;
+  --color-accent-link: #3794ff;
+  --color-accent-divider: #007fd4;
+
+  /* Icons */
+  --color-icon-default: #808080;
+  --color-icon-active: #cccccc;
+  --color-icon-folder: #dcb67a;
+  --color-icon-chevron: #808080;
+
+  /* Misc */
+  --color-guide-line: #3c3c3c;
+  --color-blockquote-text: #808080;
+  --color-blockquote-border: #3c3c3c;
+  --color-hr: #3c3c3c;
+  --color-shadow: rgba(0, 0, 0, 0.2);
+  --color-shadow-heavy: rgba(0, 0, 0, 0.4);
+
+  /* highlight.js dark */
+  --hljs-color: #d4d4d4;
+  --hljs-bg: #2d2d2d;
+  --hljs-comment: #6a9955;
+  --hljs-keyword: #569cd6;
+  --hljs-number: #b5cea8;
+  --hljs-string: #ce9178;
+  --hljs-title: #dcdcaa;
+  --hljs-type: #4ec9b0;
+  --hljs-tag: #569cd6;
+  --hljs-regexp: #d16969;
+  --hljs-symbol: #d7ba7d;
+  --hljs-built-in: #4ec9b0;
+  --hljs-meta: #d7ba7d;
+  --hljs-deletion-color: #ce9178;
+  --hljs-deletion-bg: #6c1717;
+  --hljs-addition-color: #b5cea8;
+  --hljs-addition-bg: #1e3a1e;
+}
+
 /* Reset */
 *, *::before, *::after {
   margin: 0;
@@ -9,8 +136,9 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: var(--color-bg-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-text-primary);
 }
 
 #root {
@@ -29,7 +157,7 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   font-size: 15px;
   line-height: 1.7;
-  color: #24292e;
+  color: var(--color-text-body);
   word-wrap: break-word;
 }
 
@@ -43,11 +171,11 @@ html, body {
   margin-bottom: 16px;
   font-weight: 600;
   line-height: 1.25;
-  color: #1a1a1a;
+  color: var(--color-text-heading);
 }
 
-.markdown-body h1 { font-size: 1.8em; padding-bottom: 0.3em; border-bottom: 1px solid #eaecef; }
-.markdown-body h2 { font-size: 1.4em; padding-bottom: 0.3em; border-bottom: 1px solid #eaecef; }
+.markdown-body h1 { font-size: 1.8em; padding-bottom: 0.3em; border-bottom: 1px solid var(--color-border-heading); }
+.markdown-body h2 { font-size: 1.4em; padding-bottom: 0.3em; border-bottom: 1px solid var(--color-border-heading); }
 .markdown-body h3 { font-size: 1.15em; }
 .markdown-body h4 { font-size: 1em; }
 
@@ -57,7 +185,7 @@ html, body {
 }
 
 .markdown-body a {
-  color: #0366d6;
+  color: var(--color-accent-link);
   text-decoration: none;
 }
 
@@ -82,14 +210,14 @@ html, body {
 .markdown-body blockquote {
   padding: 0 1em;
   margin: 0 0 16px;
-  color: #6a737d;
-  border-left: 4px solid #dfe2e5;
+  color: var(--color-blockquote-text);
+  border-left: 4px solid var(--color-blockquote-border);
 }
 
 .markdown-body code {
   padding: 0.2em 0.4em;
   font-size: 85%;
-  background-color: #f6f8fa;
+  background-color: var(--color-bg-code);
   border-radius: 3px;
   font-family: 'JetBrainsMono Nerd Font', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
@@ -99,7 +227,7 @@ html, body {
   overflow: auto;
   font-size: 85%;
   line-height: 1.45;
-  background-color: #f6f8fa;
+  background-color: var(--color-bg-code);
   border-radius: 6px;
   margin-bottom: 16px;
 }
@@ -121,22 +249,22 @@ html, body {
 .markdown-body table th,
 .markdown-body table td {
   padding: 6px 13px;
-  border: 1px solid #dfe2e5;
+  border: 1px solid var(--color-border-table);
 }
 
 .markdown-body table th {
   font-weight: 600;
-  background-color: #f6f8fa;
+  background-color: var(--color-bg-code);
 }
 
 .markdown-body table tr:nth-child(2n) {
-  background-color: #f6f8fa;
+  background-color: var(--color-bg-code);
 }
 
 .markdown-body hr {
   height: 2px;
   margin: 24px 0;
-  background-color: #e1e4e8;
+  background-color: var(--color-hr);
   border: 0;
 }
 
@@ -150,67 +278,67 @@ html, body {
   margin-right: 0.5em;
 }
 
-/* --- highlight.js Light Theme (GitHub-like) --- */
+/* --- highlight.js Theme (adapts via CSS variables) --- */
 .hljs {
-  color: #24292e;
-  background: #f6f8fa;
+  color: var(--hljs-color);
+  background: var(--hljs-bg);
 }
 .hljs-comment,
 .hljs-quote {
-  color: #6a737d;
+  color: var(--hljs-comment);
   font-style: italic;
 }
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-subst {
-  color: #d73a49;
+  color: var(--hljs-keyword);
 }
 .hljs-number,
 .hljs-literal,
 .hljs-variable,
 .hljs-template-variable,
 .hljs-tag .hljs-attr {
-  color: #005cc5;
+  color: var(--hljs-number);
 }
 .hljs-string,
 .hljs-doctag {
-  color: #032f62;
+  color: var(--hljs-string);
 }
 .hljs-title,
 .hljs-section,
 .hljs-selector-id {
-  color: #6f42c1;
+  color: var(--hljs-title);
   font-weight: bold;
 }
 .hljs-type,
 .hljs-class .hljs-title {
-  color: #6f42c1;
+  color: var(--hljs-type);
 }
 .hljs-tag,
 .hljs-name,
 .hljs-attribute {
-  color: #22863a;
+  color: var(--hljs-tag);
 }
 .hljs-regexp,
 .hljs-link {
-  color: #032f62;
+  color: var(--hljs-regexp);
 }
 .hljs-symbol,
 .hljs-bullet {
-  color: #e36209;
+  color: var(--hljs-symbol);
 }
 .hljs-built_in,
 .hljs-builtin-name {
-  color: #005cc5;
+  color: var(--hljs-built-in);
 }
 .hljs-meta {
-  color: #735c0f;
+  color: var(--hljs-meta);
 }
 .hljs-deletion {
-  color: #b31d28;
-  background-color: #ffeef0;
+  color: var(--hljs-deletion-color);
+  background-color: var(--hljs-deletion-bg);
 }
 .hljs-addition {
-  color: #22863a;
-  background-color: #f0fff4;
+  color: var(--hljs-addition-color);
+  background-color: var(--hljs-addition-bg);
 }

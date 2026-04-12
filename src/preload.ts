@@ -107,3 +107,12 @@ contextBridge.exposeInMainWorld('fileApi', {
   showInFolder: (filePath: string) =>
     ipcRenderer.send('fs:show-in-folder', { filePath }),
 } satisfies FileApi);
+
+export interface ThemeApi {
+  setNativeTheme(mode: 'light' | 'dark' | 'system'): void;
+}
+
+contextBridge.exposeInMainWorld('themeApi', {
+  setNativeTheme: (mode: 'light' | 'dark' | 'system') =>
+    ipcRenderer.send('theme:set', { mode }),
+} satisfies ThemeApi);

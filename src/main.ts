@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, nativeTheme } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { execFile, execFileSync } from 'node:child_process';
@@ -546,6 +546,11 @@ ipcMain.handle('fs:scan-all-files', async (_event, { rootPath: dirPath }: { root
 });
 
 // --- App Lifecycle ---
+
+// theme:set — sync Electron native theme with renderer
+ipcMain.on('theme:set', (_event, { mode }: { mode: 'light' | 'dark' | 'system' }) => {
+  nativeTheme.themeSource = mode;
+});
 
 app.on('ready', () => {
   fdPath = detectFd();

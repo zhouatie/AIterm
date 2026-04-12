@@ -20,9 +20,9 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     height: TAB_BAR_HEIGHT,
-    borderBottom: '1px solid #e0e0e0',
-    backgroundColor: '#f5f5f5',
-    paddingLeft: 8, // small breathing room
+    borderBottom: '1px solid var(--color-border-primary)',
+    backgroundColor: 'var(--color-bg-secondary)',
+    paddingLeft: 8, // small breathing room (traffic lights handled by title bar)
     userSelect: 'none' as const,
     WebkitAppRegion: 'drag' as const,
     flexShrink: 0,
@@ -41,18 +41,18 @@ const styles = {
     gap: 6,
     padding: '0 12px',
     fontSize: 12,
-    color: '#666',
+    color: 'var(--color-text-tertiary)',
     cursor: 'pointer',
-    borderRight: '1px solid #e0e0e0',
+    borderRight: '1px solid var(--color-border-primary)',
     backgroundColor: 'transparent',
     transition: 'background-color 0.1s',
     position: 'relative' as const,
     whiteSpace: 'nowrap' as const,
   },
   tabActive: {
-    color: '#1e1e1e',
-    backgroundColor: '#ffffff',
-    borderBottom: '2px solid #0451a5',
+    color: 'var(--color-text-primary)',
+    backgroundColor: 'var(--color-bg-primary)',
+    borderBottom: '2px solid var(--color-accent-primary)',
   },
   tabName: {
     pointerEvents: 'none' as const,
@@ -66,7 +66,7 @@ const styles = {
     borderRadius: 4,
     border: 'none',
     backgroundColor: 'transparent',
-    color: '#999',
+    color: 'var(--color-text-muted)',
     fontSize: 14,
     lineHeight: 1,
     cursor: 'pointer',
@@ -82,7 +82,7 @@ const styles = {
     marginLeft: 4,
     border: 'none',
     backgroundColor: 'transparent',
-    color: '#666',
+    color: 'var(--color-text-tertiary)',
     fontSize: 18,
     cursor: 'pointer',
     borderRadius: 4,
@@ -120,12 +120,12 @@ const TerminalTabBar: React.FC<TerminalTabBarProps> = ({
                   onClose(tab.id);
                 }}
                 onMouseEnter={(e) => {
-                  (e.target as HTMLElement).style.backgroundColor = '#e0e0e0';
-                  (e.target as HTMLElement).style.color = '#333';
+                  (e.target as HTMLElement).style.backgroundColor = 'var(--color-bg-hover)';
+                  (e.target as HTMLElement).style.color = 'var(--color-text-secondary)';
                 }}
                 onMouseLeave={(e) => {
                   (e.target as HTMLElement).style.backgroundColor = 'transparent';
-                  (e.target as HTMLElement).style.color = '#999';
+                  (e.target as HTMLElement).style.color = 'var(--color-text-muted)';
                 }}
               >
                 ×
@@ -138,7 +138,7 @@ const TerminalTabBar: React.FC<TerminalTabBarProps> = ({
         style={styles.newBtn}
         onClick={onNew}
         onMouseEnter={(e) => {
-          (e.target as HTMLElement).style.backgroundColor = '#e0e0e0';
+          (e.target as HTMLElement).style.backgroundColor = 'var(--color-bg-hover)';
         }}
         onMouseLeave={(e) => {
           (e.target as HTMLElement).style.backgroundColor = 'transparent';
