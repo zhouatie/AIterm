@@ -1,0 +1,71 @@
+## ADDED Requirements
+
+### Requirement: 创建终端会话
+系统 SHALL 支持通过 IPC 创建一个终端会话，在主进程中 spawn 一个 PTY 进程并连接到用户默认 shell。
+
+#### Scenario: 创建终端
+- **WHEN** 渲染进程发送 `terminal:create` 请求
+- **THEN** 主进程 SHALL 使用 node-pty 创建一个新的 PTY 实例，spawn 用户默认 shell（如 `/bin/zsh`），并返回会话标识符
+
+#### Scenario: 继承环境变量
+- **WHEN** PTY 进程被创建
+- **THEN** SHALL 继承当前系统环境变量，确保 PATH 等关键变量可用
+
+### Requirement: 终端输入传输
+用户在 xterm.js 中的按键输入 SHALL 通过 IPC 传输到主进程的 PTY stdin。
+
+#### Scenario: 普通字符输入
+- **WHEN** 用户在终端面板中输入字符
+- **THEN** 字符 SHALL 通过 `terminal:input` IPC 通道发送到对应 PTY 的 stdin
+
+#### Scenario: 特殊按键
+- **WHEN** 用户按下 Ctrl+C、Ctrl+D 等控制键
+- **THEN** 对应的控制序列 SHALL 正确传输到 PTY
+
+### Requirement: 终端输出渲染
+PTY 进程的 stdout 输出 SHALL 通过 IPC 传输到渲染进程，并由 xterm.js 渲染。
+
+#### Scenario: 命令输出
+- **WHEN** PTY 进程产生输出（如命令执行结果）
+- **THEN** 输出数据 SHALL 通过 `terminal:output` IPC 事件推送到渲染进程，由 xterm.js 渲染
+
+#### Scenario: ANSI 颜色
+- **WHEN** PTY 输出包含 ANSI 转义序列（颜色、样式等）
+- **THEN** xterm.js SHALL 正确渲染对应的颜色和样式
+
+### Requirement: 终端尺寸同步
+当终端面板尺寸变化时，系统 SHALL 将新的行列数同步到 PTY 进程。
+
+#### Scenario: 窗口缩放
+- **WHEN** 用户调整应用窗口大小导致终端面板尺寸变化
+- **THEN** 渲染进程 SHALL 通过 `terminal:resize` 通知主进程新的 cols/rows，PTY SHALL 同步更新尺寸
+
+#### Scenario: 全屏 TUI 应用适配
+- **WHEN** 终端中运行 vim、htop 等全屏 TUI 应用时窗口大小改变
+- **THEN** TUI 应用 SHALL 收到 SIGWINCH 信号并正确重绘
+
+### Requirement: 终端会话销毁
+系统 SHALL 支持销毁终端会话，清理 PTY 进程和相关资源。
+
+#### Scenario: 主动销毁
+- **WHEN** 渲染进程发送 `terminal:dispose` 请求
+- **THEN** 主进程 SHALL 终止对应的 PTY 进程并释放资源
+
+#### Scenario: shell 退出
+- **WHEN** PTY 中的 shell 进程正常退出（如用户输入 `exit`）
+- **THEN** 系统 SHALL 通知渲染进程会话已结束
+
+### Requirement: xterm.js 终端 UI
+渲染进程 SHALL 使用 xterm.js 提供终端 UI，支持基本的终端交互体验。
+
+#### Scenario: 终端面板渲染
+- **WHEN** 终端面板挂载到 DOM
+- **THEN** xterm.js SHALL 初始化并占满面板可用空间
+
+#### Scenario: 滚动回看
+- **WHEN** 终端输出超过可视区域
+- **THEN** 用户 SHALL 能通过滚动查看历史输出
+
+#### Scenario: 文本选择与复制
+- **WHEN** 用户在终端中用鼠标选择文本
+- **THEN** 选中文本 SHALL 可以通过 ⌘+C 复制到系统剪贴板
