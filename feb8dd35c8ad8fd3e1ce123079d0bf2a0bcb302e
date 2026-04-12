@@ -1,0 +1,38 @@
+src/components/TerminalInstance.tsx
+  c97b8bdf12d50ab1 60-106,136-154,184-185,187-189,207,210,230
+openspec/specs/embedded-terminal/spec.md
+  d4ced81edec47110 68-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "feb8dd35c8ad8fd3e1ce123079d0bf2a0bcb302e",
+  "prompts": {
+    "c97b8bdf12d50ab1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27de2fa40ffeUK1OlKE14VsWxw",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 221,
+      "total_deletions": 27,
+      "accepted_lines": 74,
+      "overriden_lines": 0
+    },
+    "d4ced81edec47110": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27dc44c62ffeIzOpSiL6w3GsKc",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 0,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    }
+  }
+}
