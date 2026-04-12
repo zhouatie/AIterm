@@ -287,6 +287,7 @@ interface ScanTreeNode {
   name: string;
   path: string;
   isDirectory: boolean;
+  mtime?: number;
   children?: ScanTreeNode[];
 }
 
@@ -294,7 +295,7 @@ interface ScanTreeNode {
  * Build a nested tree structure from a list of relative file paths.
  * E.g. ["docs/a.md", "readme.md"] → tree with dirs and files.
  */
-function buildTreeFromPaths(rootPath: string, relativePaths: string[]): ScanTreeNode[] {
+async function buildTreeFromPaths(rootPath: string, relativePaths: string[]): Promise<ScanTreeNode[]> {
   interface DirBucket {
     files: Set<string>;
     subdirs: Map<string, DirBucket>;
@@ -315,32 +316,52 @@ function buildTreeFromPaths(rootPath: string, relativePaths: string[]): ScanTree
     current.files.add(parts[parts.length - 1]);
   }
 
-  function bucketToNodes(bucket: DirBucket, parentPath: string): ScanTreeNode[] {
+  async function bucketToNodes(bucket: DirBucket, parentPath: string): Promise<ScanTreeNode[]> {
     const nodes: ScanTreeNode[] = [];
 
-    // Directories first, sorted alphabetically
-    const sortedDirs = [...bucket.subdirs.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-    for (const [dirName, subBucket] of sortedDirs) {
+    // Directories
+    const dirEntries = [...bucket.subdirs.entries()];
+    const dirNodes: ScanTreeNode[] = [];
+    for (const [dirName, subBucket] of dirEntries) {
       const dirPath = `${parentPath}/${dirName}`;
-      nodes.push({
+      const children = await bucketToNodes(subBucket, dirPath);
+      let mtime: number | undefined;
+      try {
+        const stat = await fs.promises.stat(dirPath);
+        mtime = stat.mtimeMs;
+      } catch { /* ignore stat errors */ }
+      dirNodes.push({
         name: dirName,
         path: dirPath,
         isDirectory: true,
-        children: bucketToNodes(subBucket, dirPath),
+        mtime,
+        children,
       });
     }
 
-    // Files second, sorted alphabetically
-    const sortedFiles = [...bucket.files].sort((a, b) => a.localeCompare(b));
-    for (const fileName of sortedFiles) {
-      nodes.push({
+    // Files
+    const fileNames = [...bucket.files];
+    const fileNodes: ScanTreeNode[] = [];
+    for (const fileName of fileNames) {
+      const filePath = `${parentPath}/${fileName}`;
+      let mtime: number | undefined;
+      try {
+        const stat = await fs.promises.stat(filePath);
+        mtime = stat.mtimeMs;
+      } catch { /* ignore stat errors */ }
+      fileNodes.push({
         name: fileName,
-        path: `${parentPath}/${fileName}`,
+        path: filePath,
         isDirectory: false,
+        mtime,
       });
     }
 
-    return nodes;
+    // Sort: mtime descending, name as tiebreaker
+    dirNodes.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
+    fileNodes.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
+
+    return [...dirNodes, ...fileNodes];
   }
 
   return bucketToNodes(root, rootPath);
@@ -367,7 +388,7 @@ function scanAllWithFd(rootPath: string): Promise<ScanTreeNode[]> {
           return;
         }
         const lines = (stdout || '').trim().split('\n').filter(Boolean);
-        resolve(buildTreeFromPaths(rootPath, lines));
+        buildTreeFromPaths(rootPath, lines).then(resolve, reject);
       },
     );
   });
@@ -397,24 +418,28 @@ async function scanAllWithNodeFs(rootPath: string): Promise<ScanTreeNode[]> {
       if (entry.isDirectory()) {
         const children = await scanDir(entryPath);
         if (children.length > 0) {
+          const stat = await fs.promises.stat(entryPath);
           dirs.push({
             name: entry.name,
             path: entryPath,
             isDirectory: true,
+            mtime: stat.mtimeMs,
             children,
           });
         }
       } else if (entry.isFile()) {
+        const stat = await fs.promises.stat(entryPath);
         files.push({
           name: entry.name,
           path: entryPath,
           isDirectory: false,
+          mtime: stat.mtimeMs,
         });
       }
     }
 
-    dirs.sort((a, b) => a.name.localeCompare(b.name));
-    files.sort((a, b) => a.name.localeCompare(b.name));
+    dirs.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
+    files.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
     return [...dirs, ...files];
   }
 
@@ -441,7 +466,7 @@ function scanWithFd(rootPath: string): Promise<ScanTreeNode[]> {
           return;
         }
         const lines = (stdout || '').trim().split('\n').filter(Boolean);
-        resolve(buildTreeFromPaths(rootPath, lines));
+        buildTreeFromPaths(rootPath, lines).then(resolve, reject);
       },
     );
   });
@@ -468,25 +493,29 @@ async function scanWithNodeFs(rootPath: string): Promise<ScanTreeNode[]> {
         const children = await scanDir(entryPath);
         // Only include directories that contain markdown (directly or nested)
         if (children.length > 0) {
+          const stat = await fs.promises.stat(entryPath);
           dirs.push({
             name: entry.name,
             path: entryPath,
             isDirectory: true,
+            mtime: stat.mtimeMs,
             children,
           });
         }
       } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+        const stat = await fs.promises.stat(entryPath);
         files.push({
           name: entry.name,
           path: entryPath,
           isDirectory: false,
+          mtime: stat.mtimeMs,
         });
       }
     }
 
-    // Directories first, then files, both sorted alphabetically
-    dirs.sort((a, b) => a.name.localeCompare(b.name));
-    files.sort((a, b) => a.name.localeCompare(b.name));
+    // Directories first, then files, both sorted by mtime descending (name as tiebreaker)
+    dirs.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
+    files.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
     return [...dirs, ...files];
   }
 

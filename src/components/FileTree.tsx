@@ -19,6 +19,7 @@ interface TreeNode {
   name: string;
   path: string;
   isDirectory: boolean;
+  mtime?: number;
   children?: TreeNode[];
   isExpanded?: boolean;
 }
@@ -40,6 +41,7 @@ function toTreeNodes(scanNodes: ScanTreeNode[]): TreeNode[] {
     name: n.name,
     path: n.path,
     isDirectory: n.isDirectory,
+    mtime: n.mtime,
     isExpanded: false,
     children: n.children ? toTreeNodes(n.children) : undefined,
   }));

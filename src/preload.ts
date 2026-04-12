@@ -24,6 +24,7 @@ export interface ScanTreeNode {
   name: string;
   path: string;
   isDirectory: boolean;
+  mtime?: number;
   children?: ScanTreeNode[];
 }
 
