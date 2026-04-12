@@ -1,0 +1,52 @@
+openspec/specs/panel-layout/spec.md
+  56183c44e3425a6f 9,13,15,17-25
+src/components/FileTree.tsx
+  56183c44e3425a6f 10,410-429,442-451
+openspec/specs/electron-shell/spec.md
+  56183c44e3425a6f 51-71
+openspec/specs/file-preview/spec.md
+  56183c44e3425a6f 1-89
+src/index.css
+  56183c44e3425a6f 21-26
+src/components/FilePreviewPanel.tsx
+  56183c44e3425a6f 89-90,102-111
+src/components/TerminalPanel.tsx
+  56183c44e3425a6f 97
+src/components/SplitLayout.tsx
+  56183c44e3425a6f 10-11,27,142-144
+src/App.tsx
+  56183c44e3425a6f 70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "8d09b19240ab323b871cca76ba6fceda1f18b4cc",
+  "prompts": {
+    "4ea44e5c435dadd4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27edc069effe74tGu1AnMl86bT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 0,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "56183c44e3425a6f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28014c8e6ffe0t5hmw9Ah0LxBf",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 179,
+      "total_deletions": 8,
+      "accepted_lines": 179,
+      "overriden_lines": 0
+    }
+  }
+}
