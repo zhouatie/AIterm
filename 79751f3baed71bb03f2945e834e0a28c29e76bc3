@@ -1,0 +1,27 @@
+openspec/specs/electron-shell/spec.md
+  98b8c5357921c011 1-50
+openspec/specs/embedded-terminal/spec.md
+  98b8c5357921c011 1-76
+openspec/specs/panel-layout/spec.md
+  98b8c5357921c011 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "79751f3baed71bb03f2945e834e0a28c29e76bc3",
+  "prompts": {
+    "98b8c5357921c011": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27fd5fe49ffer6i7EZOJEE2pGz",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 165,
+      "total_deletions": 0,
+      "accepted_lines": 165,
+      "overriden_lines": 0
+    }
+  }
+}
