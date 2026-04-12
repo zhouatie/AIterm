@@ -1,0 +1,59 @@
+openspec/changes/support-light-dark-mode/proposal.md
+  d0e687716fcd1d8c 1-32
+openspec/changes/support-light-dark-mode/tasks.md
+  d0e687716fcd1d8c 1-48
+src/App.tsx
+  d0e687716fcd1d8c 103
+src/index.css
+  d0e687716fcd1d8c 1-127,139,141,160,174,177-178,188,213-214,220,230,252,257,261,267,281,283-284,288,294,301,305,310,315,320,324,328,332,335,338-339,342-343
+src/ThemeContext.tsx
+  d0e687716fcd1d8c 1-99
+openspec/changes/support-light-dark-mode/specs/embedded-terminal/spec.md
+  d0e687716fcd1d8c 1-32
+openspec/changes/support-light-dark-mode/specs/file-preview/spec.md
+  d0e687716fcd1d8c 1-39
+src/components/FilePreviewPanel.tsx
+  d0e687716fcd1d8c 172
+src/components/FileTree.tsx
+  d0e687716fcd1d8c 52-53,139,153-154,156,178,190,246,266
+openspec/changes/support-light-dark-mode/design.md
+  d0e687716fcd1d8c 1-77
+src/components/SplitLayout.tsx
+  d0e687716fcd1d8c 133,148
+src/main.ts
+  d0e687716fcd1d8c 550-554
+src/components/TerminalTabBar.tsx
+  d0e687716fcd1d8c 44,46,69,85,123-124,128,141
+src/global.d.ts
+  d0e687716fcd1d8c 1,7
+src/preload.ts
+  d0e687716fcd1d8c 110-118
+index.html
+  d0e687716fcd1d8c 6-18
+openspec/changes/support-light-dark-mode/specs/theme-system/spec.md
+  d0e687716fcd1d8c 1-79
+openspec/changes/support-light-dark-mode/specs/electron-shell/spec.md
+  d0e687716fcd1d8c 1-36
+openspec/changes/support-light-dark-mode/specs/panel-layout/spec.md
+  d0e687716fcd1d8c 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "1ca36134e54723a4da1a456c7d874b4d233718e1",
+  "prompts": {
+    "d0e687716fcd1d8c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e76e893ffeG3nY7d97JEZBsy",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 693,
+      "total_deletions": 67,
+      "accepted_lines": 681,
+      "overriden_lines": 0
+    }
+  }
+}
