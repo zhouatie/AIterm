@@ -1,0 +1,43 @@
+openspec/changes/optimize-file-tree/proposal.md
+  4ea44e5c435dadd4 1-27
+src/App.tsx
+  4ea44e5c435dadd4 2,34,40-62,67-71,73-80,99,106,108,112,114-130
+src/components/TerminalTabBar.tsx
+  4ea44e5c435dadd4 25
+openspec/changes/optimize-file-tree/.openspec.yaml
+  4ea44e5c435dadd4 1-2
+src/components/SplitLayout.tsx
+  4ea44e5c435dadd4 12-13,30,97,107,139
+openspec/changes/optimize-file-tree/design.md
+  4ea44e5c435dadd4 1-114
+openspec/changes/optimize-file-tree/tasks.md
+  4ea44e5c435dadd4 1-47
+src/main.ts
+  4ea44e5c435dadd4 4,253-423,426-429
+src/components/FilePreviewPanel.tsx
+  4ea44e5c435dadd4 8-9,12,19,21,23,37,39,41-42,44-46,51-53
+openspec/changes/optimize-file-tree/specs/file-preview/spec.md
+  4ea44e5c435dadd4 1-115
+src/preload.ts
+  4ea44e5c435dadd4 22-28,32,86-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "910769e5ef02b44ae6a575ada250efde9b6b754c",
+  "prompts": {
+    "4ea44e5c435dadd4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27edc069effe74tGu1AnMl86bT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1083,
+      "total_deletions": 397,
+      "accepted_lines": 878,
+      "overriden_lines": 8
+    }
+  }
+}
