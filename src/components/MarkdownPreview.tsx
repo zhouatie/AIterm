@@ -17,7 +17,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, filePath }) 
           alignItems: 'center',
           justifyContent: 'center',
           height: '100%',
-          color: '#999',
+          color: 'var(--color-text-muted)',
           fontSize: 14,
           userSelect: 'none',
         }}

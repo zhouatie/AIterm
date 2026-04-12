@@ -163,7 +163,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
         style={menuItemStyle}
         onClick={handleCopyFileName}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#f0f0f0';
+           e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
@@ -195,12 +195,12 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) =>
       >
         Copy Absolute Path
       </div>
-      <div style={{ height: 1, backgroundColor: '#e0e0e0', margin: '4px 0' }} />
+      <div style={{ height: 1, backgroundColor: 'var(--color-border-primary)', margin: '4px 0' }} />
       <div
         style={menuItemStyle}
         onClick={handleShowInFolder}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#f0f0f0';
+          e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
@@ -358,7 +358,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               top: 0,
               bottom: 0,
               width: 1,
-              backgroundColor: '#e4e4e4',
+              backgroundColor: 'var(--color-guide-line)',
             }}
           />
         )}
@@ -377,9 +377,9 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
           height: ROW_HEIGHT,
           paddingRight: 8,
           cursor: 'pointer',
-          backgroundColor: isSelected ? '#e8f0fe' : 'transparent',
+          backgroundColor: isSelected ? 'var(--color-bg-selected)' : 'transparent',
           fontSize: 13,
-          color: '#333',
+          color: 'var(--color-text-secondary)',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -387,7 +387,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
         }}
         onMouseEnter={(e) => {
           if (!isSelected) {
-            e.currentTarget.style.backgroundColor = '#f5f5f5';
+            e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
           }
         }}
         onMouseLeave={(e) => {
@@ -408,7 +408,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
             width: 16,
             height: ROW_HEIGHT,
             flexShrink: 0,
-            color: '#999',
+            color: 'var(--color-icon-chevron)',
           }}
         >
           {node.isDirectory &&
@@ -428,7 +428,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
             width: 18,
             marginRight: 5,
             flexShrink: 0,
-            color: node.isDirectory ? '#dcb67a' : ICON_COLOR,
+            color: node.isDirectory ? 'var(--color-icon-folder)' : ICON_COLOR,
           }}
         >
           {node.isDirectory ? (
@@ -592,7 +592,7 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
         >
           <Loader2
             size={20}
-            style={{ color: '#999', animation: 'spin 1s linear infinite' }}
+            style={{ color: 'var(--color-text-muted)', animation: 'spin 1s linear infinite' }}
           />
         </div>
       </div>
@@ -618,7 +618,7 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
               justifyContent: 'center',
               height: '100%',
               fontSize: 13,
-              color: '#999',
+              color: 'var(--color-text-muted)',
             }}
           >
             {mdOnly ? 'No Markdown files found' : 'No files found'}

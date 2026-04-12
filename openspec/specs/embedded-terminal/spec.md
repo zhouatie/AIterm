@@ -77,6 +77,18 @@ PTY 进程的 stdout 输出 SHALL 通过 IPC 传输到渲染进程，并由 xter
 - **WHEN** 同一面板内存在多个终端实例
 - **THEN** 每个实例 SHALL 拥有独立的 xterm.js 实例、PTY 会话和滚动缓冲区，互不干扰
 
+#### Scenario: 终端配色随主题切换
+- **WHEN** 应用主题模式发生变化（深色↔浅色）
+- **THEN** 所有已存在的 xterm.js 终端实例 SHALL 动态更新其 `options.theme` 配色方案以匹配当前主题，无需销毁重建终端实例
+
+#### Scenario: 深色模式终端配色
+- **WHEN** 当前主题模式为深色
+- **THEN** 终端 SHALL 使用深色背景、浅色前景文字及适配深色模式的 ANSI 颜色方案
+
+#### Scenario: 浅色模式终端配色
+- **WHEN** 当前主题模式为浅色
+- **THEN** 终端 SHALL 使用浅色背景、深色前景文字及适配浅色模式的 ANSI 颜色方案
+
 ### Requirement: 终端 CWD 变化通知
 当 PTY 会话的工作目录发生变化时，系统 SHALL 向渲染进程推送通知事件。
 

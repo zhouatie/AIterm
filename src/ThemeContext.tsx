@@ -66,14 +66,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const cycleTheme = useCallback(() => {
-    setMode(prev => {
-      const idx = CYCLE_ORDER.indexOf(prev);
-      return CYCLE_ORDER[(idx + 1) % CYCLE_ORDER.length];
-    });
-  }, [setMode]);
-
-  // Fix: cycleTheme uses functional update, so setMode needs to support it
-  const cycleThemeFixed = useCallback(() => {
     setModeState(prev => {
       const idx = CYCLE_ORDER.indexOf(prev);
       const next = CYCLE_ORDER[(idx + 1) % CYCLE_ORDER.length];
@@ -85,8 +77,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ mode, theme: effectiveTheme, cycleTheme: cycleThemeFixed, setMode }),
-    [mode, effectiveTheme, cycleThemeFixed, setMode],
+    () => ({ mode, theme: effectiveTheme, cycleTheme, setMode }),
+    [mode, effectiveTheme, cycleTheme, setMode],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

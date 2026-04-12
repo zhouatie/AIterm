@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SplitLayout from './components/SplitLayout';
+import { useTheme } from './ThemeContext';
 import {
   PanelManagerProvider,
   PanelContainer,
@@ -62,6 +63,14 @@ const toggleButtonStyle = {
 const AppContent: React.FC = () => {
   const { panels, switchPanel, activePanel } = usePanelManager();
   const { activeSessionId } = useActiveSession();
+  const { mode, cycleTheme } = useTheme();
+
+  // Icon and tooltip for the theme toggle button
+  const ThemeIcon = mode === 'light' ? Sun : mode === 'dark' ? Moon : Monitor;
+  const themeTitle =
+    mode === 'light' ? 'Light mode — click for Dark'
+    : mode === 'dark' ? 'Dark mode — click for System'
+    : 'System mode — click for Light';
 
   // Sidebar panel visibility — persisted in localStorage
   const [panelVisible, setPanelVisible] = useState(() => {
@@ -131,6 +140,23 @@ const AppContent: React.FC = () => {
           }}
         >
           {panelVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+        </button>
+
+        {/* Theme toggle button — cycles light → dark → system → light */}
+        <button
+          onClick={cycleTheme}
+          title={themeTitle}
+          style={{ ...toggleButtonStyle, marginLeft: 4 }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+            e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = ICON_COLOR;
+          }}
+        >
+          <ThemeIcon size={16} />
         </button>
       </div>
 

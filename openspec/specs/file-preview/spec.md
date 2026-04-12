@@ -20,7 +20,7 @@
 
 #### Scenario: 选中文件高亮
 - **WHEN** 用户点击一个文件节点
-- **THEN** 该文件 SHALL 显示选中高亮状态，且触发 Markdown 预览加载
+- **THEN** 该文件 SHALL 显示选中高亮状态，高亮颜色 SHALL 使用主题变量而非硬编码值
 
 ### Requirement: Markdown 文件预览
 系统 SHALL 使用 react-markdown 渲染选中的 Markdown 文件内容，支持 GFM 语法和代码高亮。
@@ -36,6 +36,14 @@
 #### Scenario: 代码块语法高亮
 - **WHEN** Markdown 文件包含带语言标识的代码块（如 ```typescript）
 - **THEN** 预览区 SHALL 对代码块应用语法高亮着色
+
+#### Scenario: 代码高亮适配主题
+- **WHEN** 应用主题模式发生变化
+- **THEN** 代码块的 highlight.js 样式 SHALL 切换到与当前主题匹配的配色方案（浅色主题使用浅色高亮、深色主题使用深色高亮）
+
+#### Scenario: Markdown 正文适配主题
+- **WHEN** 应用主题模式发生变化
+- **THEN** Markdown 预览区的正文文字颜色、背景色、链接颜色、引用块样式等 SHALL 适配当前主题
 
 #### Scenario: 未选中文件时的占位显示
 - **WHEN** 文件预览面板加载但未选中任何文件
