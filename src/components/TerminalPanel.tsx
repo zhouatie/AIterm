@@ -94,7 +94,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
         onClose={handleClose}
         onNew={createTab}
       />
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', paddingLeft: 8 }}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {tabs.map((tab) => (
           <TerminalInstance
             key={tab.sessionId}

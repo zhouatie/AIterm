@@ -119,13 +119,13 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
     <div
       ref={containerRef}
       style={{
-        width: '100%',
-        height: '100%',
         overflow: 'hidden',
         visibility: isActive ? 'visible' : 'hidden',
         position: 'absolute',
         top: 0,
-        left: 0,
+        left: 8,
+        right: 0,
+        bottom: 0,
         pointerEvents: isActive ? 'auto' : 'none',
       }}
     />
