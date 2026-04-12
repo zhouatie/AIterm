@@ -3,13 +3,32 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
+import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
 const config: ForgeConfig = {
   packagerConfig: {
-    asar: true,
+    asar: {
+      unpack: '**/node_modules/node-pty/**',
+    },
+    // Override the VitePlugin's default ignore function.
+    // The VitePlugin checks for this — if `ignore` is already set, it skips
+    // its own (which excludes everything outside .vite/).
+    // We extend it to also include node-pty so that electron-packager copies
+    // it into the staging directory, where @electron/rebuild will rebuild it
+    // for the correct Electron ABI.
+    ignore: (file: string) => {
+      if (!file) return false;
+      // Include Vite build output
+      if (file.startsWith('/.vite')) return false;
+      // Include node-pty native module (and let its subtree through)
+      if (file === '/node_modules') return false;
+      if (file.startsWith('/node_modules/node-pty')) return false;
+      // Exclude everything else (src/, tsconfig, other node_modules, etc.)
+      return true;
+    },
   },
   rebuildConfig: {},
   makers: [
@@ -19,6 +38,7 @@ const config: ForgeConfig = {
     new MakerDeb({}),
   ],
   plugins: [
+    new AutoUnpackNativesPlugin({}),
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
       // If you are familiar with Vite configuration, it will look really familiar.
