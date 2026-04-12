@@ -5,21 +5,22 @@ import SplitLayout from './SplitLayout';
 
 interface FilePreviewPanelProps {
   activeSessionId: string | null;
+  /** When false, skip CWD sync and file tree reads (panel is collapsed but stays mounted) */
+  visible?: boolean;
 }
 
-const CWD_POLL_INTERVAL = 2000; // ms
-
-const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId }) => {
+const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, visible = true }) => {
   const [rootPath, setRootPath] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [loadingFile, setLoadingFile] = useState(false);
   const rootPathRef = useRef(rootPath);
   rootPathRef.current = rootPath;
+  const prevVisibleRef = useRef(visible);
 
-  // Sync root path with active terminal's cwd (on session switch)
+  // Sync root path with active terminal's cwd (on session switch) — only when visible
   useEffect(() => {
-    if (!activeSessionId) return;
+    if (!activeSessionId || !visible) return;
     let cancelled = false;
 
     window.terminalApi.getCwd(activeSessionId).then((result) => {
@@ -33,26 +34,45 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId }) 
     return () => {
       cancelled = true;
     };
-  }, [activeSessionId]);
+  }, [activeSessionId, visible]);
 
-  // Poll for cwd changes (picks up `cd` in the terminal)
+  // When becoming visible again, re-sync CWD immediately
   useEffect(() => {
-    if (!activeSessionId) return;
+    const wasHidden = !prevVisibleRef.current;
+    prevVisibleRef.current = visible;
 
-    const interval = setInterval(async () => {
-      try {
-        const result = await window.terminalApi.getCwd(activeSessionId);
-        if (result.cwd && result.cwd !== rootPathRef.current) {
+    if (visible && wasHidden && activeSessionId) {
+      window.terminalApi.getCwd(activeSessionId).then((result) => {
+        if (result.cwd) {
           setRootPath(result.cwd);
           setSelectedFile(null);
           setFileContent(null);
         }
-      } catch {
-        // Ignore polling errors
-      }
-    }, CWD_POLL_INTERVAL);
+      });
+    }
+  }, [visible, activeSessionId]);
 
-    return () => clearInterval(interval);
+  // Manual refresh: re-fetch terminal CWD and update rootPath
+  const handleRefresh = useCallback(async () => {
+    if (!activeSessionId) return;
+    try {
+      const result = await window.terminalApi.getCwd(activeSessionId);
+      if (result.cwd) {
+        // Always update rootPath to trigger file tree reload
+        // (set to empty first to force re-render even if same path)
+        if (result.cwd === rootPathRef.current) {
+          setRootPath('');
+          const cwd = result.cwd;
+          queueMicrotask(() => setRootPath(cwd));
+        } else {
+          setRootPath(result.cwd);
+          setSelectedFile(null);
+          setFileContent(null);
+        }
+      }
+    } catch {
+      // Ignore refresh errors
+    }
   }, [activeSessionId]);
 
   // Load file content when selection changes
@@ -73,11 +93,6 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId }) 
     }
   }, []);
 
-  // Truncate displayed path for the header
-  const displayPath = rootPath
-    ? rootPath.replace(/^\/Users\/[^/]+/, '~')
-    : '';
-
   const fileTreePane = (
     <div
       style={{
@@ -90,13 +105,14 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId }) 
         paddingTop: 38,
       }}
     >
-      {/* File tree (includes its own toolbar) */}
+      {/* File tree (includes its own toolbar with refresh) */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {rootPath ? (
           <FileTree
             rootPath={rootPath}
             selectedFile={selectedFile}
             onSelectFile={handleSelectFile}
+            onRefresh={handleRefresh}
           />
         ) : (
           <div

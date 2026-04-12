@@ -9,6 +9,8 @@ interface SplitLayoutProps {
   onResize?: () => void;
   /** Add a subtle shadow between panes for depth separation */
   shadow?: boolean;
+  /** Collapse the left pane to zero width (keeps children mounted) */
+  leftCollapsed?: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
   minRightPx = 400,
   onResize,
   shadow = false,
+  leftCollapsed = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [leftPercent, setLeftPercent] = useState(defaultLeftPercent);
@@ -91,7 +94,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
       {/* Left pane */}
       <div
         style={{
-          width: `${leftPercent}%`,
+          width: leftCollapsed ? 0 : `${leftPercent}%`,
           height: '100%',
           overflow: 'hidden',
           flexShrink: 0,
@@ -101,6 +104,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
       </div>
 
       {/* Divider: invisible wide hit area with a thin visual line in the center */}
+      {!leftCollapsed && (
       <div
         onMouseDown={handleMouseDown}
         onMouseEnter={() => setIsHovering(true)}
@@ -132,6 +136,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           }}
         />
       </div>
+      )}
 
       {/* Right pane */}
       <div

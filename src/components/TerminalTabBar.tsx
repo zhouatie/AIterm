@@ -22,7 +22,7 @@ const styles = {
     height: TAB_BAR_HEIGHT,
     borderBottom: '1px solid #e0e0e0',
     backgroundColor: '#f5f5f5',
-    paddingLeft: 80, // leave space for macOS traffic lights
+    paddingLeft: 96, // leave space for macOS traffic lights + sidebar toggle
     userSelect: 'none' as const,
     WebkitAppRegion: 'drag' as const,
     flexShrink: 0,

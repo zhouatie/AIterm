@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ChevronRight,
   ChevronDown,
@@ -7,9 +7,10 @@ import {
   FileText,
   ChevronsDownUp,
   ChevronsUpDown,
+  RefreshCw,
   Loader2,
 } from 'lucide-react';
-import type { DirEntry } from '../preload';
+import type { ScanTreeNode } from '../preload';
 
 // --- Types ---
 
@@ -18,7 +19,6 @@ interface TreeNode {
   path: string;
   isDirectory: boolean;
   children?: TreeNode[];
-  isLoaded?: boolean;
   isExpanded?: boolean;
 }
 
@@ -26,53 +26,20 @@ interface FileTreeProps {
   rootPath: string;
   selectedFile: string | null;
   onSelectFile: (filePath: string) => void;
+  onRefresh: () => void;
 }
 
 // --- Helpers ---
 
-function isMdFile(name: string): boolean {
-  return name.toLowerCase().endsWith('.md');
-}
-
-function sortEntries(entries: DirEntry[]): DirEntry[] {
-  return [...entries].sort((a, b) => {
-    if (a.isDirectory && !b.isDirectory) return -1;
-    if (!a.isDirectory && b.isDirectory) return 1;
-    return a.name.localeCompare(b.name);
-  });
-}
-
-async function loadDirectory(dirPath: string): Promise<TreeNode[]> {
-  const result = await window.fileApi.readDir(dirPath);
-  if (result.error || !result.entries) return [];
-
-  const sorted = sortEntries(result.entries);
-  const nodes: TreeNode[] = [];
-
-  for (const entry of sorted) {
-    const entryPath = `${dirPath}/${entry.name}`;
-    if (entry.name.startsWith('.')) continue;
-
-    if (entry.isDirectory) {
-      if (entry.containsMarkdown) {
-        nodes.push({
-          name: entry.name,
-          path: entryPath,
-          isDirectory: true,
-          isLoaded: false,
-          isExpanded: false,
-        });
-      }
-    } else if (entry.isFile && isMdFile(entry.name)) {
-      nodes.push({
-        name: entry.name,
-        path: entryPath,
-        isDirectory: false,
-      });
-    }
-  }
-
-  return nodes;
+/** Convert ScanTreeNode[] from IPC into local TreeNode[] (all directories collapsed). */
+function toTreeNodes(scanNodes: ScanTreeNode[]): TreeNode[] {
+  return scanNodes.map((n) => ({
+    name: n.name,
+    path: n.path,
+    isDirectory: n.isDirectory,
+    isExpanded: false,
+    children: n.children ? toTreeNodes(n.children) : undefined,
+  }));
 }
 
 // --- Constants ---
@@ -82,6 +49,125 @@ const ICON_SIZE = 15;
 const ICON_COLOR = '#8b8b8b';
 const ICON_COLOR_ACTIVE = '#5a5a5a';
 const ROW_HEIGHT = 28;
+const CONTEXT_MENU_WIDTH = 180;
+const CONTEXT_MENU_ITEM_HEIGHT = 30;
+
+// --- Context Menu ---
+
+interface ContextMenuState {
+  x: number;
+  y: number;
+  nodePath: string;
+}
+
+interface ContextMenuProps {
+  menu: ContextMenuState;
+  rootPath: string;
+  onClose: () => void;
+}
+
+const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
+  }, [onClose]);
+
+  // Adjust position if near viewport edges
+  const menuHeight = CONTEXT_MENU_ITEM_HEIGHT * 2 + 8; // 2 items + padding
+  let adjustedX = menu.x;
+  let adjustedY = menu.y;
+  if (menu.x + CONTEXT_MENU_WIDTH > window.innerWidth) {
+    adjustedX = menu.x - CONTEXT_MENU_WIDTH;
+  }
+  if (menu.y + menuHeight > window.innerHeight) {
+    adjustedY = menu.y - menuHeight;
+  }
+
+  const handleCopyRelativePath = async () => {
+    const relativePath = menu.nodePath.startsWith(rootPath + '/')
+      ? menu.nodePath.slice(rootPath.length + 1)
+      : menu.nodePath;
+    try {
+      await navigator.clipboard.writeText(relativePath);
+    } catch {
+      // Clipboard write failed silently
+    }
+    onClose();
+  };
+
+  const handleCopyAbsolutePath = async () => {
+    try {
+      await navigator.clipboard.writeText(menu.nodePath);
+    } catch {
+      // Clipboard write failed silently
+    }
+    onClose();
+  };
+
+  const menuItemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    height: CONTEXT_MENU_ITEM_HEIGHT,
+    padding: '0 12px',
+    fontSize: 12,
+    color: '#333',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    borderRadius: 3,
+  };
+
+  return (
+    <div
+      ref={menuRef}
+      style={{
+        position: 'fixed',
+        left: adjustedX,
+        top: adjustedY,
+        width: CONTEXT_MENU_WIDTH,
+        backgroundColor: '#ffffff',
+        border: '1px solid #e0e0e0',
+        borderRadius: 6,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        padding: '4px 0',
+        zIndex: 9999,
+        userSelect: 'none',
+      }}
+    >
+      <div
+        style={menuItemStyle}
+        onClick={handleCopyRelativePath}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#f0f0f0';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+      >
+        Copy Relative Path
+      </div>
+      <div
+        style={menuItemStyle}
+        onClick={handleCopyAbsolutePath}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#f0f0f0';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+      >
+        Copy Absolute Path
+      </div>
+    </div>
+  );
+};
 
 // --- Toolbar ---
 
@@ -89,12 +175,37 @@ interface ToolbarProps {
   onExpandAll: () => void;
   onCollapseAll: () => void;
   allExpanded: boolean;
+  onRefresh: () => void;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpanded }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpanded, onRefresh }) => {
   const ToggleIcon = allExpanded ? ChevronsDownUp : ChevronsUpDown;
   const toggleAction = allExpanded ? onCollapseAll : onExpandAll;
   const title = allExpanded ? 'Collapse All' : 'Expand All';
+
+  const buttonStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+    border: 'none',
+    background: 'transparent',
+    borderRadius: 4,
+    cursor: 'pointer',
+    color: ICON_COLOR,
+    padding: 0,
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = '#f0f0f0';
+    e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.color = ICON_COLOR;
+  };
 
   return (
     <div
@@ -102,35 +213,27 @@ const Toolbar: React.FC<ToolbarProps> = ({ onExpandAll, onCollapseAll, allExpand
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
+        gap: 2,
         padding: '4px 8px',
         borderBottom: '1px solid #e8e8e8',
         flexShrink: 0,
       }}
     >
       <button
+        onClick={onRefresh}
+        title="Refresh"
+        style={buttonStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <RefreshCw size={14} />
+      </button>
+      <button
         onClick={toggleAction}
         title={title}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 24,
-          height: 24,
-          border: 'none',
-          background: 'transparent',
-          borderRadius: 4,
-          cursor: 'pointer',
-          color: ICON_COLOR,
-          padding: 0,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#f0f0f0';
-          e.currentTarget.style.color = ICON_COLOR_ACTIVE;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-          e.currentTarget.style.color = ICON_COLOR;
-        }}
+        style={buttonStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <ToggleIcon size={16} />
       </button>
@@ -146,6 +249,7 @@ interface TreeNodeItemProps {
   selectedFile: string | null;
   onSelectFile: (filePath: string) => void;
   onToggleDir: (node: TreeNode) => void;
+  onContextMenu: (e: React.MouseEvent, nodePath: string) => void;
   /** For each ancestor depth, whether that ancestor has more siblings below */
   guideFlags: boolean[];
 }
@@ -156,6 +260,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   selectedFile,
   onSelectFile,
   onToggleDir,
+  onContextMenu,
   guideFlags,
 }) => {
   const isSelected = !node.isDirectory && node.path === selectedFile;
@@ -166,6 +271,12 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
     } else {
       onSelectFile(node.path);
     }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onContextMenu(e, node.path);
   };
 
   // Build indent guides
@@ -202,6 +313,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
     <>
       <div
         onClick={handleClick}
+        onContextMenu={handleContextMenu}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -290,6 +402,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
               selectedFile={selectedFile}
               onSelectFile={onSelectFile}
               onToggleDir={onToggleDir}
+              onContextMenu={onContextMenu}
               guideFlags={[
                 ...guideFlags,
                 idx < node.children!.length - 1, // true if more siblings below
@@ -304,23 +417,31 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
 // --- Main FileTree ---
 
-const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFile }) => {
+const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFile, onRefresh }) => {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
-  // Load root directory when rootPath changes
+  // Load entire tree when rootPath changes (using scanMdFiles)
   useEffect(() => {
     if (!rootPath) return;
     let cancelled = false;
     setLoading(true);
     setAllExpanded(false);
-    loadDirectory(rootPath).then((result) => {
+    setContextMenu(null);
+
+    window.fileApi.scanMdFiles(rootPath).then((result) => {
       if (!cancelled) {
-        setNodes(result);
+        if (result.tree) {
+          setNodes(toTreeNodes(result.tree));
+        } else {
+          setNodes([]);
+        }
         setLoading(false);
       }
     });
+
     return () => {
       cancelled = true;
     };
@@ -343,54 +464,29 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
   );
 
   const handleToggleDir = useCallback(
-    async (node: TreeNode) => {
+    (node: TreeNode) => {
       if (node.isExpanded) {
         updateNode(node.path, (n) => ({ ...n, isExpanded: false }));
         setAllExpanded(false);
       } else {
-        if (!node.isLoaded) {
-          const children = await loadDirectory(node.path);
-          updateNode(node.path, (n) => ({
-            ...n,
-            isExpanded: true,
-            isLoaded: true,
-            children,
-          }));
-        } else {
-          updateNode(node.path, (n) => ({ ...n, isExpanded: true }));
-        }
+        updateNode(node.path, (n) => ({ ...n, isExpanded: true }));
       }
     },
     [updateNode],
   );
 
-  // Expand all: recursively load + expand every directory node
-  const handleExpandAll = useCallback(async () => {
-    async function expandRecursive(list: TreeNode[]): Promise<TreeNode[]> {
-      const result: TreeNode[] = [];
-      for (const node of list) {
-        if (node.isDirectory) {
-          let children = node.children;
-          if (!node.isLoaded) {
-            children = await loadDirectory(node.path);
-          }
-          const expandedChildren = children ? await expandRecursive(children) : [];
-          result.push({
-            ...node,
-            isExpanded: true,
-            isLoaded: true,
-            children: expandedChildren,
-          });
-        } else {
-          result.push(node);
-        }
-      }
-      return result;
+  // Expand all: recursively set isExpanded = true (tree is already fully loaded)
+  const handleExpandAll = useCallback(() => {
+    function expandRecursive(list: TreeNode[]): TreeNode[] {
+      return list.map((n) =>
+        n.isDirectory
+          ? { ...n, isExpanded: true, children: n.children ? expandRecursive(n.children) : undefined }
+          : n,
+      );
     }
-    const expanded = await expandRecursive(nodes);
-    setNodes(expanded);
+    setNodes((prev) => expandRecursive(prev));
     setAllExpanded(true);
-  }, [nodes]);
+  }, []);
 
   // Collapse all
   const handleCollapseAll = useCallback(() => {
@@ -405,6 +501,15 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
     setAllExpanded(false);
   }, []);
 
+  // Context menu handlers
+  const handleContextMenu = useCallback((e: React.MouseEvent, nodePath: string) => {
+    setContextMenu({ x: e.clientX, y: e.clientY, nodePath });
+  }, []);
+
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -412,6 +517,7 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
           onExpandAll={handleExpandAll}
           onCollapseAll={handleCollapseAll}
           allExpanded={allExpanded}
+          onRefresh={onRefresh}
         />
         <div
           style={{
@@ -436,6 +542,7 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
         onExpandAll={handleExpandAll}
         onCollapseAll={handleCollapseAll}
         allExpanded={allExpanded}
+        onRefresh={onRefresh}
       />
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {nodes.length === 0 ? (
@@ -460,11 +567,20 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
               selectedFile={selectedFile}
               onSelectFile={onSelectFile}
               onToggleDir={handleToggleDir}
+              onContextMenu={handleContextMenu}
               guideFlags={[idx < nodes.length - 1]}
             />
           ))
         )}
       </div>
+      {/* Context menu portal */}
+      {contextMenu && (
+        <ContextMenu
+          menu={contextMenu}
+          rootPath={rootPath}
+          onClose={handleCloseContextMenu}
+        />
+      )}
     </div>
   );
 };

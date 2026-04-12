@@ -19,9 +19,17 @@ export interface DirEntry {
   containsMarkdown?: boolean;
 }
 
+export interface ScanTreeNode {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+  children?: ScanTreeNode[];
+}
+
 export interface FileApi {
   readDir(dirPath: string): Promise<{ entries?: DirEntry[]; error?: string }>;
   readFile(filePath: string): Promise<{ content?: string; error?: string }>;
+  scanMdFiles(rootPath: string): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
 }
 
 contextBridge.exposeInMainWorld('terminalApi', {
@@ -75,4 +83,7 @@ contextBridge.exposeInMainWorld('fileApi', {
 
   readFile: (filePath: string) =>
     ipcRenderer.invoke('fs:readfile', { filePath }),
+
+  scanMdFiles: (rootPath: string) =>
+    ipcRenderer.invoke('fs:scan-md-files', { rootPath }),
 } satisfies FileApi);
