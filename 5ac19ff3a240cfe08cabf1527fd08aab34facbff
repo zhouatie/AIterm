@@ -1,0 +1,49 @@
+src/main.ts
+  ea2c2ce75c469966 70-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "5ac19ff3a240cfe08cabf1527fd08aab34facbff",
+  "prompts": {
+    "4ea44e5c435dadd4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27edc069effe74tGu1AnMl86bT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1083,
+      "total_deletions": 397,
+      "accepted_lines": 878,
+      "overriden_lines": 8
+    },
+    "56183c44e3425a6f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28014c8e6ffe0t5hmw9Ah0LxBf",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 179,
+      "total_deletions": 8,
+      "accepted_lines": 179,
+      "overriden_lines": 0
+    },
+    "ea2c2ce75c469966": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ebde593ffefKZHCLt0Qkfnbi",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
