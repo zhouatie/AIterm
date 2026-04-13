@@ -1,0 +1,35 @@
+src/pty-manager.ts
+  cebd22d1e180559b 8-15,19-20,24,30-91,94,97,103,107-118,129,142,176,179,183-207
+src/components/FileTree.tsx
+  cebd22d1e180559b 1,15,499-505
+src/components/ContextMenu.tsx
+  cebd22d1e180559b 1,3-7,10-11,14,16-32,34-53,55-112,114-115,117-119,121-124,126-150,153-170,173-175,177-202,207
+src/main.ts
+  cebd22d1e180559b 12-13,86-87,106-108,113-118,158-160
+src/preload.ts
+  cebd22d1e180559b 4,8,13,16-21,48-49,60-61,91,94,96,98
+src/components/FilePreviewPanel.tsx
+  cebd22d1e180559b 35-36,54-55,67,90-91
+src/components/TerminalPanel.tsx
+  cebd22d1e180559b 2-12,15-21,24-33,40-66,70,72-139,141-143,146-168,170,175-176,179-193,196-227,230-238,240-248,250-252,254-257,259-264,266-268,271-276,278-289,291-319,321-337,339-350,352-376,379-715,717-725,727-767
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "d790b8885f0175b187fe1819c82a09cfbe222362",
+  "prompts": {
+    "cebd22d1e180559b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8482-72c3-7ef2-a0c6-98fc2a12d1c1",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1482,
+      "total_deletions": 542,
+      "accepted_lines": 1111,
+      "overriden_lines": 0
+    }
+  }
+}
