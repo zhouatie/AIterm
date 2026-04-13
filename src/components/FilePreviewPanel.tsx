@@ -32,8 +32,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     if (!activeSessionId || !visible) return;
     let cancelled = false;
 
-    window.terminalApi.getCwd(activeSessionId).then((result) => {
-      if (!cancelled && result.cwd && result.cwd !== rootPathRef.current) {
+    window.terminalApi.getSessionInfo(activeSessionId).then((result) => {
+      if (!cancelled && result?.cwd && result.cwd !== rootPathRef.current) {
         setRootPath(result.cwd);
         setSelectedFile(null);
         setFileContent(null);
@@ -51,8 +51,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     prevVisibleRef.current = visible;
 
     if (visible && wasHidden && activeSessionId) {
-      window.terminalApi.getCwd(activeSessionId).then((result) => {
-        if (result.cwd) {
+      window.terminalApi.getSessionInfo(activeSessionId).then((result) => {
+        if (result?.cwd) {
           setRootPath(result.cwd);
           setSelectedFile(null);
           setFileContent(null);
@@ -64,7 +64,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   // Listen for terminal CWD changes and auto-update file tree
   useEffect(() => {
     if (!visible) return;
-    const unsubscribe = window.terminalApi.onCwdChanged((data) => {
+    const unsubscribe = window.terminalApi.onSessionInfoChanged((data) => {
       if (data.id === activeSessionId && data.cwd !== rootPathRef.current) {
         setRootPath(data.cwd);
         setSelectedFile(null);
@@ -87,8 +87,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const handleRefresh = useCallback(async () => {
     if (!activeSessionId) return;
     try {
-      const result = await window.terminalApi.getCwd(activeSessionId);
-      if (result.cwd) {
+      const result = await window.terminalApi.getSessionInfo(activeSessionId);
+      if (result?.cwd) {
         if (result.cwd === rootPathRef.current) {
           // Same path — increment refreshKey to force rescan
           setRefreshKey((k) => k + 1);

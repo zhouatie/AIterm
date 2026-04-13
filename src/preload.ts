@@ -1,16 +1,24 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 export interface TerminalApi {
-  create(cols: number, rows: number): Promise<{ id: string }>;
+  create(cols: number, rows: number, cwd?: string): Promise<{ id: string }>;
   input(id: string, data: string): void;
   resize(id: string, cols: number, rows: number): void;
   dispose(id: string): Promise<void>;
-  getCwd(id: string): Promise<{ cwd: string | null }>;
+  getSessionInfo(id: string): Promise<TerminalSessionInfo | null>;
   onOutput(callback: (data: { id: string; data: string }) => void): () => void;
   onExit(
     callback: (data: { id: string; exitCode: number; signal?: number }) => void,
   ): () => void;
-  onCwdChanged(callback: (data: { id: string; cwd: string }) => void): () => void;
+  onSessionInfoChanged(callback: (data: TerminalSessionInfo) => void): () => void;
+}
+
+export interface TerminalSessionInfo {
+  id: string;
+  cwd: string;
+  isGitRepo: boolean;
+  branchName: string | null;
+  displayLabel: string;
 }
 
 export interface DirEntry {
@@ -37,8 +45,8 @@ export interface FileApi {
 }
 
 contextBridge.exposeInMainWorld('terminalApi', {
-  create: (cols: number, rows: number) =>
-    ipcRenderer.invoke('terminal:create', { cols, rows }),
+  create: (cols: number, rows: number, cwd?: string) =>
+    ipcRenderer.invoke('terminal:create', { cols, rows, cwd }),
 
   input: (id: string, data: string) =>
     ipcRenderer.send('terminal:input', { id, data }),
@@ -49,8 +57,8 @@ contextBridge.exposeInMainWorld('terminalApi', {
   dispose: (id: string) =>
     ipcRenderer.invoke('terminal:dispose', { id }),
 
-  getCwd: (id: string) =>
-    ipcRenderer.invoke('terminal:getCwd', { id }),
+  getSessionInfo: (id: string) =>
+    ipcRenderer.invoke('terminal:getSessionInfo', { id }),
 
   onOutput: (callback: (data: { id: string; data: string }) => void) => {
     const listener = (
@@ -80,14 +88,14 @@ contextBridge.exposeInMainWorld('terminalApi', {
     };
   },
 
-  onCwdChanged: (callback: (data: { id: string; cwd: string }) => void) => {
+  onSessionInfoChanged: (callback: (data: TerminalSessionInfo) => void) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
-      data: { id: string; cwd: string },
+      data: TerminalSessionInfo,
     ) => callback(data);
-    ipcRenderer.on('terminal:cwdChanged', listener);
+    ipcRenderer.on('terminal:sessionInfoChanged', listener);
     return () => {
-      ipcRenderer.removeListener('terminal:cwdChanged', listener);
+      ipcRenderer.removeListener('terminal:sessionInfoChanged', listener);
     };
   },
 } satisfies TerminalApi);

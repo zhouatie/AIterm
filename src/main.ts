@@ -9,8 +9,8 @@ import {
   resizeSession,
   disposeSession,
   disposeAllSessions,
-  getSessionLiveCwd,
-  checkAndUpdateCwd,
+  getSessionInfo,
+  checkAndUpdateSessionInfo,
 } from './pty-manager';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -83,8 +83,8 @@ const createWindow = () => {
 // terminal:create — create a PTY session and return the session ID
 ipcMain.handle(
   'terminal:create',
-  (_event, { cols, rows }: { cols: number; rows: number }) => {
-    const session = createSession(cols, rows);
+  (_event, { cols, rows, cwd }: { cols: number; rows: number; cwd?: string }) => {
+    const session = createSession(cols, rows, cwd);
 
     // Push PTY stdout to renderer
     session.ptyProcess.onData((data: string) => {
@@ -103,15 +103,19 @@ ipcMain.handle(
       cwdCheckScheduled = true;
       setTimeout(async () => {
         cwdCheckScheduled = false;
-        const newCwd = await checkAndUpdateCwd(session.id);
-        if (newCwd && mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('terminal:cwdChanged', {
-            id: session.id,
-            cwd: newCwd,
-          });
+        const nextInfo = await checkAndUpdateSessionInfo(session.id);
+        if (nextInfo && mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('terminal:sessionInfoChanged', nextInfo);
         }
       }, 1000);
     });
+
+    setTimeout(async () => {
+      const nextInfo = await getSessionInfo(session.id);
+      if (nextInfo && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('terminal:sessionInfoChanged', nextInfo);
+      }
+    }, 0);
 
     // Notify renderer when PTY exits
     session.ptyProcess.onExit(
@@ -151,10 +155,9 @@ ipcMain.handle('terminal:dispose', (_event, { id }: { id: string }) => {
   disposeSession(id);
 });
 
-// terminal:getCwd — return the live cwd of a PTY session
-ipcMain.handle('terminal:getCwd', async (_event, { id }: { id: string }) => {
-  const cwd = await getSessionLiveCwd(id);
-  return { cwd: cwd ?? null };
+// terminal:getSessionInfo — return the latest PTY session info
+ipcMain.handle('terminal:getSessionInfo', async (_event, { id }: { id: string }) => {
+  return await getSessionInfo(id);
 });
 
 // --- File System IPC Handlers ---

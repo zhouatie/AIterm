@@ -5,33 +5,117 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
+export interface TerminalSessionInfo {
+  id: string;
+  cwd: string;
+  isGitRepo: boolean;
+  branchName: string | null;
+  displayLabel: string;
+}
+
 export interface PtySession {
   id: string;
   ptyProcess: pty.IPty;
-  cwd: string;
-  lastKnownCwd: string;
+  initialCwd: string;
+  lastInfo: TerminalSessionInfo;
 }
 
 const sessions = new Map<string, PtySession>();
+const nonGitPathInfoCache = new Map<string, Omit<TerminalSessionInfo, 'id'>>();
 
 function getDefaultShell(): string {
   return process.env.SHELL || '/bin/zsh';
 }
 
-export function createSession(cols: number, rows: number): PtySession {
+function getLastPathSegment(cwd: string): string {
+  const trimmed = cwd.replace(/\/+$/, '');
+  if (!trimmed) return cwd;
+  const parts = trimmed.split('/');
+  return parts[parts.length - 1] || cwd;
+}
+
+async function getPathInfo(cwd: string): Promise<Omit<TerminalSessionInfo, 'id'>> {
+  const cached = nonGitPathInfoCache.get(cwd);
+  if (cached) return cached;
+
+  let isGitRepo = false;
+  let branchName: string | null = null;
+
+  try {
+    const { stdout } = await execFileAsync(
+      'git',
+      ['-C', cwd, 'rev-parse', '--is-inside-work-tree'],
+      { timeout: 2000 },
+    );
+    isGitRepo = stdout.trim() === 'true';
+  } catch {
+    isGitRepo = false;
+  }
+
+  if (isGitRepo) {
+    try {
+      const { stdout } = await execFileAsync(
+        'git',
+        ['-C', cwd, 'branch', '--show-current'],
+        { timeout: 2000 },
+      );
+      branchName = stdout.trim() || null;
+    } catch {
+      branchName = null;
+    }
+  }
+
+  const info = {
+    cwd,
+    isGitRepo,
+    branchName,
+    displayLabel: branchName || getLastPathSegment(cwd),
+  };
+  if (!isGitRepo) {
+    nonGitPathInfoCache.set(cwd, info);
+  }
+  return info;
+}
+
+async function resolveSessionInfo(id: string): Promise<TerminalSessionInfo | null> {
+  const session = sessions.get(id);
+  if (!session) return null;
+
+  const liveCwd = await getSessionLiveCwd(id);
+  if (!liveCwd) return null;
+
+  const pathInfo = await getPathInfo(liveCwd);
+  return {
+    id,
+    ...pathInfo,
+  };
+}
+
+export function createSession(cols: number, rows: number, cwd?: string): PtySession {
   const id = randomUUID();
   const shell = getDefaultShell();
-  const cwd = process.env.HOME || process.cwd();
+  const initialCwd = cwd || process.env.HOME || process.cwd();
 
   const ptyProcess = pty.spawn(shell, [], {
     name: 'xterm-256color',
     cols,
     rows,
-    cwd,
+    cwd: initialCwd,
     env: { ...process.env } as Record<string, string>,
   });
 
-  const session: PtySession = { id, ptyProcess, cwd, lastKnownCwd: cwd };
+  const session: PtySession = {
+    id,
+    ptyProcess,
+    initialCwd,
+    lastInfo: {
+      id,
+      cwd: initialCwd,
+      isGitRepo: false,
+      branchName: null,
+      displayLabel: getLastPathSegment(initialCwd),
+    },
+  };
   sessions.set(id, session);
   return session;
 }
@@ -42,7 +126,7 @@ export function getSession(id: string): PtySession | undefined {
 
 export function getSessionCwd(id: string): string | undefined {
   const session = sessions.get(id);
-  return session?.cwd;
+  return session?.lastInfo.cwd;
 }
 
 /**
@@ -55,7 +139,7 @@ export async function getSessionLiveCwd(id: string): Promise<string | null> {
 
   const pid = session.ptyProcess.pid;
   const dynamicCwd = await getProcessCwd(pid);
-  return dynamicCwd ?? session.cwd;
+  return dynamicCwd ?? session.lastInfo.cwd ?? session.initialCwd;
 }
 
 /**
@@ -89,19 +173,38 @@ async function getProcessCwd(pid: number): Promise<string | null> {
 }
 
 /**
- * Check if the CWD of a session has changed. If so, update lastKnownCwd and return the new CWD.
+ * Resolve the latest session info and persist it if anything changed.
  * Returns null if unchanged or session not found.
  */
-export async function checkAndUpdateCwd(id: string): Promise<string | null> {
+export async function getSessionInfo(id: string): Promise<TerminalSessionInfo | null> {
   const session = sessions.get(id);
   if (!session) return null;
 
-  const liveCwd = await getSessionLiveCwd(id);
-  if (liveCwd && liveCwd !== session.lastKnownCwd) {
-    session.lastKnownCwd = liveCwd;
-    return liveCwd;
-  }
-  return null;
+  const nextInfo = await resolveSessionInfo(id);
+  if (!nextInfo) return null;
+
+  session.lastInfo = nextInfo;
+  return nextInfo;
+}
+
+export async function checkAndUpdateSessionInfo(id: string): Promise<TerminalSessionInfo | null> {
+  const session = sessions.get(id);
+  if (!session) return null;
+
+  const nextInfo = await resolveSessionInfo(id);
+  if (!nextInfo) return null;
+
+  const prevInfo = session.lastInfo;
+  const changed =
+    prevInfo.cwd !== nextInfo.cwd ||
+    prevInfo.isGitRepo !== nextInfo.isGitRepo ||
+    prevInfo.branchName !== nextInfo.branchName ||
+    prevInfo.displayLabel !== nextInfo.displayLabel;
+
+  if (!changed) return null;
+
+  session.lastInfo = nextInfo;
+  return nextInfo;
 }
 
 export function writeToSession(id: string, data: string): void {

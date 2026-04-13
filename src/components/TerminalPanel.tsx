@@ -1,108 +1,770 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import TerminalTabBar, { TAB_BAR_HEIGHT } from './TerminalTabBar';
-import type { TabInfo } from './TerminalTabBar';
+import {
+  ChevronDown,
+  ChevronRight,
+  Folder,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  X,
+} from 'lucide-react';
+import type { TerminalSessionInfo } from '../preload';
+import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './ContextMenu';
 import TerminalInstance from './TerminalInstance';
 
-interface TerminalTab extends TabInfo {
-  sessionId: string;
+interface WorkspaceNode {
+  id: string;
+  name: string;
+  currentPath: string | null;
+  lastActiveSessionId: string | null;
+  isExpanded: boolean;
+  sessions: TerminalSessionInfo[];
+}
+
+interface SidebarMenuState {
+  x: number;
+  y: number;
+  workspaceId: string;
+  sessionId?: string;
+}
+
+interface RenameState {
+  workspaceId: string;
+  value: string;
 }
 
 interface TerminalPanelProps {
   onActiveSessionChange?: (sessionId: string) => void;
 }
 
-const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) => {
-  const counterRef = useRef(1);
-  const [tabs, setTabs] = useState<TerminalTab[]>([]);
-  const [activeTabId, setActiveTabId] = useState<string>('');
-  const initializedRef = useRef(false);
+const SIDEBAR_WIDTH = 240;
+const SIDEBAR_HEADER_HEIGHT = 40;
+const ROW_HEIGHT = 32;
+const SIDEBAR_TOGGLE_SIZE = 24;
 
-  // Create a new tab: spawn PTY and add to state
-  const createTab = useCallback(async () => {
-    try {
-      const { id: sessionId } = await window.terminalApi.create(80, 24);
-      const num = counterRef.current++;
-      const tab: TerminalTab = {
-        id: sessionId,
-        name: `Terminal ${num}`,
-        sessionId,
-      };
-      setTabs((prev) => [...prev, tab]);
-      setActiveTabId(tab.id);
-    } catch (err) {
-      console.error('[TerminalPanel] Failed to create tab:', err);
-    }
+function getLastPathSegment(cwd: string): string {
+  const trimmed = cwd.replace(/\/+$/, '');
+  if (!trimmed) return cwd;
+  const parts = trimmed.split('/');
+  return parts[parts.length - 1] || cwd;
+}
+
+function createPlaceholderSessionInfo(id: string, cwd?: string): TerminalSessionInfo {
+  const resolvedCwd = cwd || '';
+  return {
+    id,
+    cwd: resolvedCwd,
+    isGitRepo: false,
+    branchName: null,
+    displayLabel: resolvedCwd ? getLastPathSegment(resolvedCwd) : 'terminal',
+  };
+}
+
+function findWorkspaceBySessionId(workspaces: WorkspaceNode[], sessionId: string): WorkspaceNode | undefined {
+  return workspaces.find((workspace) =>
+    workspace.sessions.some((session) => session.id === sessionId),
+  );
+}
+
+const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) => {
+  const workspaceCounterRef = useRef(1);
+  const initializedRef = useRef(false);
+  const workspacesRef = useRef<WorkspaceNode[]>([]);
+  const workspaceRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const sessionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  const [workspaces, setWorkspaces] = useState<WorkspaceNode[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string>('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [menuState, setMenuState] = useState<SidebarMenuState | null>(null);
+  const [renameState, setRenameState] = useState<RenameState | null>(null);
+  const [hoveredWorkspaceId, setHoveredWorkspaceId] = useState<string | null>(null);
+  const sidebarWidth = sidebarCollapsed ? 0 : SIDEBAR_WIDTH;
+
+  workspacesRef.current = workspaces;
+
+  const applySessionInfo = useCallback((info: TerminalSessionInfo) => {
+    setWorkspaces((prev) =>
+      prev.map((workspace) => {
+        const hasTarget = workspace.sessions.some((session) => session.id === info.id);
+        if (!hasTarget) return workspace;
+
+        const nextSessions = workspace.sessions.map((session) =>
+          session.id === info.id ? info : session,
+        );
+        const nextCurrentPath =
+          workspace.lastActiveSessionId === info.id
+            ? info.cwd || workspace.currentPath
+            : workspace.currentPath;
+
+        return {
+          ...workspace,
+          currentPath: nextCurrentPath,
+          sessions: nextSessions,
+        };
+      }),
+    );
   }, []);
 
-  // Initialize with one default tab on mount
+  const createWorkspace = useCallback(async (cwd?: string) => {
+    const workspaceName = `workspace_${workspaceCounterRef.current++}`;
+    const workspaceId = crypto.randomUUID();
+
+    try {
+      const { id: sessionId } = await window.terminalApi.create(80, 24, cwd);
+      const placeholderSession = createPlaceholderSessionInfo(sessionId, cwd);
+
+      setWorkspaces((prev) => [
+        ...prev,
+        {
+          id: workspaceId,
+          name: workspaceName,
+          currentPath: placeholderSession.cwd || cwd || null,
+          lastActiveSessionId: sessionId,
+          isExpanded: true,
+          sessions: [placeholderSession],
+        },
+      ]);
+      setActiveSessionId(sessionId);
+
+      const info = await window.terminalApi.getSessionInfo(sessionId);
+      if (info) {
+        applySessionInfo(info);
+      }
+    } catch (error) {
+      console.error('[TerminalPanel] Failed to create workspace:', error);
+      workspaceCounterRef.current -= 1;
+    }
+  }, [applySessionInfo]);
+
+  const createSessionInWorkspace = useCallback(async (workspaceId: string) => {
+    const workspace = workspacesRef.current.find((item) => item.id === workspaceId);
+    if (!workspace) return;
+
+    try {
+      const { id: sessionId } = await window.terminalApi.create(80, 24, workspace.currentPath || undefined);
+      const placeholderSession = createPlaceholderSessionInfo(sessionId, workspace.currentPath || undefined);
+
+      setWorkspaces((prev) =>
+        prev.map((item) => {
+          if (item.id !== workspaceId) return item;
+          return {
+            ...item,
+            isExpanded: true,
+            lastActiveSessionId: sessionId,
+            currentPath: item.currentPath || placeholderSession.cwd || null,
+            sessions: [...item.sessions, placeholderSession],
+          };
+        }),
+      );
+      setActiveSessionId(sessionId);
+
+      const info = await window.terminalApi.getSessionInfo(sessionId);
+      if (info) {
+        applySessionInfo(info);
+      }
+    } catch (error) {
+      console.error('[TerminalPanel] Failed to create session in workspace:', error);
+    }
+  }, [applySessionInfo]);
+
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-    createTab();
-  }, [createTab]);
+    void createWorkspace();
+  }, [createWorkspace]);
 
-  // Notify parent when active session changes
   useEffect(() => {
-    if (activeTabId) {
-      onActiveSessionChange?.(activeTabId);
-    }
-  }, [activeTabId, onActiveSessionChange]);
+    if (!activeSessionId) return;
+    onActiveSessionChange?.(activeSessionId);
+  }, [activeSessionId, onActiveSessionChange]);
 
-  // Handle tab selection
-  const handleSelect = useCallback((id: string) => {
-    setActiveTabId(id);
+  useEffect(() => {
+    const unsubscribe = window.terminalApi.onSessionInfoChanged((info) => {
+      applySessionInfo(info);
+    });
+    return unsubscribe;
+  }, [applySessionInfo]);
+
+  useEffect(() => {
+    if (sidebarCollapsed) {
+      setMenuState(null);
+      return;
+    }
+
+    const activeWorkspace = findWorkspaceBySessionId(workspaces, activeSessionId);
+    const targetElement =
+      sessionRefs.current.get(activeSessionId) ||
+      (activeWorkspace ? workspaceRefs.current.get(activeWorkspace.id) : undefined);
+
+    if (!targetElement) return;
+    requestAnimationFrame(() => {
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }, [activeSessionId, sidebarCollapsed, workspaces]);
+
+  useEffect(() => {
+    if (!renameState) return;
+    requestAnimationFrame(() => {
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+    });
+  }, [renameState?.workspaceId]);
+
+  const handleSelectSession = useCallback((sessionId: string) => {
+    setWorkspaces((prev) =>
+      prev.map((workspace) => {
+        const selectedSession = workspace.sessions.find((session) => session.id === sessionId);
+        if (!selectedSession) return workspace;
+        return {
+          ...workspace,
+          lastActiveSessionId: sessionId,
+          currentPath: selectedSession.cwd || workspace.currentPath,
+        };
+      }),
+    );
+    setActiveSessionId(sessionId);
   }, []);
 
-  // Handle tab close
-  const handleClose = useCallback(
-    async (id: string) => {
-      // Dispose the PTY session
-      try {
-        await window.terminalApi.dispose(id);
-      } catch {
-        // PTY may already be gone
+  const handleToggleWorkspace = useCallback((workspaceId: string) => {
+    setWorkspaces((prev) =>
+      prev.map((workspace) =>
+        workspace.id === workspaceId
+          ? { ...workspace, isExpanded: !workspace.isExpanded }
+          : workspace,
+      ),
+    );
+  }, []);
+
+  const handleCloseSession = useCallback(async (workspaceId: string, sessionId: string) => {
+    try {
+      await window.terminalApi.dispose(sessionId);
+    } catch {
+      // Ignore dispose failures for already-closed sessions.
+    }
+
+    let nextActiveSessionId = '';
+    let shouldCreateWorkspace = false;
+
+    setWorkspaces((prev) => {
+      const currentActiveSessionId = activeSessionId;
+      const nextWorkspaces: WorkspaceNode[] = [];
+
+      for (const workspace of prev) {
+        if (workspace.id !== workspaceId) {
+          nextWorkspaces.push(workspace);
+          continue;
+        }
+
+        const closingIndex = workspace.sessions.findIndex((session) => session.id === sessionId);
+        if (closingIndex === -1) {
+          nextWorkspaces.push(workspace);
+          continue;
+        }
+
+        const remainingSessions = workspace.sessions.filter((session) => session.id !== sessionId);
+        if (remainingSessions.length === 0) {
+          continue;
+        }
+
+        const nextIndex = Math.min(closingIndex, remainingSessions.length - 1);
+        const nextWorkspaceSession = remainingSessions[nextIndex];
+        const nextLastActiveSessionId =
+          workspace.lastActiveSessionId === sessionId
+            ? nextWorkspaceSession.id
+            : workspace.lastActiveSessionId;
+
+        nextWorkspaces.push({
+          ...workspace,
+          currentPath:
+            nextLastActiveSessionId === nextWorkspaceSession.id
+              ? nextWorkspaceSession.cwd || workspace.currentPath
+              : workspace.currentPath,
+          lastActiveSessionId: nextLastActiveSessionId,
+          sessions: remainingSessions,
+        });
+
+        if (currentActiveSessionId === sessionId) {
+          nextActiveSessionId = nextWorkspaceSession.id;
+        }
       }
 
-      setTabs((prev) => {
-        const remaining = prev.filter((t) => t.id !== id);
+      if (nextWorkspaces.length === 0) {
+        shouldCreateWorkspace = true;
+      } else if (!nextActiveSessionId && activeSessionId !== sessionId) {
+        nextActiveSessionId = currentActiveSessionId;
+      } else if (!nextActiveSessionId) {
+        nextActiveSessionId = nextWorkspaces[0].lastActiveSessionId || nextWorkspaces[0].sessions[0].id;
+      }
 
-        if (remaining.length === 0) {
-          // Last tab closed — create a new one
-          createTab();
-          return [];
-        }
+      return nextWorkspaces;
+    });
 
-        // If closing the active tab, switch to adjacent
-        if (id === activeTabId) {
-          const closedIndex = prev.findIndex((t) => t.id === id);
-          const nextIndex = Math.min(closedIndex, remaining.length - 1);
-          setActiveTabId(remaining[nextIndex].id);
-        }
+    if (shouldCreateWorkspace) {
+      setActiveSessionId('');
+      await createWorkspace();
+      return;
+    }
 
-        return remaining;
+    if (nextActiveSessionId) {
+      setActiveSessionId(nextActiveSessionId);
+    }
+  }, [activeSessionId, createWorkspace]);
+
+  const handleStartRename = useCallback((workspaceId: string) => {
+    const workspace = workspacesRef.current.find((item) => item.id === workspaceId);
+    if (!workspace) return;
+    setRenameState({ workspaceId, value: workspace.name });
+  }, []);
+
+  const handleCommitRename = useCallback(() => {
+    if (!renameState) return;
+
+    const trimmed = renameState.value.trim();
+    setWorkspaces((prev) =>
+      prev.map((workspace) =>
+        workspace.id === renameState.workspaceId
+          ? { ...workspace, name: trimmed || workspace.name }
+          : workspace,
+      ),
+    );
+    setRenameState(null);
+  }, [renameState]);
+
+  const handleCancelRename = useCallback(() => {
+    setRenameState(null);
+  }, []);
+
+  const menuItems: ContextMenuItem[] = (() => {
+    if (!menuState) return [];
+
+    const workspace = workspaces.find((item) => item.id === menuState.workspaceId);
+    if (!workspace) return [];
+
+    if (menuState.sessionId) {
+      const session = workspace.sessions.find((item) => item.id === menuState.sessionId);
+      return createPathMenuItems({
+        nodePath: session?.cwd || null,
+        rootPath: workspace.currentPath || session?.cwd || null,
+        onClose: () => setMenuState(null),
       });
-    },
-    [activeTabId, createTab],
-  );
+    }
+
+    return [
+      {
+        label: 'New Tab',
+        onSelect: async () => {
+          setMenuState(null);
+          await createSessionInWorkspace(workspace.id);
+        },
+      },
+      {
+        label: 'Rename',
+        onSelect: () => {
+          setMenuState(null);
+          handleStartRename(workspace.id);
+        },
+      },
+      { type: 'separator' },
+      ...createPathMenuItems({
+        nodePath: workspace.currentPath,
+        rootPath: workspace.currentPath,
+        onClose: () => setMenuState(null),
+      }),
+    ];
+  })();
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <TerminalTabBar
-        tabs={tabs}
-        activeTabId={activeTabId}
-        onSelect={handleSelect}
-        onClose={handleClose}
-        onNew={createTab}
-      />
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {tabs.map((tab) => (
-          <TerminalInstance
-            key={tab.sessionId}
-            sessionId={tab.sessionId}
-            isActive={tab.id === activeTabId}
-          />
-        ))}
+    <div style={{ width: '100%', height: '100%', display: 'flex', overflow: 'hidden', position: 'relative' }}>
+      <div
+        style={{
+          width: sidebarWidth,
+          height: '100%',
+          borderRight: sidebarCollapsed ? 'none' : '1px solid var(--color-border-primary)',
+          backgroundColor: 'var(--color-bg-secondary)',
+          display: 'flex',
+          flexDirection: 'column',
+          flexShrink: 0,
+          overflow: 'hidden',
+          transition: 'width 0.18s ease',
+        }}
+      >
+        <div
+          style={{
+            height: SIDEBAR_HEADER_HEIGHT,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: sidebarCollapsed ? 'center' : 'space-between',
+            padding: sidebarCollapsed ? 0 : '0 8px',
+            borderBottom: '1px solid var(--color-border-light)',
+            flexShrink: 0,
+          }}
+        >
+          {!sidebarCollapsed && (
+            <span
+              style={{
+                fontSize: 12,
+                color: 'var(--color-text-tertiary)',
+                textTransform: 'uppercase',
+                letterSpacing: 0.6,
+              }}
+            >
+              Terminal
+            </span>
+          )}
+
+          {!sidebarCollapsed && (
+            <button
+              onClick={() => void createWorkspace()}
+              title="New Workspace"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 24,
+                height: 24,
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: 'var(--color-text-tertiary)',
+                cursor: 'pointer',
+                borderRadius: 6,
+                padding: 0,
+                flexShrink: 0,
+              }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <Plus size={15} />
+            </button>
+          )}
+        </div>
+
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            padding: sidebarCollapsed ? '6px 0' : '6px 8px 12px',
+          }}
+        >
+          {!sidebarCollapsed && workspaces.map((workspace) => {
+            const isWorkspaceActive = workspace.sessions.some((session) => session.id === activeSessionId);
+            const showWorkspaceNewButton =
+              hoveredWorkspaceId === workspace.id && renameState?.workspaceId !== workspace.id;
+
+            return (
+              <div key={workspace.id} style={{ marginBottom: 6 }}>
+                <div
+                  ref={(element) => {
+                    if (element) workspaceRefs.current.set(workspace.id, element);
+                    else workspaceRefs.current.delete(workspace.id);
+                  }}
+                  onClick={() => {
+                    if (renameState?.workspaceId === workspace.id) return;
+                    handleToggleWorkspace(workspace.id);
+                  }}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setMenuState({
+                      x: event.clientX,
+                      y: event.clientY,
+                      workspaceId: workspace.id,
+                    });
+                  }}
+                  style={{
+                    height: ROW_HEIGHT,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0 8px',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    backgroundColor: isWorkspaceActive ? 'var(--color-bg-hover)' : 'transparent',
+                    color: 'var(--color-text-secondary)',
+                    userSelect: 'none',
+                  }}
+                  onMouseEnter={(event) => {
+                    setHoveredWorkspaceId(workspace.id);
+                    event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+                  }}
+                  onMouseLeave={(event) => {
+                    setHoveredWorkspaceId((prev) => (prev === workspace.id ? null : prev));
+                    event.currentTarget.style.backgroundColor = isWorkspaceActive
+                      ? 'var(--color-bg-hover)'
+                      : 'transparent';
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 14,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      color: 'var(--color-icon-default)',
+                    }}
+                  >
+                    {workspace.isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </span>
+                  <span
+                    style={{
+                      width: 14,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      color: 'var(--color-icon-folder)',
+                    }}
+                  >
+                    <Folder size={14} />
+                  </span>
+
+                  {renameState?.workspaceId === workspace.id ? (
+                    <input
+                      ref={renameInputRef}
+                      value={renameState.value}
+                      onChange={(event) =>
+                        setRenameState((prev) =>
+                          prev ? { ...prev, value: event.target.value } : prev,
+                        )
+                      }
+                      onBlur={handleCommitRename}
+                      onClick={(event) => event.stopPropagation()}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          handleCommitRename();
+                        }
+                        if (event.key === 'Escape') {
+                          event.preventDefault();
+                          handleCancelRename();
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        border: '1px solid var(--color-border-primary)',
+                        borderRadius: 6,
+                        backgroundColor: 'var(--color-bg-primary)',
+                        color: 'var(--color-text-primary)',
+                        fontSize: 12,
+                        padding: '4px 6px',
+                        outline: 'none',
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: 12,
+                        color: 'var(--color-text-primary)',
+                      }}
+                    >
+                      {workspace.name}
+                    </span>
+                  )}
+
+                  {showWorkspaceNewButton && (
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void createSessionInWorkspace(workspace.id);
+                      }}
+                      title="New Tab"
+                      style={{
+                        width: 18,
+                        height: 18,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: 'none',
+                        borderRadius: '50%',
+                        backgroundColor: 'transparent',
+                        color: 'var(--color-text-muted)',
+                        cursor: 'pointer',
+                        padding: 0,
+                        flexShrink: 0,
+                      }}
+                      onMouseEnter={(event) => {
+                        event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+                      }}
+                      onMouseLeave={(event) => {
+                        event.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <Plus size={12} />
+                    </button>
+                  )}
+                </div>
+
+                {workspace.isExpanded && (
+                  <div style={{ marginTop: 2 }}>
+                    {workspace.sessions.map((session) => {
+                      const isActive = session.id === activeSessionId;
+                      return (
+                        <div
+                          key={session.id}
+                          ref={(element) => {
+                            if (element) sessionRefs.current.set(session.id, element);
+                            else sessionRefs.current.delete(session.id);
+                          }}
+                          onClick={() => handleSelectSession(session.id)}
+                          onContextMenu={(event) => {
+                            event.preventDefault();
+                            setMenuState({
+                              x: event.clientX,
+                              y: event.clientY,
+                              workspaceId: workspace.id,
+                              sessionId: session.id,
+                            });
+                          }}
+                          style={{
+                            height: ROW_HEIGHT,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '0 8px 0 40px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            backgroundColor: isActive ? 'var(--color-bg-selected)' : 'transparent',
+                            color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                            userSelect: 'none',
+                          }}
+                          onMouseEnter={(event) => {
+                            event.currentTarget.style.backgroundColor = isActive
+                              ? 'var(--color-bg-selected)'
+                              : 'var(--color-bg-hover)';
+                          }}
+                          onMouseLeave={(event) => {
+                            event.currentTarget.style.backgroundColor = isActive
+                              ? 'var(--color-bg-selected)'
+                              : 'transparent';
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              backgroundColor: isActive
+                                ? 'var(--color-accent-primary)'
+                                : 'var(--color-icon-default)',
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              fontSize: 12,
+                            }}
+                          >
+                            {session.displayLabel}
+                          </span>
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleCloseSession(workspace.id, session.id);
+                            }}
+                            title="Close Tab"
+                            style={{
+                              width: 18,
+                              height: 18,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              border: 'none',
+                              borderRadius: '50%',
+                              backgroundColor: 'transparent',
+                              color: 'var(--color-text-muted)',
+                              cursor: 'pointer',
+                              padding: 0,
+                              flexShrink: 0,
+                            }}
+                            onMouseEnter={(event) => {
+                              event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+                            }}
+                            onMouseLeave={(event) => {
+                              event.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
+
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {workspaces.flatMap((workspace) =>
+          workspace.sessions.map((session) => (
+            <TerminalInstance
+              key={session.id}
+              sessionId={session.id}
+              isActive={session.id === activeSessionId}
+            />
+          )),
+        )}
+      </div>
+
+      <button
+        onClick={() => setSidebarCollapsed((prev) => !prev)}
+        title={sidebarCollapsed ? 'Expand Terminal Sidebar' : 'Collapse Terminal Sidebar'}
+        style={{
+          position: 'absolute',
+          bottom: 12,
+          left: sidebarCollapsed ? 8 : sidebarWidth + 8,
+          width: SIDEBAR_TOGGLE_SIZE,
+          height: SIDEBAR_TOGGLE_SIZE,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid var(--color-border-primary)',
+          backgroundColor: 'var(--color-bg-primary)',
+          color: 'var(--color-text-tertiary)',
+          cursor: 'pointer',
+          borderRadius: 999,
+          padding: 0,
+          zIndex: 20,
+          boxShadow: '0 2px 6px var(--color-shadow)',
+          transition: 'left 0.18s ease, background-color 0.15s ease',
+        }}
+        onMouseEnter={(event) => {
+          event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+        }}
+        onMouseLeave={(event) => {
+          event.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
+        }}
+      >
+        {sidebarCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
+      </button>
+
+      {menuState && menuItems.length > 0 && (
+        <ContextMenu
+          x={menuState.x}
+          y={menuState.y}
+          items={menuItems}
+          onClose={() => setMenuState(null)}
+        />
+      )}
     </div>
   );
 };

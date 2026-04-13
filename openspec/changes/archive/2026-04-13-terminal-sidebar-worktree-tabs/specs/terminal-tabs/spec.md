@@ -1,9 +1,4 @@
-# Capability: terminal-tabs
-
-## Purpose
-终端分组导航能力，提供基于 workspace / 终端会话的侧边双层结构、终端会话切换与关闭、以及围绕当前终端上下文自动更新标签名称的交互。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Tab 栏显示
 终端面板 SHALL 在左侧显示一个双层导航区域，以 workspace 为一级节点、终端会话为二级节点。
@@ -53,11 +48,6 @@
 - **THEN** 系统 SHALL 在该 workspace 下创建一个新的二级终端节点和对应 PTY 会话
 - **THEN** 新二级终端的初始工作目录 SHALL 继承该 workspace 当前绑定的路径；若无有效路径则回退到用户 HOME 目录
 
-#### Scenario: 从一级节点悬停按钮新增二级终端
-- **WHEN** 用户鼠标悬停某个一级 workspace 节点，点击其右侧显示的 `+` 按钮
-- **THEN** 系统 SHALL 在该 workspace 下创建一个新的二级终端节点和对应 PTY 会话
-- **THEN** 该行为 SHALL 与一级 workspace 右键菜单中的 `New Tab` 保持一致
-
 #### Scenario: workspace 编号不回填
 - **WHEN** 用户删除了较早创建的 workspace 后再次点击 `+`
 - **THEN** 新 workspace 的 `{index}` SHALL 继续按递增计数生成
@@ -104,24 +94,38 @@
 - **WHEN** 用户关闭应用内最后一个剩余的二级终端
 - **THEN** 系统 SHALL 自动创建一个新的 `workspace_{index}` 与其首个二级终端，保证终端面板始终至少有一个可用终端
 
-### Requirement: 终端实例生命周期管理
-每个二级终端节点对应的终端实例 SHALL 独立管理自己的 xterm.js 和 PTY 生命周期。
+### Requirement: 新建按钮样式
+新建按钮 SHALL 适配侧边导航布局，并作为“新建 workspace”的明确入口。
 
-#### Scenario: 终端实例挂载
-- **WHEN** 一个新的二级终端被创建
-- **THEN** 系统 SHALL 创建一个独立的 xterm.js 实例并绑定到独立的 PTY 会话
+#### Scenario: 新建按钮渲染
+- **WHEN** 新建按钮渲染时
+- **THEN** 该按钮 SHALL 显示 `Plus` 图标
+- **THEN** 该按钮 SHALL 出现在左侧终端导航区域内，且可被稳定点击
 
-#### Scenario: 非活跃终端保持连接
-- **WHEN** 一个二级终端处于非活跃状态
-- **THEN** 其 PTY 进程 SHALL 继续运行，xterm.js 实例 SHALL 保持挂载但不可见
+#### Scenario: 新建按钮悬停
+- **WHEN** 用户鼠标悬停在新建按钮上
+- **THEN** 按钮 SHALL 显示悬停高亮反馈
 
-#### Scenario: 终端切换或侧边栏宽度变化时适配尺寸
-- **WHEN** 用户切换活跃终端或收起 / 展开侧边导航导致终端内容区宽度变化
-- **THEN** 当前活跃终端 SHALL 自动重新适配当前面板尺寸
+### Requirement: Tab 自动滚动到可视区域
+当新建、切换或展开 workspace 时，系统 SHALL 自动保证目标节点位于侧边导航的可视区域内。
 
-#### Scenario: 节点关闭时清理资源
-- **WHEN** 一个二级终端节点被关闭
-- **THEN** 系统 SHALL 销毁对应的 xterm.js 实例并通过 IPC 销毁 PTY 会话
+#### Scenario: 新建 workspace 后自动滚动
+- **WHEN** 用户点击 `+` 新建一个 workspace
+- **THEN** 侧边导航 SHALL 自动滚动到目标位置，确保新建的一组节点可见
+
+#### Scenario: 切换到不可见的二级终端时自动滚动
+- **WHEN** 用户切换到一个当前不在可视区域内的二级终端节点
+- **THEN** 系统 SHALL 将该节点平滑滚动到可视区域内
+
+#### Scenario: 展开 workspace 后显示其活跃子节点
+- **WHEN** 用户展开一个当前被折叠的 workspace，且其活跃二级节点不在可视区域内
+- **THEN** 系统 SHALL 自动滚动，使该活跃二级节点进入可视区域
+
+#### Scenario: 侧边栏重新展开后保持目标节点可见
+- **WHEN** 用户重新展开 terminal 侧边 tab 栏，且当前活跃二级终端节点不在可视区域内
+- **THEN** 系统 SHALL 自动滚动，使当前活跃节点进入可视区域
+
+## ADDED Requirements
 
 ### Requirement: Workspace 右键菜单
 terminal tab SHALL 提供与文件树一致的右键菜单能力；一级 workspace 在通用路径菜单基础上额外提供 workspace 级操作。
@@ -160,22 +164,3 @@ terminal tab SHALL 提供与文件树一致的右键菜单能力；一级 worksp
 - **WHEN** 某个 workspace 下任意终端会话的 cwd 发生变化
 - **THEN** 该 workspace 的一级名称 SHALL 保持不变
 - **THEN** 系统 SHALL 仅更新其路径上下文与受影响的二级节点名称
-
-### Requirement: Tab 自动滚动到可视区域
-当新建、切换或展开 workspace 时，系统 SHALL 自动保证目标节点位于侧边导航的可视区域内。
-
-#### Scenario: 新建 workspace 后自动滚动
-- **WHEN** 用户点击 `+` 新建一个 workspace
-- **THEN** 侧边导航 SHALL 自动滚动到目标位置，确保新建的一组节点可见
-
-#### Scenario: 切换到不可见的二级终端时自动滚动
-- **WHEN** 用户切换到一个当前不在可视区域内的二级终端节点
-- **THEN** 系统 SHALL 将该节点平滑滚动到可视区域内
-
-#### Scenario: 展开 workspace 后显示其活跃子节点
-- **WHEN** 用户展开一个当前被折叠的 workspace，且其活跃二级节点不在可视区域内
-- **THEN** 系统 SHALL 自动滚动，使该活跃二级节点进入可视区域
-
-#### Scenario: 侧边栏重新展开后保持目标节点可见
-- **WHEN** 用户重新展开 terminal 侧边 tab 栏，且当前活跃二级终端节点不在可视区域内
-- **THEN** 系统 SHALL 自动滚动，使当前活跃节点进入可视区域

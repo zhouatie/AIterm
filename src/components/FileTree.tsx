@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   ChevronRight,
   ChevronDown,
@@ -12,6 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { ScanTreeNode } from '../preload';
+import ContextMenu, { createPathMenuItems } from './ContextMenu';
 
 // --- Types ---
 
@@ -55,165 +56,11 @@ const ICON_SIZE = 15;
 const ICON_COLOR = 'var(--color-icon-default)';
 const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
 const ROW_HEIGHT = 28;
-const CONTEXT_MENU_WIDTH = 180;
-const CONTEXT_MENU_ITEM_HEIGHT = 30;
-
-// --- Context Menu ---
-
 interface ContextMenuState {
   x: number;
   y: number;
   nodePath: string;
 }
-
-interface ContextMenuProps {
-  menu: ContextMenuState;
-  rootPath: string;
-  onClose: () => void;
-}
-
-const ContextMenu: React.FC<ContextMenuProps> = ({ menu, rootPath, onClose }) => {
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Close on outside click
-  useEffect(() => {
-    const handleMouseDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    document.addEventListener('mousedown', handleMouseDown);
-    return () => document.removeEventListener('mousedown', handleMouseDown);
-  }, [onClose]);
-
-  // Adjust position if near viewport edges
-  const menuHeight = CONTEXT_MENU_ITEM_HEIGHT * 4 + 8 + 1; // 4 items + padding + separator
-  let adjustedX = menu.x;
-  let adjustedY = menu.y;
-  if (menu.x + CONTEXT_MENU_WIDTH > window.innerWidth) {
-    adjustedX = menu.x - CONTEXT_MENU_WIDTH;
-  }
-  if (menu.y + menuHeight > window.innerHeight) {
-    adjustedY = menu.y - menuHeight;
-  }
-
-  const handleCopyFileName = async () => {
-    const fileName = menu.nodePath.split('/').pop() || menu.nodePath;
-    try {
-      await navigator.clipboard.writeText(fileName);
-    } catch {
-      // Clipboard write failed silently
-    }
-    onClose();
-  };
-
-  const handleCopyRelativePath = async () => {
-    const relativePath = menu.nodePath.startsWith(rootPath + '/')
-      ? menu.nodePath.slice(rootPath.length + 1)
-      : menu.nodePath;
-    try {
-      await navigator.clipboard.writeText(relativePath);
-    } catch {
-      // Clipboard write failed silently
-    }
-    onClose();
-  };
-
-  const handleCopyAbsolutePath = async () => {
-    try {
-      await navigator.clipboard.writeText(menu.nodePath);
-    } catch {
-      // Clipboard write failed silently
-    }
-    onClose();
-  };
-
-  const handleShowInFolder = () => {
-    window.fileApi.showInFolder(menu.nodePath);
-    onClose();
-  };
-
-  const menuItemStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    height: CONTEXT_MENU_ITEM_HEIGHT,
-    padding: '0 12px',
-    fontSize: 12,
-    color: 'var(--color-text-secondary)',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    borderRadius: 3,
-  };
-
-  return (
-    <div
-      ref={menuRef}
-      style={{
-        position: 'fixed',
-        left: adjustedX,
-        top: adjustedY,
-        width: CONTEXT_MENU_WIDTH,
-        backgroundColor: 'var(--color-bg-primary)',
-        border: '1px solid var(--color-border-primary)',
-        borderRadius: 6,
-        boxShadow: '0 2px 8px var(--color-shadow-heavy)',
-        padding: '4px 0',
-        zIndex: 9999,
-        userSelect: 'none',
-      }}
-    >
-      <div
-        style={menuItemStyle}
-        onClick={handleCopyFileName}
-        onMouseEnter={(e) => {
-           e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-      >
-        Copy Filename
-      </div>
-      <div
-        style={menuItemStyle}
-        onClick={handleCopyRelativePath}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-      >
-        Copy Relative Path
-      </div>
-      <div
-        style={menuItemStyle}
-        onClick={handleCopyAbsolutePath}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-      >
-        Copy Absolute Path
-      </div>
-      <div style={{ height: 1, backgroundColor: 'var(--color-border-primary)', margin: '4px 0' }} />
-      <div
-        style={menuItemStyle}
-        onClick={handleShowInFolder}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-      >
-        Reveal in Finder
-      </div>
-    </div>
-  );
-};
 
 // --- Toolbar ---
 
@@ -649,8 +496,13 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
       {/* Context menu portal */}
       {contextMenu && (
         <ContextMenu
-          menu={contextMenu}
-          rootPath={rootPath}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={createPathMenuItems({
+            nodePath: contextMenu.nodePath,
+            rootPath,
+            onClose: handleCloseContextMenu,
+          })}
           onClose={handleCloseContextMenu}
         />
       )}
