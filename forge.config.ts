@@ -10,8 +10,32 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
 const config: ForgeConfig = {
   packagerConfig: {
+    appBundleId: 'com.zhoushitie.aiterm',
     asar: {
       unpack: '**/node_modules/node-pty/**',
+    },
+    osxSign: {
+      identity: '-',
+      identityValidation: false,
+      optionsForFile: () => ({
+        hardenedRuntime: false,
+        timestamp: 'none',
+      }),
+    },
+    // macOS TCC (Privacy) — terminal emulators need broad filesystem access so
+    // that shell child processes (git, lazygit, etc.) can read any user directory.
+    // These strings trigger the system permission dialog when the app first
+    // accesses each protected location.  Users can also grant Full Disk Access
+    // manually in System Settings → Privacy & Security → Full Disk Access.
+    extendInfo: {
+      NSDesktopFolderUsageDescription:
+        'Terminal sessions need access to your Desktop folder.',
+      NSDocumentsFolderUsageDescription:
+        'Terminal sessions need access to your Documents folder.',
+      NSDownloadsFolderUsageDescription:
+        'Terminal sessions need access to your Downloads folder.',
+      NSRemovableVolumesUsageDescription:
+        'Terminal sessions need access to removable volumes.',
     },
     // Override the VitePlugin's default ignore function.
     // The VitePlugin checks for this — if `ignore` is already set, it skips

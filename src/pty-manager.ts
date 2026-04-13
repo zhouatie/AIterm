@@ -27,6 +27,21 @@ function getDefaultShell(): string {
   return process.env.SHELL || '/bin/zsh';
 }
 
+function getPtyEnv(shell: string): Record<string, string> {
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter((entry): entry is [string, string] => (
+      typeof entry[1] === 'string'
+    )),
+  );
+
+  return {
+    ...env,
+    SHELL: shell,
+    TERM: 'xterm-256color',
+    COLORTERM: 'truecolor',
+  };
+}
+
 function getLastPathSegment(cwd: string): string {
   const trimmed = cwd.replace(/\/+$/, '');
   if (!trimmed) return cwd;
@@ -101,7 +116,7 @@ export function createSession(cols: number, rows: number, cwd?: string): PtySess
     cols,
     rows,
     cwd: initialCwd,
-    env: { ...process.env } as Record<string, string>,
+    env: getPtyEnv(shell),
   });
 
   const session: PtySession = {
