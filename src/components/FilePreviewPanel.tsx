@@ -18,8 +18,9 @@ interface FilePreviewSnapshot {
   expandedPaths: string[];
 }
 
-const STORAGE_KEY_FILE_TREE_SPLIT_PERCENT = 'filePreviewTreeSplitPercent';
+const STORAGE_KEY_FILE_TREE_SPLIT_PX = 'filePreviewTreeSplitPx';
 const STORAGE_KEY_FILE_TREE_VISIBLE = 'filePreviewTreeVisible';
+const FILE_TREE_SIDEBAR_WIDTH = 220;
 const ICON_COLOR = 'var(--color-icon-default)';
 const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
 
@@ -272,10 +273,11 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
       <SplitLayout
         left={fileTreePane}
         right={previewPane}
-        defaultLeftPercent={30}
-        storageKey={STORAGE_KEY_FILE_TREE_SPLIT_PERCENT}
+        defaultLeftPx={FILE_TREE_SIDEBAR_WIDTH}
+        storageKey={STORAGE_KEY_FILE_TREE_SPLIT_PX}
         minLeftPx={150}
         minRightPx={200}
+        shadow
         leftCollapsed={!fileTreeVisible}
       />
     </div>

@@ -236,6 +236,7 @@ const AppContent: React.FC = () => {
             defaultLeftPercent={50}
             storageKey={STORAGE_KEY_MAIN_SPLIT_PERCENT}
             shadow
+            shadowSide="left"
             leftCollapsed={!panelVisible}
           />
         </div>
