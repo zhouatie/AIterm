@@ -1,0 +1,29 @@
+src/components/SettingsPanel.tsx
+  50a441f2d7549acc 13,19,22,130,133,138,141,148,151,153,172-175,185-194,197,200-201,214-215,220-228,231,346,487-536
+src/utils/terminal-settings.ts
+  50a441f2d7549acc 1-20
+src/components/TerminalPanel.tsx
+  50a441f2d7549acc 49,94-97,222-223,233,235,415,422,473,480
+src/App.tsx
+  50a441f2d7549acc 18-22,42-62,119,139-141,231,234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "d9ce060b01f54bbd40d318803a58cf6a2b1b96a3",
+  "prompts": {
+    "50a441f2d7549acc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d866c-1f94-7b60-a64d-569261eed7d5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 169,
+      "total_deletions": 15,
+      "accepted_lines": 169,
+      "overriden_lines": 0
+    }
+  }
+}
