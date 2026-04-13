@@ -74,24 +74,40 @@ const ICON_COLOR = 'var(--color-icon-default)';
 const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
 
 // Height of the dedicated title bar area (houses traffic lights + sidebar toggle)
-const TITLE_BAR_HEIGHT = 38;
+const TITLE_BAR_HEIGHT = 42;
 
 const toggleButtonStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 24,
-  height: 24,
-  border: 'none',
+  width: 28,
+  height: 28,
+  border: '1px solid transparent',
   background: 'transparent',
-  borderRadius: 4,
+  borderRadius: 8,
   cursor: 'pointer',
   color: ICON_COLOR,
   padding: 0,
-  transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease',
+  transition: 'background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease',
   // Clickable even in title bar drag region
   WebkitAppRegion: 'no-drag' as const,
 };
+
+function applyChromeButtonHover(target: HTMLButtonElement) {
+  target.style.backgroundColor = 'var(--color-surface-content-elevated)';
+  target.style.borderColor = 'var(--color-border-primary)';
+  target.style.color = ICON_COLOR_ACTIVE;
+  target.style.transform = 'translateY(-1px)';
+  target.style.boxShadow = 'var(--color-shadow-soft)';
+}
+
+function resetChromeButtonHover(target: HTMLButtonElement) {
+  target.style.backgroundColor = 'transparent';
+  target.style.borderColor = 'transparent';
+  target.style.color = ICON_COLOR;
+  target.style.transform = 'translateY(0)';
+  target.style.boxShadow = 'none';
+}
 
 const AppContent: React.FC = () => {
   const { activeSessionId } = useActiveSession();
@@ -157,7 +173,7 @@ const AppContent: React.FC = () => {
           height: '100vh',
           flexDirection: 'column',
           overflow: 'hidden',
-          backgroundColor: 'var(--color-bg-primary)',
+          background: 'var(--color-workbench-bg)',
         }}
       >
         {/* Title bar — drag region, houses macOS traffic lights + sidebar toggle */}
@@ -168,8 +184,12 @@ const AppContent: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             paddingLeft: 78,
-            backgroundColor: 'var(--color-bg-secondary)',
-            borderBottom: '1px solid var(--color-border-primary)',
+            paddingRight: 12,
+            gap: 6,
+            background: 'var(--color-window-chrome-bg)',
+            borderBottom: '1px solid var(--color-window-chrome-border)',
+            boxShadow: '0 1px 0 var(--color-border-light)',
+            backdropFilter: 'blur(20px) saturate(180%)',
             WebkitAppRegion: 'drag',
           } as React.CSSProperties}
         >
@@ -178,16 +198,10 @@ const AppContent: React.FC = () => {
             title={fileTreeToggleTitle}
             style={toggleButtonStyle}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-              e.currentTarget.style.color = ICON_COLOR_ACTIVE;
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 2px 6px var(--color-shadow)';
+              applyChromeButtonHover(e.currentTarget);
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = ICON_COLOR;
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              resetChromeButtonHover(e.currentTarget);
             }}
           >
             {panelVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
@@ -198,23 +212,24 @@ const AppContent: React.FC = () => {
             title={themeTitle}
             style={{ ...toggleButtonStyle, marginLeft: 4 }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-              e.currentTarget.style.color = ICON_COLOR_ACTIVE;
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 2px 6px var(--color-shadow)';
+              applyChromeButtonHover(e.currentTarget);
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = ICON_COLOR;
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              resetChromeButtonHover(e.currentTarget);
             }}
           >
             <ThemeIcon size={16} />
           </button>
         </div>
 
-        <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        <div
+          style={{
+            flex: 1,
+            overflow: 'hidden',
+            position: 'relative',
+            background: 'var(--color-workbench-bg)',
+          }}
+        >
           <SplitLayout
             left={<FilePreviewPanel activeSessionId={activeSessionId} visible={panelVisible} />}
             right={<PanelContainer />}

@@ -51,10 +51,10 @@ interface TerminalPanelProps {
 }
 
 const SIDEBAR_WIDTH = 240;
-const SIDEBAR_HEADER_HEIGHT = 40;
-const SIDEBAR_FOOTER_HEIGHT = 40;
-const ROW_HEIGHT = 32;
-const SIDEBAR_TOGGLE_SIZE = 24;
+const SIDEBAR_HEADER_HEIGHT = 46;
+const SIDEBAR_FOOTER_HEIGHT = 48;
+const ROW_HEIGHT = 34;
+const SIDEBAR_TOGGLE_SIZE = 28;
 
 function getLastPathSegment(cwd: string): string {
   const trimmed = cwd.replace(/\/+$/, '');
@@ -112,6 +112,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const [menuState, setMenuState] = useState<SidebarMenuState | null>(null);
   const [renameState, setRenameState] = useState<RenameState | null>(null);
   const [hoveredWorkspaceId, setHoveredWorkspaceId] = useState<string | null>(null);
+  const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
   const sidebarWidth = sidebarCollapsed ? 0 : SIDEBAR_WIDTH;
   const renameTargetKey = renameState
     ? renameState.type === 'workspace'
@@ -646,17 +647,28 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [getActiveWorkspace, handleCloseWorkspace, registerAction]);
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', overflow: 'hidden', position: 'relative' }}>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'var(--color-workbench-bg)',
+      }}
+    >
       <div
         style={{
           width: sidebarWidth,
           height: '100%',
-          borderRight: sidebarCollapsed ? 'none' : '1px solid var(--color-border-primary)',
-          backgroundColor: 'var(--color-bg-secondary)',
+          borderRight: sidebarCollapsed ? 'none' : '1px solid var(--color-window-chrome-border)',
+          background: 'var(--color-surface-sidebar)',
           display: 'flex',
           flexDirection: 'column',
           flexShrink: 0,
           overflow: 'hidden',
+          boxShadow: 'var(--color-shadow-inset)',
+          backdropFilter: 'blur(18px) saturate(160%)',
           transition: 'width 0.18s ease',
         }}
       >
@@ -666,8 +678,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: sidebarCollapsed ? 'center' : 'space-between',
-            padding: sidebarCollapsed ? 0 : '0 8px',
-            borderBottom: '1px solid var(--color-border-light)',
+            padding: sidebarCollapsed ? 0 : '0 12px',
+            borderBottom: '1px solid var(--color-border-secondary)',
             flexShrink: 0,
           }}
         >
@@ -677,7 +689,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 fontSize: 12,
                 color: 'var(--color-text-tertiary)',
                 textTransform: 'uppercase',
-                letterSpacing: 0.6,
+                letterSpacing: 0.8,
+                fontWeight: 600,
               }}
             >
               Terminal
@@ -692,21 +705,28 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 24,
-                height: 24,
-                border: 'none',
+                width: 26,
+                height: 26,
+                border: '1px solid transparent',
                 backgroundColor: 'transparent',
                 color: 'var(--color-text-tertiary)',
                 cursor: 'pointer',
-                borderRadius: 6,
+                borderRadius: 8,
                 padding: 0,
                 flexShrink: 0,
+                transition: 'background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease',
               }}
               onMouseEnter={(event) => {
-                event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+                event.currentTarget.style.backgroundColor = 'var(--color-surface-content-elevated)';
+                event.currentTarget.style.borderColor = 'var(--color-border-primary)';
+                event.currentTarget.style.color = 'var(--color-text-primary)';
+                event.currentTarget.style.boxShadow = 'var(--color-shadow-soft)';
               }}
               onMouseLeave={(event) => {
                 event.currentTarget.style.backgroundColor = 'transparent';
+                event.currentTarget.style.borderColor = 'transparent';
+                event.currentTarget.style.color = 'var(--color-text-tertiary)';
+                event.currentTarget.style.boxShadow = 'none';
               }}
             >
               <Plus size={15} />
@@ -719,13 +739,13 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             flex: 1,
             overflowY: 'auto',
             overflowX: 'hidden',
-            padding: sidebarCollapsed ? '6px 0' : '6px 8px 12px',
+            padding: sidebarCollapsed ? '8px 0' : '10px 10px 14px',
           }}
         >
           {!sidebarCollapsed && workspaces.map((workspace) => {
             const isWorkspaceActive = workspace.sessions.some((session) => session.id === activeSessionId);
             const showWorkspaceNewButton =
-              hoveredWorkspaceId === workspace.id
+              (hoveredWorkspaceId === workspace.id || isWorkspaceActive)
               && !(renameState?.type === 'workspace' && renameState.workspaceId === workspace.id);
             const workspaceNewTabTitle = getIconButtonTooltip({
               label: '新增 Terminal Tab',
@@ -756,23 +776,29 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                     height: ROW_HEIGHT,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 6,
-                    padding: '0 8px',
-                    borderRadius: 8,
+                    gap: 8,
+                    padding: '0 10px',
+                    borderRadius: 10,
                     cursor: 'pointer',
-                    backgroundColor: isWorkspaceActive ? 'var(--color-bg-hover)' : 'transparent',
+                    backgroundColor:
+                      hoveredWorkspaceId === workspace.id
+                        ? 'var(--color-sidebar-workspace-hover)'
+                        : isWorkspaceActive
+                        ? 'var(--color-surface-hover-soft)'
+                        : 'transparent',
                     color: 'var(--color-text-secondary)',
                     userSelect: 'none',
+                    boxShadow:
+                      hoveredWorkspaceId === workspace.id || isWorkspaceActive
+                        ? 'var(--color-shadow-inset)'
+                        : 'none',
+                    transition: 'background-color 0.16s ease, box-shadow 0.16s ease',
                   }}
                   onMouseEnter={(event) => {
                     setHoveredWorkspaceId(workspace.id);
-                    event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
                   }}
                   onMouseLeave={(event) => {
                     setHoveredWorkspaceId((prev) => (prev === workspace.id ? null : prev));
-                    event.currentTarget.style.backgroundColor = isWorkspaceActive
-                      ? 'var(--color-bg-hover)'
-                      : 'transparent';
                   }}
                 >
                   <span
@@ -782,7 +808,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      color: 'var(--color-icon-default)',
+                      color: isWorkspaceActive ? 'var(--color-icon-active)' : 'var(--color-icon-default)',
                     }}
                   >
                     {workspace.isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -838,56 +864,62 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                       style={{
                         flex: 1,
                         minWidth: 0,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontSize: 12,
-                        color: 'var(--color-text-primary)',
-                      }}
-                    >
-                      {workspace.name}
-                    </span>
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      fontSize: 12.5,
+                      fontWeight: 600,
+                      letterSpacing: 0.1,
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    {workspace.name}
+                  </span>
                   )}
 
-                  {showWorkspaceNewButton && (
-                    <button
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void createSessionInWorkspace(workspace.id);
-                      }}
-                      title={workspaceNewTabTitle}
-                      style={{
-                        width: 18,
-                        height: 18,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: 'none',
-                        borderRadius: '50%',
-                        backgroundColor: 'transparent',
-                        color: 'var(--color-text-muted)',
-                        cursor: 'pointer',
-                        padding: 0,
-                        flexShrink: 0,
-                      }}
-                      onMouseEnter={(event) => {
-                        event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-                      }}
-                      onMouseLeave={(event) => {
-                        event.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <Plus size={12} />
-                    </button>
-                  )}
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void createSessionInWorkspace(workspace.id);
+                    }}
+                    title={workspaceNewTabTitle}
+                    style={{
+                      width: 18,
+                      height: 18,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: 'none',
+                      borderRadius: 999,
+                      backgroundColor: 'transparent',
+                      color: 'var(--color-text-muted)',
+                      cursor: showWorkspaceNewButton ? 'pointer' : 'default',
+                      padding: 0,
+                      flexShrink: 0,
+                      opacity: showWorkspaceNewButton ? 1 : 0,
+                      pointerEvents: showWorkspaceNewButton ? 'auto' : 'none',
+                      transition: 'opacity 0.16s ease, background-color 0.16s ease, color 0.16s ease',
+                    }}
+                    onMouseEnter={(event) => {
+                      event.currentTarget.style.backgroundColor = 'var(--color-sidebar-item-hover)';
+                      event.currentTarget.style.color = 'var(--color-text-primary)';
+                    }}
+                    onMouseLeave={(event) => {
+                      event.currentTarget.style.backgroundColor = 'transparent';
+                      event.currentTarget.style.color = 'var(--color-text-muted)';
+                    }}
+                  >
+                    <Plus size={12} />
+                  </button>
                 </div>
 
                 {workspace.isExpanded && (
-                  <div style={{ marginTop: 2 }}>
+                  <div style={{ marginTop: 4, paddingLeft: 10 }}>
                     {workspace.sessions.map((session) => {
                       const isActive = session.id === activeSessionId;
                       const attention = attentionBySessionId[session.id];
                       const hasAttention = !!attention;
+                      const isHovered = hoveredSessionId === session.id;
                       const isRenamingSession =
                         renameState?.type === 'session' && renameState.sessionId === session.id;
                       const sessionRenameState =
@@ -924,22 +956,26 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                             display: 'flex',
                             alignItems: 'center',
                             gap: 8,
-                            padding: '0 8px 0 40px',
-                            borderRadius: 8,
+                            padding: '0 10px 0 18px',
+                            marginTop: 2,
+                            borderRadius: 10,
                             cursor: 'pointer',
-                            backgroundColor: isActive ? 'var(--color-bg-selected)' : 'transparent',
+                            backgroundColor: isActive
+                              ? 'var(--color-sidebar-item-active)'
+                              : isHovered
+                              ? 'var(--color-sidebar-item-hover)'
+                              : 'transparent',
                             color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                             userSelect: 'none',
+                            border: isActive ? '1px solid var(--color-sidebar-item-active-border)' : '1px solid transparent',
+                            boxShadow: isActive ? 'var(--color-shadow-inset)' : 'none',
+                            transition: 'background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease',
                           }}
                           onMouseEnter={(event) => {
-                            event.currentTarget.style.backgroundColor = isActive
-                              ? 'var(--color-bg-selected)'
-                              : 'var(--color-bg-hover)';
+                            setHoveredSessionId(session.id);
                           }}
                           onMouseLeave={(event) => {
-                            event.currentTarget.style.backgroundColor = isActive
-                              ? 'var(--color-bg-selected)'
-                              : 'transparent';
+                            setHoveredSessionId((prev) => (prev === session.id ? null : prev));
                           }}
                         >
                           <span
@@ -949,11 +985,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                               height: 6,
                               borderRadius: '50%',
                               backgroundColor: hasAttention
-                                ? '#d93025'
+                                ? 'var(--color-attention)'
                                 : isActive
                                 ? 'var(--color-accent-primary)'
                                 : 'var(--color-icon-default)',
-                              boxShadow: hasAttention ? '0 0 0 2px rgba(217, 48, 37, 0.18)' : 'none',
+                              boxShadow: hasAttention ? '0 0 0 4px var(--color-attention-soft)' : 'none',
                               flexShrink: 0,
                             }}
                           />
@@ -982,8 +1018,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                 flex: 1,
                                 minWidth: 0,
                                 border: '1px solid var(--color-border-primary)',
-                                borderRadius: 6,
-                                backgroundColor: 'var(--color-bg-primary)',
+                                borderRadius: 8,
+                                backgroundColor: 'var(--color-surface-content-elevated)',
                                 color: 'var(--color-text-primary)',
                                 fontSize: 12,
                                 padding: '4px 6px',
@@ -998,7 +1034,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
-                                fontSize: 12,
+                                fontSize: 12.5,
+                                fontWeight: isActive ? 600 : 500,
                               }}
                             >
                               {getSessionDisplayLabel(session, sessionNameOverrides)}
@@ -1018,18 +1055,23 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 border: 'none',
-                                borderRadius: '50%',
+                                borderRadius: 999,
                                 backgroundColor: 'transparent',
                                 color: 'var(--color-text-muted)',
-                                cursor: 'pointer',
+                                cursor: isActive || isHovered ? 'pointer' : 'default',
                                 padding: 0,
                                 flexShrink: 0,
+                                opacity: isActive || isHovered ? 1 : 0,
+                                pointerEvents: isActive || isHovered ? 'auto' : 'none',
+                                transition: 'opacity 0.16s ease, background-color 0.16s ease, color 0.16s ease',
                               }}
                               onMouseEnter={(event) => {
-                                event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+                                event.currentTarget.style.backgroundColor = 'var(--color-sidebar-item-hover)';
+                                event.currentTarget.style.color = hasAttention ? 'var(--color-attention)' : 'var(--color-text-primary)';
                               }}
                               onMouseLeave={(event) => {
                                 event.currentTarget.style.backgroundColor = 'transparent';
+                                event.currentTarget.style.color = 'var(--color-text-muted)';
                               }}
                             >
                               <X size={12} />
@@ -1052,8 +1094,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              padding: '0 8px 8px',
-              borderTop: '1px solid var(--color-border-light)',
+              padding: '0 10px 10px',
+              borderTop: '1px solid var(--color-border-secondary)',
               flexShrink: 0,
             }}
           >
@@ -1067,19 +1109,24 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 border: '1px solid var(--color-border-primary)',
-                backgroundColor: 'var(--color-bg-primary)',
+                backgroundColor: 'var(--color-surface-sidebar-elevated)',
                 color: 'var(--color-text-tertiary)',
                 cursor: 'pointer',
                 borderRadius: 999,
                 padding: 0,
-                boxShadow: '0 2px 6px var(--color-shadow)',
+                boxShadow: 'var(--color-shadow-soft)',
                 flexShrink: 0,
+                transition: 'background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease',
               }}
               onMouseEnter={(event) => {
-                event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+                event.currentTarget.style.backgroundColor = 'var(--color-surface-content-elevated)';
+                event.currentTarget.style.borderColor = 'var(--color-border-strong)';
+                event.currentTarget.style.color = 'var(--color-text-primary)';
               }}
               onMouseLeave={(event) => {
-                event.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
+                event.currentTarget.style.backgroundColor = 'var(--color-surface-sidebar-elevated)';
+                event.currentTarget.style.borderColor = 'var(--color-border-primary)';
+                event.currentTarget.style.color = 'var(--color-text-tertiary)';
               }}
             >
               <PanelLeftClose size={14} />
@@ -1088,7 +1135,14 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         )}
       </div>
 
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      <div
+        style={{
+          flex: 1,
+          position: 'relative',
+          overflow: 'hidden',
+          background: 'var(--color-surface-terminal)',
+        }}
+      >
         {workspaces.flatMap((workspace) =>
           workspace.sessions.map((session) => (
             <TerminalInstance
@@ -1107,26 +1161,31 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           style={{
             position: 'absolute',
             bottom: 12,
-            left: 8,
+            left: 10,
             width: SIDEBAR_TOGGLE_SIZE,
             height: SIDEBAR_TOGGLE_SIZE,
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             border: '1px solid var(--color-border-primary)',
-            backgroundColor: 'var(--color-bg-primary)',
+            backgroundColor: 'var(--color-surface-sidebar-elevated)',
             color: 'var(--color-text-tertiary)',
             cursor: 'pointer',
             borderRadius: 999,
             padding: 0,
             zIndex: 20,
-            boxShadow: '0 2px 6px var(--color-shadow)',
+            boxShadow: 'var(--color-shadow-soft)',
+            transition: 'background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease',
           }}
           onMouseEnter={(event) => {
-            event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+            event.currentTarget.style.backgroundColor = 'var(--color-surface-content-elevated)';
+            event.currentTarget.style.borderColor = 'var(--color-border-strong)';
+            event.currentTarget.style.color = 'var(--color-text-primary)';
           }}
           onMouseLeave={(event) => {
-            event.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
+            event.currentTarget.style.backgroundColor = 'var(--color-surface-sidebar-elevated)';
+            event.currentTarget.style.borderColor = 'var(--color-border-primary)';
+            event.currentTarget.style.color = 'var(--color-text-tertiary)';
           }}
         >
           <PanelLeftOpen size={14} />

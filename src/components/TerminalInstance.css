@@ -1,16 +1,19 @@
 /* Keep xterm spacing and scrollbar overrides after the upstream xterm.css import. */
 .terminal-instance {
-  background-color: var(--color-bg-primary);
+  background:
+    linear-gradient(180deg, var(--color-surface-terminal-muted) 0%, var(--color-surface-terminal) 100%);
+  box-shadow: var(--color-shadow-inset);
 }
 
 .terminal-instance .xterm {
-  padding-left: 6px;
-  background-color: var(--color-bg-primary);
+  padding-left: 10px;
+  padding-top: 6px;
+  background-color: transparent;
 }
 
 .terminal-instance .xterm-viewport,
 .terminal-instance .xterm-screen {
-  background-color: var(--color-bg-primary);
+  background-color: transparent;
 }
 
 .terminal-instance .xterm-viewport {

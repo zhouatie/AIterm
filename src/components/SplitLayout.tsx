@@ -148,6 +148,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
         width: '100%',
         height: '100%',
         overflow: 'hidden',
+        background: 'var(--color-workbench-bg)',
       }}
     >
       {/* Left pane */}
@@ -157,6 +158,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           height: '100%',
           overflow: 'hidden',
           flexShrink: 0,
+          backgroundColor: 'var(--color-surface-content)',
           transition: isDraggingState ? 'none' : 'width 0.18s ease',
         }}
       >
@@ -196,8 +198,9 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
             height: '100%',
             backgroundColor: showAccent ? 'var(--color-accent-divider)' : 'var(--color-border-secondary)',
             opacity: leftCollapsed ? 0 : 1,
-            transition: 'background-color 0.15s, width 0.15s, opacity 0.18s ease',
-            borderRadius: showAccent ? 1 : 0,
+            transition: 'background-color 0.16s ease, width 0.16s ease, opacity 0.18s ease, box-shadow 0.16s ease',
+            borderRadius: 999,
+            boxShadow: showAccent ? '0 0 0 3px var(--color-focus-soft)' : 'none',
           }}
         />
       </div>
@@ -208,8 +211,9 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           flex: 1,
           height: '100%',
           overflow: 'hidden',
+          backgroundColor: 'var(--color-surface-content)',
           ...(shadow
-            ? { boxShadow: '-2px 0 6px var(--color-shadow)', zIndex: 1 }
+            ? { boxShadow: 'var(--color-shadow-soft)', zIndex: 1 }
             : {}),
         }}
       >
