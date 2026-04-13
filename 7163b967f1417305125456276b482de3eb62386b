@@ -1,0 +1,23 @@
+vite.renderer.config.ts
+  d0093deb11a78a6a 7-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "7163b967f1417305125456276b482de3eb62386b",
+  "prompts": {
+    "d0093deb11a78a6a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_279a71b21ffeGPtC1H2OnK48cm",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 0,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
