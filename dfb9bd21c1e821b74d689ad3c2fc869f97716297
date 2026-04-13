@@ -1,0 +1,241 @@
+src/App.tsx
+  0742876b448b92ee 239
+src/components/SplitLayout.tsx
+  56183c44e3425a6f 66,78-80,87,104-106,113,156,165-167,183,188-190,233-237,262-266
+  25db579073b76545 7,26-30,37,47,49,72,75-76,102-103,133-134,136-137,151,153-154,157,160,163-164
+  6e3fbceab1b3f9dc 31-32,38-39,42-43,51,59,85-86,127,138-140,144,146
+  4ea44e5c435dadd4 14-15
+  a0206c08d77bd684 240
+  0742876b448b92ee 218,223-232
+  d0e687716fcd1d8c 238
+src/components/FilePreviewPanel.tsx
+  0742876b448b92ee 21,23,276-277,280
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "dfb9bd21c1e821b74d689ad3c2fc869f97716297",
+  "prompts": {
+    "0742876b448b92ee": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8776-7294-7f32-ad84-fab44f79d9c9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 8,
+      "accepted_lines": 27,
+      "overriden_lines": 0
+    },
+    "0fec8fe7f5983e39": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d84fe-2232-7c00-8dfc-fc770e8d7249",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 873,
+      "total_deletions": 83,
+      "accepted_lines": 75,
+      "overriden_lines": 0
+    },
+    "25db579073b76545": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8760-6f61-7362-bf8c-abecd22707ea",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 95,
+      "total_deletions": 73,
+      "accepted_lines": 57,
+      "overriden_lines": 0
+    },
+    "2f5331d7ed23c123": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e7499d3ffeFTy7P0E5hT25Gj",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1572,
+      "total_deletions": 73,
+      "accepted_lines": 15,
+      "overriden_lines": 0
+    },
+    "4ea44e5c435dadd4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27edc069effe74tGu1AnMl86bT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    },
+    "50a441f2d7549acc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d866c-1f94-7b60-a64d-569261eed7d5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 169,
+      "total_deletions": 15,
+      "accepted_lines": 32,
+      "overriden_lines": 0
+    },
+    "56183c44e3425a6f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28014c8e6ffe0t5hmw9Ah0LxBf",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 179,
+      "total_deletions": 8,
+      "accepted_lines": 278,
+      "overriden_lines": 0
+    },
+    "5f250a7e4284b945": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ddb2051ffe1TWPq25lNlFOvY",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 155,
+      "total_deletions": 16,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    },
+    "6e3fbceab1b3f9dc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d86fd-c923-7b91-a31c-48e626ac96c1",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 198,
+      "total_deletions": 21,
+      "accepted_lines": 127,
+      "overriden_lines": 0
+    },
+    "7311ca3fd5bee82a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e97da08ffeRfBCvmPl11H70l",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 533,
+      "total_deletions": 18,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "93df86d8df2ecb3c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e70a595ffeLeambh2Bu16l7d",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 496,
+      "total_deletions": 72,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    },
+    "95f8bb1fa0dacf3b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8646-4dc9-7063-8453-0bcf5a800ee7",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 115,
+      "total_deletions": 32,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    },
+    "a0206c08d77bd684": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8737-2989-70c2-a882-dceca7b5967d",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 658,
+      "total_deletions": 201,
+      "accepted_lines": 47,
+      "overriden_lines": 0
+    },
+    "bfb58b8ce6c206b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8565-6ca6-7701-ba59-61c9bc4d0e81",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1090,
+      "total_deletions": 273,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    },
+    "c5111cad0106f539": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d84fb-ab85-7653-943e-0dcc3698e89a",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 121,
+      "total_deletions": 94,
+      "accepted_lines": 39,
+      "overriden_lines": 0
+    },
+    "cebd22d1e180559b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8482-72c3-7ef2-a0c6-98fc2a12d1c1",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1482,
+      "total_deletions": 542,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "d0e687716fcd1d8c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e76e893ffeG3nY7d97JEZBsy",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 693,
+      "total_deletions": 67,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
