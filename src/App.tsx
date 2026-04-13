@@ -15,6 +15,7 @@ import {
   readSpecDirectoryNames,
   saveSpecDirectoryNames,
 } from './utils/file-tree-settings';
+import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 
 // --- Active Session Context ---
 // Shared between TerminalPanel (writer) and FilePreviewPanel (reader)
@@ -61,6 +62,7 @@ const toggleButtonStyle = {
   cursor: 'pointer',
   color: ICON_COLOR,
   padding: 0,
+  transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease',
   // Clickable even in title bar drag region
   WebkitAppRegion: 'no-drag' as const,
 };
@@ -79,9 +81,9 @@ const AppContent: React.FC = () => {
   // Icon and tooltip for the theme toggle button
   const ThemeIcon = mode === 'light' ? Sun : mode === 'dark' ? Moon : Monitor;
   const themeTitle =
-    mode === 'light' ? 'Light mode — click for Dark'
-    : mode === 'dark' ? 'Dark mode — click for System'
-    : 'System mode — click for Light';
+    mode === 'light' ? '切换到深色模式'
+    : mode === 'dark' ? '切换到跟随系统'
+    : '切换到浅色模式';
 
   // Sidebar panel visibility — persisted in localStorage
   const [panelVisible, setPanelVisible] = useState(() => {
@@ -89,6 +91,11 @@ const AppContent: React.FC = () => {
     return stored !== null ? stored === 'true' : true;
   });
   const [specDirectoryNames, setSpecDirectoryNames] = useState(readSpecDirectoryNames);
+  const fileTreeToggleTitle = getIconButtonTooltip({
+    label: panelVisible ? '收起文件树' : '展开文件树',
+    bindings,
+    actionId: 'toggle-file-tree',
+  });
 
   const togglePanel = useCallback(() => {
     setPanelVisible((prev) => {
@@ -136,15 +143,19 @@ const AppContent: React.FC = () => {
         >
           <button
             onClick={togglePanel}
-            title={panelVisible ? 'Hide Sidebar' : 'Show Sidebar'}
+            title={fileTreeToggleTitle}
             style={toggleButtonStyle}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
               e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 2px 6px var(--color-shadow)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
               e.currentTarget.style.color = ICON_COLOR;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             {panelVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
@@ -157,10 +168,14 @@ const AppContent: React.FC = () => {
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
               e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 2px 6px var(--color-shadow)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
               e.currentTarget.style.color = ICON_COLOR;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             <ThemeIcon size={16} />

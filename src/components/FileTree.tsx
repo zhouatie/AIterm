@@ -11,6 +11,7 @@ import {
   Search,
 } from 'lucide-react';
 import type { ScanTreeNode, SpecTreeOptions } from '../preload';
+import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import ContextMenu, { createPathMenuItems } from './ContextMenu';
 import {
   readSpecDirectoryNames,
@@ -222,7 +223,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const isCollapseOnly = !canExpandAll;
   const ToggleIcon = allExpanded || isCollapseOnly ? ChevronsDownUp : ChevronsUpDown;
   const toggleAction = allExpanded || isCollapseOnly ? onCollapseAll : onExpandAll;
-  const title = allExpanded || isCollapseOnly ? 'Collapse All' : 'Expand All';
+  const refreshTitle = getIconButtonTooltip({
+    label: '刷新文件树',
+  });
+  const expandToggleTitle = getIconButtonTooltip({
+    label: allExpanded || isCollapseOnly ? '收起全部' : '展开全部',
+  });
 
   const buttonStyle: React.CSSProperties = {
     display: 'flex',
@@ -236,16 +242,21 @@ const Toolbar: React.FC<ToolbarProps> = ({
     cursor: 'pointer',
     color: ICON_COLOR,
     padding: 0,
+    transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease',
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
     e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+    e.currentTarget.style.transform = 'translateY(-1px)';
+    e.currentTarget.style.boxShadow = '0 2px 6px var(--color-shadow)';
   };
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.style.backgroundColor = 'transparent';
     e.currentTarget.style.color = ICON_COLOR;
+    e.currentTarget.style.transform = 'translateY(0)';
+    e.currentTarget.style.boxShadow = 'none';
   };
 
   return (
@@ -307,13 +318,15 @@ const Toolbar: React.FC<ToolbarProps> = ({
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = specOnly ? 'var(--color-bg-selected)' : 'transparent';
           e.currentTarget.style.color = specOnly ? ICON_COLOR_ACTIVE : ICON_COLOR;
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'none';
         }}
       >
         spec
       </button>
       <button
         onClick={onRefresh}
-        title="Refresh"
+        title={refreshTitle}
         style={buttonStyle}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -323,7 +336,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       {showExpandControl && (
         <button
           onClick={toggleAction}
-          title={title}
+          title={expandToggleTitle}
           style={buttonStyle}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}

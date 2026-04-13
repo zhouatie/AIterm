@@ -8,6 +8,7 @@ import {
   formatShortcutForDisplay,
   validateShortcutBindings,
 } from '../ShortcutContext';
+import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import { normalizeSpecDirectoryNames } from '../utils/file-tree-settings';
 
 interface SettingsPanelProps {
@@ -161,6 +162,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   );
   const normalizedSpecDirectoryKey = specDirectoryNames.join('\n');
   const draftSpecDirectoryKey = normalizedDraftSpecDirectories.join('\n');
+  const closeButtonTitle = getIconButtonTooltip({
+    label: '关闭设置',
+    bindings,
+  });
 
   const isDirty = useMemo(
     () => SHORTCUT_ACTIONS.some((action) => draftBindings[action.id] !== bindings[action.id])
@@ -305,6 +310,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <button
               type="button"
               onClick={onClose}
+              title={closeButtonTitle}
               style={{
                 width: 32,
                 height: 32,

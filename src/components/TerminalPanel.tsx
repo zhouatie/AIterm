@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { TerminalSessionInfo } from '../preload';
 import { useKeyboardShortcuts } from '../ShortcutContext';
+import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './ContextMenu';
 import TerminalInstance from './TerminalInstance';
 
@@ -90,7 +91,7 @@ function getSessionDisplayLabel(
 }
 
 const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) => {
-  const { registerAction } = useKeyboardShortcuts();
+  const { bindings, registerAction } = useKeyboardShortcuts();
   const workspaceCounterRef = useRef(1);
   const initializedRef = useRef(false);
   const workspacesRef = useRef<WorkspaceNode[]>([]);
@@ -112,6 +113,16 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
       ? `workspace:${renameState.workspaceId}`
       : `session:${renameState.workspaceId}:${renameState.sessionId}`
     : null;
+  const createWorkspaceTitle = getIconButtonTooltip({
+    label: '新增 Workspace',
+    bindings,
+    actionId: 'create-workspace',
+  });
+  const sidebarToggleTitle = getIconButtonTooltip({
+    label: sidebarCollapsed ? '展开 Terminal 侧边栏' : '收起 Terminal 侧边栏',
+    bindings,
+    actionId: 'toggle-terminal-sidebar',
+  });
 
   workspacesRef.current = workspaces;
   sessionNameOverridesRef.current = sessionNameOverrides;
@@ -642,7 +653,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
           {!sidebarCollapsed && (
             <button
               onClick={() => void createWorkspace()}
-              title="New Workspace"
+              title={createWorkspaceTitle}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -682,6 +693,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
             const showWorkspaceNewButton =
               hoveredWorkspaceId === workspace.id
               && !(renameState?.type === 'workspace' && renameState.workspaceId === workspace.id);
+            const workspaceNewTabTitle = getIconButtonTooltip({
+              label: '新增 Terminal Tab',
+              bindings: isWorkspaceActive ? bindings : undefined,
+              actionId: isWorkspaceActive ? 'create-terminal-tab' : undefined,
+            });
 
             return (
               <div key={workspace.id} style={{ marginBottom: 6 }}>
@@ -805,7 +821,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
                         event.stopPropagation();
                         void createSessionInWorkspace(workspace.id);
                       }}
-                      title="New Tab"
+                      title={workspaceNewTabTitle}
                       style={{
                         width: 18,
                         height: 18,
@@ -842,6 +858,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
                         isRenamingSession && renameState?.type === 'session'
                           ? renameState
                           : null;
+                      const closeSessionTitle = getIconButtonTooltip({
+                        label: '关闭 Terminal Tab',
+                        bindings: isActive ? bindings : undefined,
+                        actionId: isActive ? 'close-current-terminal-tab' : undefined,
+                      });
                       return (
                         <div
                           key={session.id}
@@ -949,7 +970,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
                                 event.stopPropagation();
                                 void handleCloseSession(workspace.id, session.id);
                               }}
-                              title="Close Tab"
+                              title={closeSessionTitle}
                               style={{
                                 width: 18,
                                 height: 18,
@@ -998,7 +1019,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
           >
             <button
               onClick={() => setSidebarCollapsed(true)}
-              title="Collapse Terminal Sidebar"
+              title={sidebarToggleTitle}
               style={{
                 width: SIDEBAR_TOGGLE_SIZE,
                 height: SIDEBAR_TOGGLE_SIZE,
@@ -1042,7 +1063,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
       {sidebarCollapsed && (
         <button
           onClick={() => setSidebarCollapsed(false)}
-          title="Expand Terminal Sidebar"
+          title={sidebarToggleTitle}
           style={{
             position: 'absolute',
             bottom: 12,
