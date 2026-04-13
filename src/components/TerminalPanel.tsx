@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import type { TerminalSessionInfo } from '../preload';
+import { useKeyboardShortcuts } from '../ShortcutContext';
 import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './ContextMenu';
 import TerminalInstance from './TerminalInstance';
 
@@ -67,6 +68,7 @@ function findWorkspaceBySessionId(workspaces: WorkspaceNode[], sessionId: string
 }
 
 const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) => {
+  const { registerAction } = useKeyboardShortcuts();
   const workspaceCounterRef = useRef(1);
   const initializedRef = useRef(false);
   const workspacesRef = useRef<WorkspaceNode[]>([]);
@@ -174,6 +176,18 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
     initializedRef.current = true;
     void createWorkspace();
   }, [createWorkspace]);
+
+  useEffect(() => {
+    return registerAction('toggle-terminal-sidebar', () => {
+      setSidebarCollapsed((prev) => !prev);
+    });
+  }, [registerAction]);
+
+  useEffect(() => {
+    return registerAction('create-workspace', () => {
+      void createWorkspace();
+    });
+  }, [registerAction, createWorkspace]);
 
   useEffect(() => {
     if (!activeSessionId) return;

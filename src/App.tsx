@@ -2,12 +2,13 @@ import React, { useEffect, useState, useCallback, createContext, useContext } fr
 import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
+import SettingsPanel from './components/SettingsPanel';
 import SplitLayout from './components/SplitLayout';
+import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
 import {
   PanelManagerProvider,
   PanelContainer,
-  usePanelManager,
 } from './components/PanelManager';
 import type { PanelDefinition } from './components/PanelManager';
 
@@ -61,9 +62,15 @@ const toggleButtonStyle = {
 };
 
 const AppContent: React.FC = () => {
-  const { panels, switchPanel, activePanel } = usePanelManager();
   const { activeSessionId } = useActiveSession();
   const { mode, cycleTheme } = useTheme();
+  const {
+    bindings,
+    closeSettings,
+    isSettingsOpen,
+    registerAction,
+    saveBindings,
+  } = useKeyboardShortcuts();
 
   // Icon and tooltip for the theme toggle button
   const ThemeIcon = mode === 'light' ? Sun : mode === 'dark' ? Moon : Monitor;
@@ -86,91 +93,88 @@ const AppContent: React.FC = () => {
     });
   }, []);
 
-  // Keyboard shortcut for panel switching (reserved for future panels)
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+K to cycle panels (only when there are multiple)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k' && panels.length > 1) {
-        e.preventDefault();
-        const currentIndex = panels.findIndex((p) => p.id === activePanel);
-        const nextIndex = (currentIndex + 1) % panels.length;
-        switchPanel(panels[nextIndex].id);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [panels, activePanel, switchPanel]);
+    return registerAction('toggle-file-tree', () => {
+      togglePanel();
+    });
+  }, [registerAction, togglePanel]);
 
   return (
-    <div
-      style={{
-        width: '100vw',
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        backgroundColor: 'var(--color-bg-primary)',
-      }}
-    >
-      {/* Title bar — drag region, houses macOS traffic lights + sidebar toggle */}
+    <>
       <div
         style={{
-          height: TITLE_BAR_HEIGHT,
-          flexShrink: 0,
           display: 'flex',
-          alignItems: 'center',
-          // 78px = traffic lights (~64px) + 14px harmonious gap
-          paddingLeft: 78,
-          backgroundColor: 'var(--color-bg-secondary)',
-          borderBottom: '1px solid var(--color-border-primary)',
-          WebkitAppRegion: 'drag',
-        } as React.CSSProperties}
+          width: '100vw',
+          height: '100vh',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          backgroundColor: 'var(--color-bg-primary)',
+        }}
       >
-        <button
-          onClick={togglePanel}
-          title={panelVisible ? 'Hide Sidebar' : 'Show Sidebar'}
-          style={toggleButtonStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-            e.currentTarget.style.color = ICON_COLOR_ACTIVE;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = ICON_COLOR;
-          }}
+        {/* Title bar — drag region, houses macOS traffic lights + sidebar toggle */}
+        <div
+          style={{
+            height: TITLE_BAR_HEIGHT,
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            paddingLeft: 78,
+            backgroundColor: 'var(--color-bg-secondary)',
+            borderBottom: '1px solid var(--color-border-primary)',
+            WebkitAppRegion: 'drag',
+          } as React.CSSProperties}
         >
-          {panelVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
-        </button>
+          <button
+            onClick={togglePanel}
+            title={panelVisible ? 'Hide Sidebar' : 'Show Sidebar'}
+            style={toggleButtonStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+              e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = ICON_COLOR;
+            }}
+          >
+            {panelVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+          </button>
 
-        {/* Theme toggle button — cycles light → dark → system → light */}
-        <button
-          onClick={cycleTheme}
-          title={themeTitle}
-          style={{ ...toggleButtonStyle, marginLeft: 4 }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-            e.currentTarget.style.color = ICON_COLOR_ACTIVE;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = ICON_COLOR;
-          }}
-        >
-          <ThemeIcon size={16} />
-        </button>
+          <button
+            onClick={cycleTheme}
+            title={themeTitle}
+            style={{ ...toggleButtonStyle, marginLeft: 4 }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+              e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = ICON_COLOR;
+            }}
+          >
+            <ThemeIcon size={16} />
+          </button>
+        </div>
+
+        <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+          <SplitLayout
+            left={<FilePreviewPanel activeSessionId={activeSessionId} visible={panelVisible} />}
+            right={<PanelContainer />}
+            defaultLeftPercent={50}
+            shadow
+            leftCollapsed={!panelVisible}
+          />
+        </div>
       </div>
 
-      {/* Main content area — left sidebar + right panel */}
-      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-        <SplitLayout
-          left={<FilePreviewPanel activeSessionId={activeSessionId} visible={panelVisible} />}
-          right={<PanelContainer />}
-          defaultLeftPercent={50}
-          shadow
-          leftCollapsed={!panelVisible}
-        />
-      </div>
-    </div>
+      <SettingsPanel
+        isOpen={isSettingsOpen}
+        bindings={bindings}
+        onSave={saveBindings}
+        onClose={closeSettings}
+      />
+    </>
   );
 };
 
@@ -186,12 +190,14 @@ const App: React.FC = () => {
     <ActiveSessionContext.Provider
       value={{ activeSessionId, setActiveSessionId: handleSetActiveSession }}
     >
-      <PanelManagerProvider
-        defaultPanel={TERMINAL_PANEL_ID}
-        initialPanels={INITIAL_PANELS}
-      >
-        <AppContent />
-      </PanelManagerProvider>
+      <ShortcutProvider>
+        <PanelManagerProvider
+          defaultPanel={TERMINAL_PANEL_ID}
+          initialPanels={INITIAL_PANELS}
+        >
+          <AppContent />
+        </PanelManagerProvider>
+      </ShortcutProvider>
     </ActiveSessionContext.Provider>
   );
 };
