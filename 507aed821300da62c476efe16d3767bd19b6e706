@@ -1,0 +1,33 @@
+src/components/TerminalPanel.tsx
+  f5cfc2a515196199 11,109,135-143,259-274,302,315,364,451,464,510,889-890,946,951-953,956
+src/terminal-attention.ts
+  f5cfc2a515196199 1-19
+src/main.ts
+  f5cfc2a515196199 1,5-6,17-18,20-24,32-188,254,290,309,324,1028,1030,1051
+src/global.d.ts
+  f5cfc2a515196199 1-12
+src/preload.ts
+  f5cfc2a515196199 2,15-16,19-20,116-137
+src/pty-manager.ts
+  f5cfc2a515196199 23-27,35-39,51-57,125-130,140,163-164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "507aed821300da62c476efe16d3767bd19b6e706",
+  "prompts": {
+    "f5cfc2a515196199": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8716-73dd-73d1-8e59-2da1fc7c3137",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 301,
+      "total_deletions": 12,
+      "accepted_lines": 301,
+      "overriden_lines": 0
+    }
+  }
+}
