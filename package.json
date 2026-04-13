@@ -1,6 +1,6 @@
 {
   "name": "electron-terminal-workbench",
-  "productName": "electron-terminal-workbench",
+  "productName": "AIterm",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
