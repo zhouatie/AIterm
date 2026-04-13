@@ -11,6 +11,10 @@ import {
   PanelContainer,
 } from './components/PanelManager';
 import type { PanelDefinition } from './components/PanelManager';
+import {
+  readSpecDirectoryNames,
+  saveSpecDirectoryNames,
+} from './utils/file-tree-settings';
 
 // --- Active Session Context ---
 // Shared between TerminalPanel (writer) and FilePreviewPanel (reader)
@@ -84,6 +88,7 @@ const AppContent: React.FC = () => {
     const stored = localStorage.getItem(STORAGE_KEY_PANEL_VISIBLE);
     return stored !== null ? stored === 'true' : true;
   });
+  const [specDirectoryNames, setSpecDirectoryNames] = useState(readSpecDirectoryNames);
 
   const togglePanel = useCallback(() => {
     setPanelVisible((prev) => {
@@ -91,6 +96,11 @@ const AppContent: React.FC = () => {
       localStorage.setItem(STORAGE_KEY_PANEL_VISIBLE, String(next));
       return next;
     });
+  }, []);
+
+  const handleSaveSpecDirectoryNames = useCallback((names: string[]) => {
+    saveSpecDirectoryNames(names);
+    setSpecDirectoryNames(readSpecDirectoryNames());
   }, []);
 
   useEffect(() => {
@@ -171,7 +181,9 @@ const AppContent: React.FC = () => {
       <SettingsPanel
         isOpen={isSettingsOpen}
         bindings={bindings}
+        specDirectoryNames={specDirectoryNames}
         onSave={saveBindings}
+        onSaveSpecDirectoryNames={handleSaveSpecDirectoryNames}
         onClose={closeSettings}
       />
     </>

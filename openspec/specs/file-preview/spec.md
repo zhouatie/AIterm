@@ -8,19 +8,99 @@
 
 #### Scenario: 文件树渲染
 - **WHEN** 文件预览面板挂载且根目录已确定
-- **THEN** 文件树 SHALL 读取根目录内容并以缩进树形结构展示，目录在前、文件在后，同组内按修改时间倒序排列（最近修改的排在最上面），修改时间相同时按名称排序
+- **THEN** 文件树 SHALL 只读取根目录的第一层内容并以缩进树形结构展示，目录在前、文件在后，同组内按修改时间倒序排列（最近修改的排在最上面），修改时间相同时按名称排序
 
 #### Scenario: 目录展开与折叠
 - **WHEN** 用户点击一个目录节点
-- **THEN** 若该目录为折叠状态，SHALL 展开并懒加载其子目录内容；若为展开状态，SHALL 折叠隐藏子节点
+- **THEN** 若该目录为折叠状态，SHALL 按需读取该目录的第一层子节点并展开显示；若为展开状态，SHALL 折叠隐藏其后代节点
 
-#### Scenario: 默认过滤 Markdown 文件
+#### Scenario: 默认显示全部文件
 - **WHEN** 文件树加载目录内容时
-- **THEN** SHALL 只显示 `.md` 文件和包含 `.md` 文件（或包含子目录）的目录，隐藏其他文件类型
+- **THEN** SHALL 显示目录和非隐藏文件，并复用系统目录、Home 目录、项目噪音目录与 `.gitignore` 排除策略
 
 #### Scenario: 选中文件高亮
 - **WHEN** 用户点击一个文件节点
 - **THEN** 该文件 SHALL 显示选中高亮状态，高亮颜色 SHALL 使用主题变量而非硬编码值
+
+### Requirement: 文件树虚拟化渲染
+系统 SHALL 基于当前展开状态生成文件树可见行，并使用固定行高虚拟列表限制实际挂载的节点数量。
+
+#### Scenario: 折叠目录不挂载后代节点
+- **WHEN** 文件树已加载树结果且某个目录处于折叠状态
+- **THEN** 该目录的后代节点 SHALL 不进入当前可见行列表，也 SHALL 不挂载到 React 渲染树中
+
+#### Scenario: 大量可见节点滚动
+- **WHEN** 当前展开状态产生的可见节点数量超过文件树视口可显示数量
+- **THEN** 文件树 SHALL 只挂载视口附近的可见行，并 SHALL 通过占位高度保持滚动条表示完整可见行列表
+
+#### Scenario: 展开全部虚拟化
+- **WHEN** 用户点击展开全部按钮
+- **THEN** 文件树 SHALL 将当前完整树中的目录视为展开状态，并 SHALL 继续只挂载虚拟窗口范围内的可见行
+
+#### Scenario: 虚拟行交互保持一致
+- **WHEN** 用户对虚拟列表中的文件或目录行执行点击、右键、hover 或选中操作
+- **THEN** 文件树 SHALL 保持现有展开折叠、文件预览、选中高亮和上下文菜单行为不变
+
+### Requirement: 文件树按需加载与展开全部
+系统 SHALL 初次只加载根目录第一层，并 SHALL 根据根目录层级决定是否提供展开全部入口。
+
+#### Scenario: 初次只加载第一层
+- **WHEN** 文件树根目录发生变化或用户手动刷新
+- **THEN** 系统 SHALL 只请求该根目录的直接子节点，不 SHALL 扫描完整子树
+
+#### Scenario: 展开目录加载下一层
+- **WHEN** 用户展开一个尚未加载过子节点的目录
+- **THEN** 系统 SHALL 只请求该目录的直接子节点，并 SHALL 将结果缓存到该目录节点下
+
+#### Scenario: 高层目录隐藏展开全部
+- **WHEN** 文件树根目录是文件系统根目录、`/Users` 或当前用户 Home
+- **THEN** 文件树工具栏 SHALL 不显示展开全部按钮
+
+#### Scenario: 非高层目录显示展开全部
+- **WHEN** 文件树根目录不是文件系统根目录、`/Users` 或当前用户 Home
+- **THEN** 文件树工具栏 SHALL 显示展开全部按钮
+
+#### Scenario: 非高层目录展开全部
+- **WHEN** 用户在非高层目录点击展开全部按钮
+- **THEN** 系统 SHALL 扫描该根目录完整文件树，替换当前树数据，并展开所有目录
+
+### Requirement: 文件树搜索
+系统 SHALL 在文件树工具栏提供搜索框，用于过滤当前已加载的树节点。
+
+#### Scenario: 输入搜索关键词
+- **WHEN** 用户在文件树搜索框输入关键词
+- **THEN** 文件树 SHALL 只展示当前已加载树中名称或路径匹配关键词的节点及其必要父节点
+
+#### Scenario: 清空搜索关键词
+- **WHEN** 用户清空搜索框
+- **THEN** 文件树 SHALL 恢复按当前展开状态展示可见节点
+
+### Requirement: 文件树 Spec 模式
+系统 SHALL 提供 spec 模式切换按钮，用于只加载配置的 spec 目录名对应的目录树。
+
+#### Scenario: 开启 spec 模式
+- **WHEN** 用户点击 spec 模式按钮且当前为关闭状态
+- **THEN** 文件树 SHALL 重新加载 spec tree，并只访问当前根目录下配置的 spec 目录路径，不 SHALL 先读取当前根目录的所有 entry 再过滤
+
+#### Scenario: 关闭 spec 模式
+- **WHEN** 用户点击 spec 模式按钮且当前为开启状态
+- **THEN** 文件树 SHALL 重新加载根目录第一层，并恢复普通全部文件展示
+
+#### Scenario: spec 模式按钮显示
+- **WHEN** 文件树工具栏渲染 spec 模式按钮
+- **THEN** 按钮内容 SHALL 显示 `spec` 文本而非图形 icon
+
+#### Scenario: spec 模式继续按需展开
+- **WHEN** 用户在 spec 模式下展开已展示的 spec 目录
+- **THEN** 文件树 SHALL 按需加载该目录下一层内容
+
+#### Scenario: spec 模式展开全部
+- **WHEN** 用户在 spec 模式下点击展开全部按钮
+- **THEN** 系统 SHALL 只扫描配置的 spec 目录树并展开结果，不 SHALL 扫描或展开非 spec 目录
+
+#### Scenario: 移除 Markdown 过滤切换
+- **WHEN** 文件树工具栏渲染
+- **THEN** 文件树 SHALL 不显示 Markdown-only / 全部文件切换按钮
 
 ### Requirement: Markdown 文件预览
 系统 SHALL 使用 react-markdown 渲染选中的 Markdown 文件内容，支持 GFM 语法和代码高亮。仅当选中文件的扩展名为 `.md` 时才使用此渲染模式。
@@ -93,6 +173,10 @@
 #### Scenario: 读取目录内容
 - **WHEN** 渲染进程调用 `fileApi.readDir(path)` 
 - **THEN** 主进程 SHALL 读取指定路径的目录内容，返回条目列表（包含名称和类型信息）
+
+#### Scenario: 按需读取树节点
+- **WHEN** 渲染进程调用 `fileApi.readTreeDirectory(path)`
+- **THEN** 主进程 SHALL 只读取指定目录的直接子节点，并返回包含 `name`、`path`、`isDirectory`、`mtime` 的树节点列表
 
 #### Scenario: 读取文件内容
 - **WHEN** 渲染进程调用 `fileApi.readFile(path)` 
@@ -198,47 +282,20 @@
 - **WHEN** 右键点击位置接近视口边缘
 - **THEN** 菜单 SHALL 调整弹出方向，确保完整显示在可视区域内
 
-### Requirement: 文件树加载性能优化
-系统 SHALL 使用 `fd` 命令一次性扫描目录下所有 Markdown 文件，替代逐目录递归遍历，以提升加载性能。
+### Requirement: 文件树全量扫描性能优化
+系统 SHALL 在需要全量扫描时优先使用 `fd` 命令，并在不可用时回退到 Node.js 遍历方案。
 
-#### Scenario: 使用 fd 扫描
-- **WHEN** 文件树需要加载目录内容且系统检测到 `fd` 命令可用
-- **THEN** 系统 SHALL 执行 `fd -e md --type f` 扫描根目录，将输出的文件路径列表解析为完整的树结构一次性返回
+#### Scenario: 使用 fd 扫描 Markdown 文件
+- **WHEN** 文件树需要扫描 Markdown 文件且系统检测到 `fd` 命令可用
+- **THEN** 系统 SHALL 执行 `fd -e md --type f` 扫描目录，将输出的文件路径列表解析为树结构返回
 
 #### Scenario: fd 不可用时回退
-- **WHEN** 文件树需要加载目录内容且系统检测到 `fd` 命令不可用
+- **WHEN** 文件树需要执行全量扫描且系统检测到 `fd` 命令不可用
 - **THEN** 系统 SHALL 回退到现有的 Node.js 递归遍历方案，功能不受影响
 
 #### Scenario: 自动遵守 gitignore
 - **WHEN** 使用 `fd` 扫描文件
 - **THEN** 扫描结果 SHALL 自动排除 `.gitignore` 中指定的文件和目录（`fd` 默认行为）
-
-### Requirement: 文件类型过滤切换
-系统 SHALL 提供一个切换控件，允许用户在"仅 Markdown 文件"和"全部文件"两种文件树显示模式之间切换。
-
-#### Scenario: 切换按钮位置
-- **WHEN** 文件树工具栏渲染时
-- **THEN** 刷新按钮左侧 SHALL 显示一个文件类型过滤切换图标按钮
-
-#### Scenario: 默认显示 Markdown 文件
-- **WHEN** 应用首次启动且无持久化偏好
-- **THEN** 文件树 SHALL 以 Markdown-only 模式显示，仅展示 `.md` 文件和包含 `.md` 文件的目录
-
-#### Scenario: 切换到全部文件模式
-- **WHEN** 用户点击过滤切换按钮且当前为 Markdown-only 模式
-- **THEN** 文件树 SHALL 重新加载并显示根目录下的所有文件（排除隐藏文件和常见大目录如 `node_modules`、`.git`），图标 SHALL 切换为"全部文件"语义图标
-
-#### Scenario: 切换回 Markdown-only 模式
-- **WHEN** 用户点击过滤切换按钮且当前为全部文件模式
-- **THEN** 文件树 SHALL 重新加载并仅显示 `.md` 文件，图标 SHALL 切换为"Markdown 文件"语义图标
-
-#### Scenario: 过滤偏好持久化
-- **WHEN** 用户切换文件类型过滤模式
-- **THEN** 系统 SHALL 将当前模式保存到 `localStorage`，下次应用启动时恢复
-
-#### Scenario: 全部文件扫描排除策略
-- **WHEN** 文件树以全部文件模式扫描目录
-- **THEN** 系统 SHALL 排除 `node_modules`、`.git`、`dist`、`build`、`out`、`.next` 等常见大目录，排除隐藏文件（以 `.` 开头），并尊重 `.gitignore` 规则
 
 ### Requirement: 全部文件扫描 IPC 通道
 系统 SHALL 提供扫描全部文件的 IPC 通道，支持返回指定目录下所有非隐藏文件的树结构。
@@ -250,6 +307,10 @@
 #### Scenario: fd 不可用时回退
 - **WHEN** 渲染进程请求扫描全部文件且 `fd` 命令不可用
 - **THEN** 系统 SHALL 回退到 Node.js 递归遍历方案，排除隐藏文件、gitignore 文件和常见大目录
+
+#### Scenario: spec 模式限定全量扫描范围
+- **WHEN** 渲染进程以 spec 模式请求扫描全部文件并提供 spec 目录配置
+- **THEN** 主进程 SHALL 只扫描配置的 spec 目录树，并返回对应的完整树结果
 
 ### Requirement: 右键菜单复制文件名
 文件树节点右键菜单 SHALL 支持"复制文件名"操作。
@@ -291,4 +352,3 @@
 #### Scenario: 切换文件类型时预览组件切换
 - **WHEN** 用户先选中一个 `.md` 文件，再选中一个 `.ts` 文件
 - **THEN** 预览区 SHALL 从 Markdown 渲染模式无缝切换到代码高亮模式
-

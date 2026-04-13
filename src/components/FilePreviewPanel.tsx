@@ -17,8 +17,6 @@ interface FilePreviewSnapshot {
   expandedPaths: string[];
 }
 
-const MD_ONLY_KEY = 'file-tree-md-only';
-
 const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, visible = true }) => {
   const [rootPath, setRootPath] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -26,10 +24,6 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [loadingFile, setLoadingFile] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
-  const [mdOnly, setMdOnly] = useState<boolean>(() => {
-    const stored = localStorage.getItem(MD_ONLY_KEY);
-    return stored === null ? true : stored === 'true';
-  });
   const rootPathRef = useRef(rootPath);
   const snapshotRef = useRef<Record<string, FilePreviewSnapshot>>({});
   const fileLoadTokenRef = useRef(0);
@@ -96,15 +90,6 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     return unsubscribe;
   }, [activeSessionId, visible, restoreSnapshot]);
 
-  // Toggle mdOnly filter with localStorage persistence
-  const handleToggleMdOnly = useCallback(() => {
-    setMdOnly((prev) => {
-      const next = !prev;
-      localStorage.setItem(MD_ONLY_KEY, String(next));
-      return next;
-    });
-  }, []);
-
   // Manual refresh: re-fetch terminal CWD and trigger file tree rescan
   const handleRefresh = useCallback(async () => {
     if (!activeSessionId) return;
@@ -165,8 +150,6 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             onSelectFile={handleSelectFile}
             onRefresh={handleRefresh}
             refreshKey={refreshKey}
-            mdOnly={mdOnly}
-            onToggleMdOnly={handleToggleMdOnly}
             expandedPaths={expandedPaths}
             onExpandedPathsChange={setExpandedPaths}
           />

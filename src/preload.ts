@@ -36,11 +36,23 @@ export interface ScanTreeNode {
   children?: ScanTreeNode[];
 }
 
+export interface SpecTreeOptions {
+  specRootPath?: string;
+  specDirectoryNames?: string[];
+}
+
 export interface FileApi {
   readDir(dirPath: string): Promise<{ entries?: DirEntry[]; error?: string }>;
   readFile(filePath: string): Promise<{ content?: string; error?: string }>;
+  readTreeDirectory(
+    dirPath: string,
+    options?: SpecTreeOptions,
+  ): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
   scanMdFiles(rootPath: string): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
-  scanAllFiles(rootPath: string): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
+  scanAllFiles(
+    rootPath: string,
+    options?: SpecTreeOptions,
+  ): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
   showInFolder(filePath: string): void;
 }
 
@@ -107,11 +119,17 @@ contextBridge.exposeInMainWorld('fileApi', {
   readFile: (filePath: string) =>
     ipcRenderer.invoke('fs:readfile', { filePath }),
 
+  readTreeDirectory: (
+    dirPath: string,
+    options?: SpecTreeOptions,
+  ) =>
+    ipcRenderer.invoke('fs:read-tree-directory', { dirPath, options }),
+
   scanMdFiles: (rootPath: string) =>
     ipcRenderer.invoke('fs:scan-md-files', { rootPath }),
 
-  scanAllFiles: (rootPath: string) =>
-    ipcRenderer.invoke('fs:scan-all-files', { rootPath }),
+  scanAllFiles: (rootPath: string, options?: SpecTreeOptions) =>
+    ipcRenderer.invoke('fs:scan-all-files', { rootPath, options }),
 
   showInFolder: (filePath: string) =>
     ipcRenderer.send('fs:show-in-folder', { filePath }),

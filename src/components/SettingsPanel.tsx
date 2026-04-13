@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Keyboard, Settings2, X } from 'lucide-react';
+import { BookOpen, Check, Keyboard, Settings2, X } from 'lucide-react';
 import {
   SHORTCUT_ACTIONS,
   type ShortcutActionId,
@@ -8,11 +8,14 @@ import {
   formatShortcutForDisplay,
   validateShortcutBindings,
 } from '../ShortcutContext';
+import { normalizeSpecDirectoryNames } from '../utils/file-tree-settings';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   bindings: ShortcutBindings;
+  specDirectoryNames: string[];
   onSave: (bindings: ShortcutBindings) => void;
+  onSaveSpecDirectoryNames: (names: string[]) => void;
   onClose: () => void;
 }
 
@@ -119,19 +122,25 @@ function ShortcutRecorder({ actionId, value, error, onChange }: ShortcutRecorder
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
   bindings,
+  specDirectoryNames,
   onSave,
+  onSaveSpecDirectoryNames,
   onClose,
 }) => {
   const [draftBindings, setDraftBindings] = useState<ShortcutBindings>(bindings);
+  const [draftSpecDirectories, setDraftSpecDirectories] = useState(specDirectoryNames.join('\n'));
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ShortcutActionId, string>>>({});
+  const [specDirectoryError, setSpecDirectoryError] = useState('');
   const [saveFeedback, setSaveFeedback] = useState<string>('');
 
   useEffect(() => {
     if (!isOpen) return;
     setDraftBindings(bindings);
+    setDraftSpecDirectories(specDirectoryNames.join('\n'));
     setFieldErrors({});
+    setSpecDirectoryError('');
     setSaveFeedback('');
-  }, [isOpen, bindings]);
+  }, [isOpen, bindings, specDirectoryNames]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -146,9 +155,17 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
+  const normalizedDraftSpecDirectories = useMemo(
+    () => normalizeSpecDirectoryNames(draftSpecDirectories),
+    [draftSpecDirectories],
+  );
+  const normalizedSpecDirectoryKey = specDirectoryNames.join('\n');
+  const draftSpecDirectoryKey = normalizedDraftSpecDirectories.join('\n');
+
   const isDirty = useMemo(
-    () => SHORTCUT_ACTIONS.some((action) => draftBindings[action.id] !== bindings[action.id]),
-    [draftBindings, bindings],
+    () => SHORTCUT_ACTIONS.some((action) => draftBindings[action.id] !== bindings[action.id])
+      || draftSpecDirectoryKey !== normalizedSpecDirectoryKey,
+    [draftBindings, bindings, draftSpecDirectoryKey, normalizedSpecDirectoryKey],
   );
 
   const handleSave = () => {
@@ -160,7 +177,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       return;
     }
 
+    if (normalizedDraftSpecDirectories.length === 0) {
+      setSpecDirectoryError('至少保留一个目录名');
+      setSaveFeedback('存在未解决的配置错误');
+      return;
+    }
+
     onSave(draftBindings);
+    onSaveSpecDirectoryNames(normalizedDraftSpecDirectories);
     setSaveFeedback('所有更改已保存');
   };
 
@@ -351,6 +375,68 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               >
                 支持配置文件树展示/收起、terminal tab 侧边栏展示/收起、新增 workspace 和 terminal tab 切换。
                 设置入口固定为 <strong style={{ color: 'var(--color-text-primary)' }}>Command + ,</strong>。
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) 260px',
+                  gap: 16,
+                  alignItems: 'start',
+                  padding: '16px 0',
+                  borderTop: '1px solid var(--color-border-light)',
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--color-text-primary)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    <BookOpen size={14} />
+                    Spec 目录
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                    文件树开启 spec 模式时，只展示这些目录名下的文件。每行或逗号分隔一个目录名。
+                  </div>
+                  {specDirectoryError && (
+                    <div style={{ fontSize: 12, color: '#d14343', marginTop: 8 }}>
+                      {specDirectoryError}
+                    </div>
+                  )}
+                </div>
+                <textarea
+                  value={draftSpecDirectories}
+                  onChange={(event) => {
+                    setDraftSpecDirectories(event.target.value);
+                    setSpecDirectoryError('');
+                    setSaveFeedback('');
+                  }}
+                  rows={4}
+                  spellCheck={false}
+                  style={{
+                    width: '100%',
+                    minHeight: 92,
+                    resize: 'vertical',
+                    borderRadius: 10,
+                    border: specDirectoryError
+                      ? '1px solid #d14343'
+                      : '1px solid var(--color-border-primary)',
+                    backgroundColor: 'var(--color-bg-secondary)',
+                    color: 'var(--color-text-primary)',
+                    padding: '10px 12px',
+                    fontSize: 13,
+                    lineHeight: 1.45,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
