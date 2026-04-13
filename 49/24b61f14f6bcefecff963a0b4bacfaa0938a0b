@@ -1,0 +1,61 @@
+src/main.ts
+  bfb58b8ce6c206b5 495-533,540-543,670-706,708-709,823-838,840-847,849-850
+openspec/specs/file-preview/spec.md
+  bfb58b8ce6c206b5 11,15,17,19,25-104,177-180,285-286,288-290,293,311-314
+src/components/FileTree.tsx
+  bfb58b8ce6c206b5 1,13,29,32-36,52,58-59,77-104,144-178,186-187,204-205,209,214-225,298-302,312,323-333,341,348,352,359,361,410-446,448,450-451,453-456,459-460,462-471,474-476,478-483,485-489,507-509,513-515,517-519,526-541,543-544,558,564-567,569-570,573-581,597-614,617-636,638,641-658,680-681,695-696,726-727,730-734,749-758,760-763
+  cc07e5a2ab8682bc 11,15-19,107-143,197-200,210-213,256,262-292,294-297,303-305,307-310,347,358,363,510-512,516,520-525,542,545-552,554-557,664-670,688-691,719-722,735,746,759
+openspec/changes/archive/2026-04-13-optimize-file-tree-rendering/proposal.md
+  bfb58b8ce6c206b5 1-39
+openspec/changes/archive/2026-04-13-optimize-file-tree-rendering/tasks.md
+  bfb58b8ce6c206b5 1-84
+src/components/SettingsPanel.tsx
+  bfb58b8ce6c206b5 2,11,16,18,125,127,131,133,139,141,143,158-164,166-168,180-182,187,380-439
+openspec/changes/archive/2026-04-13-optimize-file-tree-rendering/design.md
+  bfb58b8ce6c206b5 1-114
+openspec/changes/archive/2026-04-13-optimize-file-tree-rendering/specs/file-preview/spec.md
+  bfb58b8ce6c206b5 1-102
+openspec/changes/archive/2026-04-13-optimize-file-tree-rendering/.openspec.yaml
+  bfb58b8ce6c206b5 1-2
+src/App.tsx
+  bfb58b8ce6c206b5 14-17,91,101-105,184,186
+src/preload.ts
+  bfb58b8ce6c206b5 39-43,49,52-55,124,131-132
+openspec/changes/archive/2026-04-13-optimize-file-tree-rendering/specs/settings-panel/spec.md
+  bfb58b8ce6c206b5 1-16
+openspec/specs/settings-panel/spec.md
+  bfb58b8ce6c206b5 37-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "4924b61f14f6bcefecff963a0b4bacfaa0938a0b",
+  "prompts": {
+    "bfb58b8ce6c206b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8565-6ca6-7701-ba59-61c9bc4d0e81",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1090,
+      "total_deletions": 273,
+      "accepted_lines": 996,
+      "overriden_lines": 0
+    },
+    "cc07e5a2ab8682bc": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27a491280ffetYHQkXU3s1M8qz",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 150,
+      "total_deletions": 38,
+      "accepted_lines": 138,
+      "overriden_lines": 0
+    }
+  }
+}
