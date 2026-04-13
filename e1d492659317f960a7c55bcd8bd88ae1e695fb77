@@ -1,0 +1,33 @@
+openspec/changes/fix-agent-notification-wiring/design.md
+  733ba57c13d051b4 1-112
+openspec/changes/fix-agent-notification-wiring/proposal.md
+  733ba57c13d051b4 1-29
+openspec/changes/fix-agent-notification-wiring/.openspec.yaml
+  733ba57c13d051b4 1-2
+openspec/changes/fix-agent-notification-wiring/specs/agent-attention-notifications/spec.md
+  733ba57c13d051b4 1-51
+openspec/changes/fix-agent-notification-wiring/tasks.md
+  733ba57c13d051b4 1-14
+scripts/codex-hook-wrapper.mjs
+  733ba57c13d051b4 1-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "e1d492659317f960a7c55bcd8bd88ae1e695fb77",
+  "prompts": {
+    "733ba57c13d051b4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2786a5967ffe49klC0WjT4nxm8",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 274,
+      "total_deletions": 6,
+      "accepted_lines": 268,
+      "overriden_lines": 0
+    }
+  }
+}
