@@ -1,0 +1,34 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "d02bf8c27419d344e084769623101d9cf450d27c",
+  "prompts": {
+    "56183c44e3425a6f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28014c8e6ffe0t5hmw9Ah0LxBf",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 179,
+      "total_deletions": 8,
+      "accepted_lines": 179,
+      "overriden_lines": 0
+    },
+    "93df86d8df2ecb3c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e70a595ffeLeambh2Bu16l7d",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 496,
+      "total_deletions": 72,
+      "accepted_lines": 425,
+      "overriden_lines": 0
+    }
+  }
+}
