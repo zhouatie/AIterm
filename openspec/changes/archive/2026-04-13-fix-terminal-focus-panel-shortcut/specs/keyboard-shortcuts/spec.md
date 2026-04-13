@@ -1,29 +1,4 @@
-# Capability: keyboard-shortcuts
-
-## Purpose
-应用级快捷键系统，负责默认快捷键定义、用户自定义绑定持久化以及保存前的配置校验。
-
-## Requirements
-
-### Requirement: 默认快捷键定义
-系统 SHALL 为首批支持的应用动作提供默认快捷键绑定。
-
-#### Scenario: 首次加载默认绑定
-- **WHEN** 用户首次打开应用，且本地尚无快捷键配置
-- **THEN** 文件树展示/收起 SHALL 默认绑定为 `Command + S`
-- **THEN** terminal tab 侧边栏展示/收起 SHALL 默认绑定为 `Command + B`
-- **THEN** 新增 workspace SHALL 默认绑定为 `Command + T`
-
-### Requirement: 快捷键配置持久化
-系统 SHALL 支持保存用户自定义快捷键，并在后续启动时恢复。
-
-#### Scenario: 保存自定义绑定
-- **WHEN** 用户在设置面板中修改快捷键并执行保存
-- **THEN** 系统 SHALL 持久化保存新的快捷键绑定
-
-#### Scenario: 重新启动后恢复自定义绑定
-- **WHEN** 用户已经保存过自定义快捷键后重新启动应用
-- **THEN** 系统 SHALL 加载并使用上一次保存的快捷键绑定，而不是回退到默认值
+## MODIFIED Requirements
 
 ### Requirement: 快捷键配置校验
 系统 SHALL 阻止无效或冲突的快捷键配置被保存。快捷键触发判断 SHALL 能正确区分真实用户可编辑输入元素（`<input>`、`<select>`、`contentEditable` 元素及非终端 `<textarea>`）与 xterm.js 内部键盘捕获元素，在终端获焦时不得屏蔽全局面板快捷键的触发。

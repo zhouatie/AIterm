@@ -197,7 +197,15 @@ function isEditableTarget(target: EventTarget | null): boolean {
   if (target.isContentEditable) return true;
 
   const tagName = target.tagName.toLowerCase();
-  return tagName === 'input' || tagName === 'textarea' || tagName === 'select';
+  if (tagName === 'input' || tagName === 'select') return true;
+  if (tagName === 'textarea') {
+    // xterm.js 内部使用一个隐藏的 <textarea> 作为键盘事件捕获元素，
+    // 该元素位于 .xterm 容器内。不应将其视为用户可编辑字段，
+    // 否则终端获焦时所有面板快捷键（Meta+B / Meta+S 等）会被静默丢弃。
+    // 注意：.xterm 是 xterm.js 的固定容器类名，应用内不应复用该类名。
+    return !target.closest('.xterm');
+  }
+  return false;
 }
 
 export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
