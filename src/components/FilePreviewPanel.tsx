@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownPreview from './MarkdownPreview';
 import CodePreview from './CodePreview';
@@ -17,6 +18,32 @@ interface FilePreviewSnapshot {
   expandedPaths: string[];
 }
 
+const STORAGE_KEY_FILE_TREE_SPLIT_PERCENT = 'filePreviewTreeSplitPercent';
+const STORAGE_KEY_FILE_TREE_VISIBLE = 'filePreviewTreeVisible';
+const ICON_COLOR = 'var(--color-icon-default)';
+const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
+
+const treeToggleButtonBaseStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 24,
+  height: 24,
+  border: 'none',
+  background: 'var(--color-bg-secondary)',
+  borderRadius: 4,
+  cursor: 'pointer',
+  color: ICON_COLOR,
+  padding: 0,
+  boxShadow: '0 1px 4px var(--color-shadow)',
+  transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease',
+};
+
+function readFileTreeVisible(): boolean {
+  const stored = localStorage.getItem(STORAGE_KEY_FILE_TREE_VISIBLE);
+  return stored !== null ? stored === 'true' : true;
+}
+
 const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, visible = true }) => {
   const [rootPath, setRootPath] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -24,11 +51,13 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [loadingFile, setLoadingFile] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
+  const [fileTreeVisible, setFileTreeVisible] = useState(readFileTreeVisible);
+  const fileTreeActive = visible && fileTreeVisible;
   const rootPathRef = useRef(rootPath);
   const snapshotRef = useRef<Record<string, FilePreviewSnapshot>>({});
   const fileLoadTokenRef = useRef(0);
   rootPathRef.current = rootPath;
-  const prevVisibleRef = useRef(visible);
+  const prevFileTreeActiveRef = useRef(fileTreeActive);
 
   const restoreSnapshot = useCallback((nextRootPath: string) => {
     fileLoadTokenRef.current += 1;
@@ -49,9 +78,9 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     };
   }, [rootPath, selectedFile, fileContent, expandedPaths]);
 
-  // Sync root path with active terminal's cwd (on session switch) — only when visible
+  // Sync root path with active terminal's cwd (on session switch) — only when the tree is active
   useEffect(() => {
-    if (!activeSessionId || !visible) return;
+    if (!activeSessionId || !fileTreeActive) return;
     let cancelled = false;
 
     window.terminalApi.getSessionInfo(activeSessionId).then((result) => {
@@ -63,36 +92,36 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     return () => {
       cancelled = true;
     };
-  }, [activeSessionId, visible, restoreSnapshot]);
+  }, [activeSessionId, fileTreeActive, restoreSnapshot]);
 
-  // When becoming visible again, re-sync CWD immediately
+  // When the file tree becomes active again, re-sync CWD immediately
   useEffect(() => {
-    const wasHidden = !prevVisibleRef.current;
-    prevVisibleRef.current = visible;
+    const wasInactive = !prevFileTreeActiveRef.current;
+    prevFileTreeActiveRef.current = fileTreeActive;
 
-    if (visible && wasHidden && activeSessionId) {
+    if (fileTreeActive && wasInactive && activeSessionId) {
       window.terminalApi.getSessionInfo(activeSessionId).then((result) => {
         if (result?.cwd) {
           restoreSnapshot(result.cwd);
         }
       });
     }
-  }, [visible, activeSessionId, restoreSnapshot]);
+  }, [fileTreeActive, activeSessionId, restoreSnapshot]);
 
   // Listen for terminal CWD changes and auto-update file tree
   useEffect(() => {
-    if (!visible) return;
+    if (!fileTreeActive) return;
     const unsubscribe = window.terminalApi.onSessionInfoChanged((data) => {
       if (data.id === activeSessionId && data.cwd !== rootPathRef.current) {
         restoreSnapshot(data.cwd);
       }
     });
     return unsubscribe;
-  }, [activeSessionId, visible, restoreSnapshot]);
+  }, [activeSessionId, fileTreeActive, restoreSnapshot]);
 
   // Manual refresh: re-fetch terminal CWD and trigger file tree rescan
   const handleRefresh = useCallback(async () => {
-    if (!activeSessionId) return;
+    if (!activeSessionId || !fileTreeActive) return;
     try {
       const result = await window.terminalApi.getSessionInfo(activeSessionId);
       if (result?.cwd) {
@@ -106,7 +135,49 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     } catch {
       // Ignore refresh errors
     }
-  }, [activeSessionId, restoreSnapshot]);
+  }, [activeSessionId, fileTreeActive, restoreSnapshot]);
+
+  const toggleFileTreePane = useCallback(() => {
+    setFileTreeVisible((prev) => {
+      const next = !prev;
+      localStorage.setItem(STORAGE_KEY_FILE_TREE_VISIBLE, String(next));
+      return next;
+    });
+  }, []);
+
+  const renderFileTreeToggleButton = useCallback((overlay: boolean) => (
+    <button
+      onClick={toggleFileTreePane}
+      title={fileTreeVisible ? '收起文件树边栏' : '展开文件树边栏'}
+      style={{
+        ...treeToggleButtonBaseStyle,
+        ...(overlay
+          ? {
+              position: 'absolute',
+              top: 6,
+              left: 8,
+              zIndex: 20,
+            }
+          : {
+              flexShrink: 0,
+            }),
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+        e.currentTarget.style.color = ICON_COLOR_ACTIVE;
+        e.currentTarget.style.transform = 'translateY(-1px)';
+        e.currentTarget.style.boxShadow = '0 2px 6px var(--color-shadow)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--color-bg-secondary)';
+        e.currentTarget.style.color = ICON_COLOR;
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 4px var(--color-shadow)';
+      }}
+    >
+      {fileTreeVisible ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+    </button>
+  ), [fileTreeVisible, toggleFileTreePane]);
 
   // Load file content when selection changes
   const handleSelectFile = useCallback(async (filePath: string) => {
@@ -152,6 +223,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             refreshKey={refreshKey}
             expandedPaths={expandedPaths}
             onExpandedPathsChange={setExpandedPaths}
+            leadingControl={renderFileTreeToggleButton(false)}
           />
         ) : (
           <div
@@ -195,13 +267,16 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   );
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {visible && (!fileTreeVisible || !rootPath) && renderFileTreeToggleButton(true)}
       <SplitLayout
         left={fileTreePane}
         right={previewPane}
         defaultLeftPercent={30}
+        storageKey={STORAGE_KEY_FILE_TREE_SPLIT_PERCENT}
         minLeftPx={150}
         minRightPx={200}
+        leftCollapsed={!fileTreeVisible}
       />
     </div>
   );

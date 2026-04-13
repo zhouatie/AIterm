@@ -4,6 +4,7 @@ interface SplitLayoutProps {
   left: ReactNode;
   right: ReactNode;
   defaultLeftPercent?: number;
+  storageKey?: string;
   minLeftPx?: number;
   minRightPx?: number;
   onResize?: () => void;
@@ -19,10 +20,38 @@ interface SplitLayoutProps {
  */
 const HIT_AREA_WIDTH = 8;
 
+function readStoredPercent(storageKey: string | undefined, fallback: number): number {
+  if (!storageKey) return fallback;
+  const stored = localStorage.getItem(storageKey);
+  if (stored === null) return fallback;
+  const parsed = Number(stored);
+  return Number.isFinite(parsed) && parsed > 0 && parsed < 100 ? parsed : fallback;
+}
+
+function clampPercentToWidth(
+  percent: number,
+  totalWidth: number,
+  minLeftPx: number,
+  minRightPx: number,
+): number {
+  if (totalWidth <= 0) return percent;
+
+  const targetPx = (percent / 100) * totalWidth;
+  const minLeft = Math.min(minLeftPx, totalWidth);
+  const maxLeft = Math.max(0, totalWidth - minRightPx);
+  const clampedPx =
+    minLeft <= maxLeft
+      ? Math.max(minLeft, Math.min(targetPx, maxLeft))
+      : Math.max(0, Math.min(targetPx, totalWidth));
+
+  return (clampedPx / totalWidth) * 100;
+}
+
 const SplitLayout: React.FC<SplitLayoutProps> = ({
   left,
   right,
   defaultLeftPercent = 30,
+  storageKey,
   minLeftPx = 200,
   minRightPx = 400,
   onResize,
@@ -30,10 +59,16 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
   leftCollapsed = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [leftPercent, setLeftPercent] = useState(defaultLeftPercent);
+  const [leftPercent, setLeftPercent] = useState(() => readStoredPercent(storageKey, defaultLeftPercent));
+  const leftPercentRef = useRef(leftPercent);
   const isDragging = useRef(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isDraggingState, setIsDraggingState] = useState(false);
+
+  const updateLeftPercent = useCallback((nextPercent: number) => {
+    leftPercentRef.current = nextPercent;
+    setLeftPercent(nextPercent);
+  }, []);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -47,14 +82,17 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
         const totalWidth = rect.width;
         const mouseX = moveEvent.clientX - rect.left;
 
-        const clampedX = Math.max(minLeftPx, Math.min(mouseX, totalWidth - minRightPx));
-        const newPercent = (clampedX / totalWidth) * 100;
-        setLeftPercent(newPercent);
+        const targetPercent = totalWidth > 0 ? (mouseX / totalWidth) * 100 : leftPercentRef.current;
+        const newPercent = clampPercentToWidth(targetPercent, totalWidth, minLeftPx, minRightPx);
+        updateLeftPercent(newPercent);
       };
 
       const onMouseUp = () => {
         isDragging.current = false;
         setIsDraggingState(false);
+        if (storageKey) {
+          localStorage.setItem(storageKey, String(leftPercentRef.current));
+        }
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         document.body.style.cursor = '';
@@ -67,8 +105,29 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
     },
-    [minLeftPx, minRightPx, onResize],
+    [minLeftPx, minRightPx, onResize, storageKey, updateLeftPercent],
   );
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const clampToCurrentWidth = () => {
+      if (!containerRef.current || isDragging.current) return;
+      const totalWidth = containerRef.current.getBoundingClientRect().width;
+      const nextPercent = clampPercentToWidth(leftPercentRef.current, totalWidth, minLeftPx, minRightPx);
+      if (nextPercent !== leftPercentRef.current) {
+        updateLeftPercent(nextPercent);
+      }
+    };
+
+    clampToCurrentWidth();
+
+    const resizeObserver = new ResizeObserver(clampToCurrentWidth);
+    resizeObserver.observe(containerRef.current);
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [minLeftPx, minRightPx, updateLeftPercent]);
 
   // Notify parent when leftPercent changes during drag
   const prevPercentRef = useRef(leftPercent);
@@ -98,7 +157,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           height: '100%',
           overflow: 'hidden',
           flexShrink: 0,
-          transition: 'width 0.18s ease',
+          transition: isDraggingState ? 'none' : 'width 0.18s ease',
         }}
       >
         {left}
@@ -127,7 +186,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           justifyContent: 'center',
           overflow: 'hidden',
           pointerEvents: leftCollapsed ? 'none' : 'auto',
-          transition: 'width 0.18s ease, margin 0.18s ease',
+          transition: isDraggingState ? 'none' : 'width 0.18s ease, margin 0.18s ease',
         }}
       >
         {/* The visible line */}

@@ -75,6 +75,11 @@ PTY 进程的 stdout 输出 SHALL 通过 IPC 传输到渲染进程，并由 xter
 - **THEN** 终端文字左侧 SHALL 存在合理的内边距（4-6px），防止文字紧贴容器左边缘
 - **AND** 该内边距 SHALL 通过 xterm.js 内部样式或 CSS 覆写实现，不影响 FitAddon 的列数计算准确性
 
+#### Scenario: 终端滚动条样式统一
+- **WHEN** 终端输出超过可视区域且 xterm viewport 出现滚动条
+- **THEN** xterm 滚动条 SHALL 使用与文件系统滚动区域一致的滚动条宽度、轨道、滑块、hover 和圆角样式
+- **AND** 滚动条颜色 SHALL 使用当前主题下的应用滚动条 CSS 变量
+
 #### Scenario: 滚动回看
 - **WHEN** 终端输出超过可视区域
 - **THEN** 用户 SHALL 能通过滚动查看历史输出

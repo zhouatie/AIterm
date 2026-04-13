@@ -45,6 +45,7 @@ interface FileTreeProps {
   refreshKey?: number;
   expandedPaths: string[];
   onExpandedPathsChange: (paths: string[]) => void;
+  leadingControl?: React.ReactNode;
 }
 
 // --- Helpers ---
@@ -205,6 +206,7 @@ interface ToolbarProps {
   hasExpandedPaths: boolean;
   canExpandAll: boolean;
   onRefresh: () => void;
+  leadingControl?: React.ReactNode;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -218,6 +220,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   hasExpandedPaths,
   canExpandAll,
   onRefresh,
+  leadingControl,
 }) => {
   const showExpandControl = canExpandAll || hasExpandedPaths;
   const isCollapseOnly = !canExpandAll;
@@ -270,6 +273,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         flexShrink: 0,
       }}
     >
+      {leadingControl}
       <div
         style={{
           flex: 1,
@@ -513,6 +517,7 @@ const FileTree: React.FC<FileTreeProps> = ({
   refreshKey,
   expandedPaths,
   onExpandedPathsChange,
+  leadingControl,
 }) => {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(false);
@@ -708,6 +713,7 @@ const FileTree: React.FC<FileTreeProps> = ({
           hasExpandedPaths={hasExpandedPaths}
           canExpandAll={canExpandAll}
           onRefresh={onRefresh}
+          leadingControl={leadingControl}
         />
         <div
           style={{
@@ -739,6 +745,7 @@ const FileTree: React.FC<FileTreeProps> = ({
         hasExpandedPaths={hasExpandedPaths}
         canExpandAll={canExpandAll}
         onRefresh={onRefresh}
+        leadingControl={leadingControl}
       />
       <div
         ref={scrollContainerRef}

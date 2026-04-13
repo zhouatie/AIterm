@@ -4,6 +4,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { useTheme } from '../ThemeContext';
 import type { ITheme } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
+import './TerminalInstance.css';
 
 // --- xterm.js color schemes ---
 
@@ -225,6 +226,7 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
   return (
     <div
       ref={containerRef}
+      className="terminal-instance"
       style={{
         overflow: 'hidden',
         visibility: isActive ? 'visible' : 'hidden',

@@ -64,6 +64,7 @@ const ConnectedTerminalPanel: React.FC = () => {
 
 const TERMINAL_PANEL_ID = 'terminal';
 const STORAGE_KEY_PANEL_VISIBLE = 'sidebarPanelVisible';
+const STORAGE_KEY_MAIN_SPLIT_PERCENT = 'mainSplitLeftPercent';
 
 const INITIAL_PANELS: PanelDefinition[] = [
   { id: TERMINAL_PANEL_ID, component: ConnectedTerminalPanel },
@@ -218,6 +219,7 @@ const AppContent: React.FC = () => {
             left={<FilePreviewPanel activeSessionId={activeSessionId} visible={panelVisible} />}
             right={<PanelContainer />}
             defaultLeftPercent={50}
+            storageKey={STORAGE_KEY_MAIN_SPLIT_PERCENT}
             shadow
             leftCollapsed={!panelVisible}
           />
