@@ -10,13 +10,16 @@ import {
 } from '../ShortcutContext';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import { normalizeSpecDirectoryNames } from '../utils/file-tree-settings';
+import { normalizeTerminalStartDirectory } from '../utils/terminal-settings';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   bindings: ShortcutBindings;
   specDirectoryNames: string[];
+  terminalStartDirectory: string;
   onSave: (bindings: ShortcutBindings) => void;
   onSaveSpecDirectoryNames: (names: string[]) => void;
+  onSaveTerminalStartDirectory: (value: string) => void;
   onClose: () => void;
 }
 
@@ -124,24 +127,30 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
   bindings,
   specDirectoryNames,
+  terminalStartDirectory,
   onSave,
   onSaveSpecDirectoryNames,
+  onSaveTerminalStartDirectory,
   onClose,
 }) => {
   const [draftBindings, setDraftBindings] = useState<ShortcutBindings>(bindings);
   const [draftSpecDirectories, setDraftSpecDirectories] = useState(specDirectoryNames.join('\n'));
+  const [draftTerminalStartDirectory, setDraftTerminalStartDirectory] = useState(terminalStartDirectory);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ShortcutActionId, string>>>({});
   const [specDirectoryError, setSpecDirectoryError] = useState('');
+  const [terminalDirectoryError, setTerminalDirectoryError] = useState('');
   const [saveFeedback, setSaveFeedback] = useState<string>('');
 
   useEffect(() => {
     if (!isOpen) return;
     setDraftBindings(bindings);
     setDraftSpecDirectories(specDirectoryNames.join('\n'));
+    setDraftTerminalStartDirectory(terminalStartDirectory);
     setFieldErrors({});
     setSpecDirectoryError('');
+    setTerminalDirectoryError('');
     setSaveFeedback('');
-  }, [isOpen, bindings, specDirectoryNames]);
+  }, [isOpen, bindings, specDirectoryNames, terminalStartDirectory]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -160,6 +169,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     () => normalizeSpecDirectoryNames(draftSpecDirectories),
     [draftSpecDirectories],
   );
+  const normalizedTerminalStartDirectory = useMemo(
+    () => normalizeTerminalStartDirectory(draftTerminalStartDirectory),
+    [draftTerminalStartDirectory],
+  );
   const normalizedSpecDirectoryKey = specDirectoryNames.join('\n');
   const draftSpecDirectoryKey = normalizedDraftSpecDirectories.join('\n');
   const closeButtonTitle = getIconButtonTooltip({
@@ -169,13 +182,23 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   const isDirty = useMemo(
     () => SHORTCUT_ACTIONS.some((action) => draftBindings[action.id] !== bindings[action.id])
-      || draftSpecDirectoryKey !== normalizedSpecDirectoryKey,
-    [draftBindings, bindings, draftSpecDirectoryKey, normalizedSpecDirectoryKey],
+      || draftSpecDirectoryKey !== normalizedSpecDirectoryKey
+      || normalizedTerminalStartDirectory !== terminalStartDirectory,
+    [
+      draftBindings,
+      bindings,
+      draftSpecDirectoryKey,
+      normalizedSpecDirectoryKey,
+      normalizedTerminalStartDirectory,
+      terminalStartDirectory,
+    ],
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const errors = validateShortcutBindings(draftBindings);
     setFieldErrors(errors);
+    setSpecDirectoryError('');
+    setTerminalDirectoryError('');
 
     if (Object.keys(errors).length > 0) {
       setSaveFeedback('存在未解决的快捷键冲突或空值');
@@ -188,8 +211,24 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       return;
     }
 
+    if (normalizedTerminalStartDirectory && !normalizedTerminalStartDirectory.startsWith('/')) {
+      setTerminalDirectoryError('请输入绝对路径，或留空使用 Home (~)');
+      setSaveFeedback('存在未解决的配置错误');
+      return;
+    }
+
+    if (normalizedTerminalStartDirectory) {
+      const { error } = await window.fileApi.readDir(normalizedTerminalStartDirectory);
+      if (error) {
+        setTerminalDirectoryError('目录不存在或不可访问');
+        setSaveFeedback('存在未解决的配置错误');
+        return;
+      }
+    }
+
     onSave(draftBindings);
     onSaveSpecDirectoryNames(normalizedDraftSpecDirectories);
+    onSaveTerminalStartDirectory(normalizedTerminalStartDirectory);
     setSaveFeedback('所有更改已保存');
   };
 
@@ -304,7 +343,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 通用
               </div>
               <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 }}>
-                管理应用内快捷键与基础操作入口
+                管理 terminal 默认目录、应用内快捷键与基础操作入口
               </div>
             </div>
             <button
@@ -437,6 +476,64 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     backgroundColor: 'var(--color-bg-secondary)',
                     color: 'var(--color-text-primary)',
                     padding: '10px 12px',
+                    fontSize: 13,
+                    lineHeight: 1.45,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) 260px',
+                  gap: 16,
+                  alignItems: 'start',
+                  padding: '16px 0',
+                  borderTop: '1px solid var(--color-border-light)',
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--color-text-primary)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    Terminal 默认目录
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                    首次打开 terminal 或新建 workspace 时使用。留空表示 Home (~)，否则请输入绝对路径。
+                  </div>
+                  {terminalDirectoryError && (
+                    <div style={{ fontSize: 12, color: '#d14343', marginTop: 8 }}>
+                      {terminalDirectoryError}
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={draftTerminalStartDirectory}
+                  onChange={(event) => {
+                    setDraftTerminalStartDirectory(event.target.value);
+                    setTerminalDirectoryError('');
+                    setSaveFeedback('');
+                  }}
+                  placeholder="留空使用 Home (~)"
+                  spellCheck={false}
+                  style={{
+                    width: '100%',
+                    minHeight: 42,
+                    borderRadius: 10,
+                    border: terminalDirectoryError
+                      ? '1px solid #d14343'
+                      : '1px solid var(--color-border-primary)',
+                    backgroundColor: 'var(--color-bg-secondary)',
+                    color: 'var(--color-text-primary)',
+                    padding: '0 12px',
                     fontSize: 13,
                     lineHeight: 1.45,
                     outline: 'none',

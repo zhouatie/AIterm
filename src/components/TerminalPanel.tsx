@@ -46,6 +46,7 @@ interface SessionRenameState {
 type RenameState = WorkspaceRenameState | SessionRenameState;
 
 interface TerminalPanelProps {
+  initialDirectory?: string;
   onActiveSessionChange?: (sessionId: string) => void;
 }
 
@@ -90,7 +91,10 @@ function getSessionDisplayLabel(
   return sessionNameOverrides[session.id] || session.displayLabel;
 }
 
-const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) => {
+const TerminalPanel: React.FC<TerminalPanelProps> = ({
+  initialDirectory,
+  onActiveSessionChange,
+}) => {
   const { bindings, registerAction } = useKeyboardShortcuts();
   const workspaceCounterRef = useRef(1);
   const initializedRef = useRef(false);
@@ -215,8 +219,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-    void createWorkspace();
-  }, [createWorkspace]);
+    void createWorkspace(initialDirectory);
+  }, [createWorkspace, initialDirectory]);
 
   useEffect(() => {
     return registerAction('toggle-terminal-sidebar', () => {
@@ -226,9 +230,9 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
 
   useEffect(() => {
     return registerAction('create-workspace', () => {
-      void createWorkspace();
+      void createWorkspace(initialDirectory);
     });
-  }, [registerAction, createWorkspace]);
+  }, [registerAction, createWorkspace, initialDirectory]);
 
   useEffect(() => {
     if (!activeSessionId) return;
@@ -408,14 +412,14 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
 
     if (shouldCreateWorkspace) {
       setActiveSessionId('');
-      await createWorkspace();
+      await createWorkspace(initialDirectory);
       return;
     }
 
     if (nextActiveSessionId) {
       setActiveSessionId(nextActiveSessionId);
     }
-  }, [activeSessionId, createWorkspace]);
+  }, [activeSessionId, createWorkspace, initialDirectory]);
 
   const handleCloseWorkspace = useCallback(async (workspaceId: string) => {
     const currentActiveSessionId = activeSessionId;
@@ -466,14 +470,14 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
 
     if (shouldCreateWorkspace) {
       setActiveSessionId('');
-      await createWorkspace();
+      await createWorkspace(initialDirectory);
       return;
     }
 
     if (nextActiveSessionId) {
       setActiveSessionId(nextActiveSessionId);
     }
-  }, [activeSessionId, createWorkspace]);
+  }, [activeSessionId, createWorkspace, initialDirectory]);
 
   const handleStartWorkspaceRename = useCallback((workspaceId: string) => {
     const workspace = workspacesRef.current.find((item) => item.id === workspaceId);

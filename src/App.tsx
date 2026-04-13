@@ -15,6 +15,11 @@ import {
   readSpecDirectoryNames,
   saveSpecDirectoryNames,
 } from './utils/file-tree-settings';
+import {
+  readTerminalStartDirectory,
+  saveTerminalStartDirectory,
+  TERMINAL_START_DIRECTORY_CHANGED_EVENT,
+} from './utils/terminal-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 
 // --- Active Session Context ---
@@ -34,7 +39,27 @@ export const useActiveSession = () => useContext(ActiveSessionContext);
 // --- Terminal panel wrapper that connects to active session context ---
 const ConnectedTerminalPanel: React.FC = () => {
   const { setActiveSessionId } = useActiveSession();
-  return <TerminalPanel onActiveSessionChange={setActiveSessionId} />;
+  const [initialDirectory, setInitialDirectory] = useState(readTerminalStartDirectory);
+
+  useEffect(() => {
+    const handleDirectoryChange = () => {
+      setInitialDirectory(readTerminalStartDirectory());
+    };
+
+    window.addEventListener('storage', handleDirectoryChange);
+    window.addEventListener(TERMINAL_START_DIRECTORY_CHANGED_EVENT, handleDirectoryChange);
+    return () => {
+      window.removeEventListener('storage', handleDirectoryChange);
+      window.removeEventListener(TERMINAL_START_DIRECTORY_CHANGED_EVENT, handleDirectoryChange);
+    };
+  }, []);
+
+  return (
+    <TerminalPanel
+      initialDirectory={initialDirectory || undefined}
+      onActiveSessionChange={setActiveSessionId}
+    />
+  );
 };
 
 const TERMINAL_PANEL_ID = 'terminal';
@@ -91,6 +116,7 @@ const AppContent: React.FC = () => {
     return stored !== null ? stored === 'true' : true;
   });
   const [specDirectoryNames, setSpecDirectoryNames] = useState(readSpecDirectoryNames);
+  const [terminalStartDirectory, setTerminalStartDirectory] = useState(readTerminalStartDirectory);
   const fileTreeToggleTitle = getIconButtonTooltip({
     label: panelVisible ? '收起文件树' : '展开文件树',
     bindings,
@@ -108,6 +134,11 @@ const AppContent: React.FC = () => {
   const handleSaveSpecDirectoryNames = useCallback((names: string[]) => {
     saveSpecDirectoryNames(names);
     setSpecDirectoryNames(readSpecDirectoryNames());
+  }, []);
+
+  const handleSaveTerminalStartDirectory = useCallback((value: string) => {
+    saveTerminalStartDirectory(value);
+    setTerminalStartDirectory(readTerminalStartDirectory());
   }, []);
 
   useEffect(() => {
@@ -197,8 +228,10 @@ const AppContent: React.FC = () => {
         isOpen={isSettingsOpen}
         bindings={bindings}
         specDirectoryNames={specDirectoryNames}
+        terminalStartDirectory={terminalStartDirectory}
         onSave={saveBindings}
         onSaveSpecDirectoryNames={handleSaveSpecDirectoryNames}
+        onSaveTerminalStartDirectory={handleSaveTerminalStartDirectory}
         onClose={closeSettings}
       />
     </>
