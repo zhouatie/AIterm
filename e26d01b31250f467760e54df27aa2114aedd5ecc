@@ -1,0 +1,25 @@
+src/components/FilePreviewPanel.tsx
+  c5111cad0106f539 14-19,28,34-35,39-47,49-57,65,72,82,86,93,97,118,124,128,133,140,143-145,170-171
+src/components/FileTree.tsx
+  c5111cad0106f539 34-35,40,51-64,173,185,189,278-279,282,298,315-342,350-360,364-366,402-405,407,410,412-413,417-418,491
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "e26d01b31250f467760e54df27aa2114aedd5ecc",
+  "prompts": {
+    "c5111cad0106f539": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d84fb-ab85-7653-943e-0dcc3698e89a",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 121,
+      "total_deletions": 94,
+      "accepted_lines": 121,
+      "overriden_lines": 0
+    }
+  }
+}
