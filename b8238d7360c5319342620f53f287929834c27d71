@@ -1,0 +1,27 @@
+src/components/SettingsPanel.tsx
+  2ebddbaf6a04cdf1 352
+src/ShortcutContext.tsx
+  2ebddbaf6a04cdf1 14-16,58-67,74-75,95-96
+src/components/TerminalPanel.tsx
+  2ebddbaf6a04cdf1 70-73,248-272
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "b8238d7360c5319342620f53f287929834c27d71",
+  "prompts": {
+    "2ebddbaf6a04cdf1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d856c-e8b8-7da3-9170-e84c0d0801d9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 48,
+      "total_deletions": 2,
+      "accepted_lines": 48,
+      "overriden_lines": 0
+    }
+  }
+}
