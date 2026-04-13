@@ -2,9 +2,7 @@
 
 ## Purpose
 应用内设置面板，负责统一承载基础配置入口，并展示当前支持的快捷键配置项。
-
 ## Requirements
-
 ### Requirement: 设置面板打开与关闭
 应用 SHALL 提供一个应用内设置面板，并支持通过固定快捷键 `Command + ,` 打开。
 
@@ -25,7 +23,7 @@
 
 #### Scenario: 展示可配置动作
 - **WHEN** 用户打开设置面板
-- **THEN** 系统 SHALL 展示文件树展示/收起、terminal tab 侧边栏展示/收起、新增 workspace 这 3 个动作的快捷键配置项
+- **THEN** 系统 SHALL 展示文件树展示/收起、terminal tab 侧边栏展示/收起、新增 workspace、当前激活 workspace 下新增 terminal tab、重命名当前 workspace、重命名当前二级 terminal tab、关闭当前二级 terminal tab、关闭当前 workspace、上一个 terminal tab、下一个 terminal tab这 10 个动作的快捷键配置项
 
 #### Scenario: 展示当前生效值
 - **WHEN** 设置面板渲染快捷键配置项
@@ -49,3 +47,4 @@
 #### Scenario: 扩展 spec 目录配置
 - **WHEN** 用户添加新的目录名并保存
 - **THEN** 文件树 spec 模式 SHALL 使用更新后的目录名列表过滤根目录
+

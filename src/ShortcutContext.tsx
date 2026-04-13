@@ -12,6 +12,11 @@ export type ShortcutActionId =
   | 'toggle-file-tree'
   | 'toggle-terminal-sidebar'
   | 'create-workspace'
+  | 'create-terminal-tab'
+  | 'rename-current-workspace'
+  | 'rename-current-terminal-tab'
+  | 'close-current-terminal-tab'
+  | 'close-current-workspace'
   | 'select-previous-terminal-tab'
   | 'select-next-terminal-tab';
 
@@ -56,6 +61,31 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
     description: '创建一个新的 workspace 及其首个终端',
   },
   {
+    id: 'create-terminal-tab',
+    title: '当前 Workspace 新增 Terminal Tab',
+    description: '在当前激活的 workspace 下创建一个新的 terminal tab',
+  },
+  {
+    id: 'rename-current-workspace',
+    title: '重命名当前 Workspace',
+    description: '重命名当前激活 terminal 所属的 workspace',
+  },
+  {
+    id: 'rename-current-terminal-tab',
+    title: '重命名当前 Terminal Tab',
+    description: '重命名当前激活的二级 terminal tab',
+  },
+  {
+    id: 'close-current-terminal-tab',
+    title: '关闭当前 Terminal Tab',
+    description: '关闭当前激活的二级 terminal tab',
+  },
+  {
+    id: 'close-current-workspace',
+    title: '关闭当前 Workspace',
+    description: '关闭当前 workspace 下的所有 terminal tab',
+  },
+  {
     id: 'select-previous-terminal-tab',
     title: '上一个 Terminal Tab',
     description: '切换到左侧导航顺序中的上一个 terminal tab',
@@ -70,7 +100,12 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
 export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindings = {
   'toggle-file-tree': 'Meta+S',
   'toggle-terminal-sidebar': 'Meta+B',
-  'create-workspace': 'Meta+T',
+  'create-workspace': 'Meta+N',
+  'create-terminal-tab': 'Meta+T',
+  'rename-current-workspace': 'Meta+Shift+R',
+  'rename-current-terminal-tab': 'Meta+R',
+  'close-current-terminal-tab': 'Meta+W',
+  'close-current-workspace': 'Meta+Shift+W',
   'select-previous-terminal-tab': 'Meta+Shift+[',
   'select-next-terminal-tab': 'Meta+Shift+]',
 };

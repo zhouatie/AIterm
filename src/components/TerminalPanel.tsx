@@ -29,10 +29,20 @@ interface SidebarMenuState {
   sessionId?: string;
 }
 
-interface RenameState {
+interface WorkspaceRenameState {
+  type: 'workspace';
   workspaceId: string;
   value: string;
 }
+
+interface SessionRenameState {
+  type: 'session';
+  workspaceId: string;
+  sessionId: string;
+  value: string;
+}
+
+type RenameState = WorkspaceRenameState | SessionRenameState;
 
 interface TerminalPanelProps {
   onActiveSessionChange?: (sessionId: string) => void;
@@ -72,24 +82,39 @@ function getOrderedSessionIds(workspaces: WorkspaceNode[]): string[] {
   return workspaces.flatMap((workspace) => workspace.sessions.map((session) => session.id));
 }
 
+function getSessionDisplayLabel(
+  session: TerminalSessionInfo,
+  sessionNameOverrides: Record<string, string>,
+): string {
+  return sessionNameOverrides[session.id] || session.displayLabel;
+}
+
 const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) => {
   const { registerAction } = useKeyboardShortcuts();
   const workspaceCounterRef = useRef(1);
   const initializedRef = useRef(false);
   const workspacesRef = useRef<WorkspaceNode[]>([]);
+  const sessionNameOverridesRef = useRef<Record<string, string>>({});
   const workspaceRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const sessionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const renameInputRef = useRef<HTMLInputElement>(null);
 
   const [workspaces, setWorkspaces] = useState<WorkspaceNode[]>([]);
+  const [sessionNameOverrides, setSessionNameOverrides] = useState<Record<string, string>>({});
   const [activeSessionId, setActiveSessionId] = useState<string>('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [menuState, setMenuState] = useState<SidebarMenuState | null>(null);
   const [renameState, setRenameState] = useState<RenameState | null>(null);
   const [hoveredWorkspaceId, setHoveredWorkspaceId] = useState<string | null>(null);
   const sidebarWidth = sidebarCollapsed ? 0 : SIDEBAR_WIDTH;
+  const renameTargetKey = renameState
+    ? renameState.type === 'workspace'
+      ? `workspace:${renameState.workspaceId}`
+      : `session:${renameState.workspaceId}:${renameState.sessionId}`
+    : null;
 
   workspacesRef.current = workspaces;
+  sessionNameOverridesRef.current = sessionNameOverrides;
 
   const applySessionInfo = useCallback((info: TerminalSessionInfo) => {
     setWorkspaces((prev) =>
@@ -229,7 +254,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
       renameInputRef.current?.focus();
       renameInputRef.current?.select();
     });
-  }, [renameState?.workspaceId]);
+  }, [renameTargetKey]);
 
   const handleSelectSession = useCallback((sessionId: string) => {
     setWorkspaces((prev) =>
@@ -271,6 +296,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
       selectRelativeTerminalTab(1);
     });
   }, [registerAction, selectRelativeTerminalTab]);
+
+  const getActiveWorkspace = useCallback(() => {
+    if (!activeSessionId) return undefined;
+    return findWorkspaceBySessionId(workspacesRef.current, activeSessionId);
+  }, [activeSessionId]);
 
   const handleToggleWorkspace = useCallback((workspaceId: string) => {
     setWorkspaces((prev) =>
@@ -346,6 +376,25 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
       return nextWorkspaces;
     });
 
+    setSessionNameOverrides((prev) => {
+      if (!(sessionId in prev)) return prev;
+      const nextOverrides = { ...prev };
+      delete nextOverrides[sessionId];
+      return nextOverrides;
+    });
+
+    setRenameState((prev) => {
+      if (!prev) return prev;
+      if (prev.type === 'session' && prev.sessionId === sessionId) return null;
+      if (prev.type === 'workspace' && prev.workspaceId === workspaceId) {
+        const workspace = workspacesRef.current.find((item) => item.id === workspaceId);
+        if (workspace?.sessions.length === 1 && workspace.sessions[0].id === sessionId) {
+          return null;
+        }
+      }
+      return prev;
+    });
+
     if (shouldCreateWorkspace) {
       setActiveSessionId('');
       await createWorkspace();
@@ -357,23 +406,114 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
     }
   }, [activeSessionId, createWorkspace]);
 
-  const handleStartRename = useCallback((workspaceId: string) => {
+  const handleCloseWorkspace = useCallback(async (workspaceId: string) => {
+    const currentActiveSessionId = activeSessionId;
+    const workspaceToClose = workspacesRef.current.find((workspace) => workspace.id === workspaceId);
+    if (!workspaceToClose) return;
+
+    for (const session of workspaceToClose.sessions) {
+      try {
+        await window.terminalApi.dispose(session.id);
+      } catch {
+        // Ignore dispose failures for already-closed sessions.
+      }
+    }
+
+    let nextActiveSessionId = '';
+    let shouldCreateWorkspace = false;
+
+    setWorkspaces((prev) => {
+      const closingIndex = prev.findIndex((workspace) => workspace.id === workspaceId);
+      if (closingIndex === -1) return prev;
+
+      const nextWorkspaces = prev.filter((workspace) => workspace.id !== workspaceId);
+      const isClosingActiveWorkspace = workspaceToClose.sessions.some(
+        (session) => session.id === currentActiveSessionId,
+      );
+
+      if (nextWorkspaces.length === 0) {
+        shouldCreateWorkspace = true;
+      } else if (isClosingActiveWorkspace) {
+        const fallbackWorkspace = nextWorkspaces[Math.min(closingIndex, nextWorkspaces.length - 1)];
+        nextActiveSessionId = fallbackWorkspace.lastActiveSessionId || fallbackWorkspace.sessions[0].id;
+      } else {
+        nextActiveSessionId = currentActiveSessionId;
+      }
+
+      return nextWorkspaces;
+    });
+
+    setSessionNameOverrides((prev) => {
+      const nextOverrides = { ...prev };
+      for (const session of workspaceToClose.sessions) {
+        delete nextOverrides[session.id];
+      }
+      return nextOverrides;
+    });
+
+    setRenameState((prev) => (prev?.workspaceId === workspaceId ? null : prev));
+
+    if (shouldCreateWorkspace) {
+      setActiveSessionId('');
+      await createWorkspace();
+      return;
+    }
+
+    if (nextActiveSessionId) {
+      setActiveSessionId(nextActiveSessionId);
+    }
+  }, [activeSessionId, createWorkspace]);
+
+  const handleStartWorkspaceRename = useCallback((workspaceId: string) => {
     const workspace = workspacesRef.current.find((item) => item.id === workspaceId);
     if (!workspace) return;
-    setRenameState({ workspaceId, value: workspace.name });
+    setRenameState({
+      type: 'workspace',
+      workspaceId,
+      value: workspace.name,
+    });
+  }, []);
+
+  const handleStartSessionRename = useCallback((workspaceId: string, sessionId: string) => {
+    const workspace = workspacesRef.current.find((item) => item.id === workspaceId);
+    const session = workspace?.sessions.find((item) => item.id === sessionId);
+    if (!workspace || !session) return;
+
+    setWorkspaces((prev) =>
+      prev.map((item) =>
+        item.id === workspaceId
+          ? { ...item, isExpanded: true }
+          : item,
+      ),
+    );
+    setRenameState({
+      type: 'session',
+      workspaceId,
+      sessionId,
+      value: getSessionDisplayLabel(session, sessionNameOverridesRef.current),
+    });
   }, []);
 
   const handleCommitRename = useCallback(() => {
     if (!renameState) return;
 
     const trimmed = renameState.value.trim();
-    setWorkspaces((prev) =>
-      prev.map((workspace) =>
-        workspace.id === renameState.workspaceId
-          ? { ...workspace, name: trimmed || workspace.name }
-          : workspace,
-      ),
-    );
+
+    if (renameState.type === 'workspace') {
+      setWorkspaces((prev) =>
+        prev.map((workspace) =>
+          workspace.id === renameState.workspaceId
+            ? { ...workspace, name: trimmed || workspace.name }
+            : workspace,
+        ),
+      );
+    } else if (trimmed) {
+      setSessionNameOverrides((prev) => ({
+        ...prev,
+        [renameState.sessionId]: trimmed,
+      }));
+    }
+
     setRenameState(null);
   }, [renameState]);
 
@@ -408,7 +548,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
         label: 'Rename',
         onSelect: () => {
           setMenuState(null);
-          handleStartRename(workspace.id);
+          handleStartWorkspaceRename(workspace.id);
         },
       },
       { type: 'separator' },
@@ -419,6 +559,46 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
       }),
     ];
   })();
+
+  useEffect(() => {
+    return registerAction('create-terminal-tab', () => {
+      const activeWorkspace = getActiveWorkspace();
+      if (!activeWorkspace) return;
+      void createSessionInWorkspace(activeWorkspace.id);
+    });
+  }, [createSessionInWorkspace, getActiveWorkspace, registerAction]);
+
+  useEffect(() => {
+    return registerAction('rename-current-workspace', () => {
+      const activeWorkspace = getActiveWorkspace();
+      if (!activeWorkspace) return;
+      handleStartWorkspaceRename(activeWorkspace.id);
+    });
+  }, [getActiveWorkspace, handleStartWorkspaceRename, registerAction]);
+
+  useEffect(() => {
+    return registerAction('rename-current-terminal-tab', () => {
+      const activeWorkspace = getActiveWorkspace();
+      if (!activeWorkspace || !activeSessionId) return;
+      handleStartSessionRename(activeWorkspace.id, activeSessionId);
+    });
+  }, [activeSessionId, getActiveWorkspace, handleStartSessionRename, registerAction]);
+
+  useEffect(() => {
+    return registerAction('close-current-terminal-tab', () => {
+      const activeWorkspace = getActiveWorkspace();
+      if (!activeWorkspace || !activeSessionId) return;
+      void handleCloseSession(activeWorkspace.id, activeSessionId);
+    });
+  }, [activeSessionId, getActiveWorkspace, handleCloseSession, registerAction]);
+
+  useEffect(() => {
+    return registerAction('close-current-workspace', () => {
+      const activeWorkspace = getActiveWorkspace();
+      if (!activeWorkspace) return;
+      void handleCloseWorkspace(activeWorkspace.id);
+    });
+  }, [getActiveWorkspace, handleCloseWorkspace, registerAction]);
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', overflow: 'hidden', position: 'relative' }}>
@@ -500,7 +680,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
           {!sidebarCollapsed && workspaces.map((workspace) => {
             const isWorkspaceActive = workspace.sessions.some((session) => session.id === activeSessionId);
             const showWorkspaceNewButton =
-              hoveredWorkspaceId === workspace.id && renameState?.workspaceId !== workspace.id;
+              hoveredWorkspaceId === workspace.id
+              && !(renameState?.type === 'workspace' && renameState.workspaceId === workspace.id);
 
             return (
               <div key={workspace.id} style={{ marginBottom: 6 }}>
@@ -510,7 +691,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
                     else workspaceRefs.current.delete(workspace.id);
                   }}
                   onClick={() => {
-                    if (renameState?.workspaceId === workspace.id) return;
+                    if (renameState?.type === 'workspace' && renameState.workspaceId === workspace.id) return;
                     handleToggleWorkspace(workspace.id);
                   }}
                   onContextMenu={(event) => {
@@ -569,7 +750,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
                     <Folder size={14} />
                   </span>
 
-                  {renameState?.workspaceId === workspace.id ? (
+                  {renameState?.type === 'workspace' && renameState.workspaceId === workspace.id ? (
                     <input
                       ref={renameInputRef}
                       value={renameState.value}
@@ -655,6 +836,12 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
                   <div style={{ marginTop: 2 }}>
                     {workspace.sessions.map((session) => {
                       const isActive = session.id === activeSessionId;
+                      const isRenamingSession =
+                        renameState?.type === 'session' && renameState.sessionId === session.id;
+                      const sessionRenameState =
+                        isRenamingSession && renameState?.type === 'session'
+                          ? renameState
+                          : null;
                       return (
                         <div
                           key={session.id}
@@ -662,7 +849,10 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
                             if (element) sessionRefs.current.set(session.id, element);
                             else sessionRefs.current.delete(session.id);
                           }}
-                          onClick={() => handleSelectSession(session.id)}
+                          onClick={() => {
+                            if (isRenamingSession) return;
+                            handleSelectSession(session.id);
+                          }}
                           onContextMenu={(event) => {
                             event.preventDefault();
                             setMenuState({
@@ -706,47 +896,84 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
                               flexShrink: 0,
                             }}
                           />
-                          <span
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              fontSize: 12,
-                            }}
-                          >
-                            {session.displayLabel}
-                          </span>
-                          <button
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleCloseSession(workspace.id, session.id);
-                            }}
-                            title="Close Tab"
-                            style={{
-                              width: 18,
-                              height: 18,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              border: 'none',
-                              borderRadius: '50%',
-                              backgroundColor: 'transparent',
-                              color: 'var(--color-text-muted)',
-                              cursor: 'pointer',
-                              padding: 0,
-                              flexShrink: 0,
-                            }}
-                            onMouseEnter={(event) => {
-                              event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-                            }}
-                            onMouseLeave={(event) => {
-                              event.currentTarget.style.backgroundColor = 'transparent';
-                            }}
-                          >
-                            <X size={12} />
-                          </button>
+                          {isRenamingSession ? (
+                            <input
+                              ref={renameInputRef}
+                              value={sessionRenameState?.value || ''}
+                              onChange={(event) =>
+                                setRenameState((prev) =>
+                                  prev ? { ...prev, value: event.target.value } : prev,
+                                )
+                              }
+                              onBlur={handleCommitRename}
+                              onClick={(event) => event.stopPropagation()}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                  event.preventDefault();
+                                  handleCommitRename();
+                                }
+                                if (event.key === 'Escape') {
+                                  event.preventDefault();
+                                  handleCancelRename();
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                minWidth: 0,
+                                border: '1px solid var(--color-border-primary)',
+                                borderRadius: 6,
+                                backgroundColor: 'var(--color-bg-primary)',
+                                color: 'var(--color-text-primary)',
+                                fontSize: 12,
+                                padding: '4px 6px',
+                                outline: 'none',
+                              }}
+                            />
+                          ) : (
+                            <span
+                              style={{
+                                flex: 1,
+                                minWidth: 0,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                fontSize: 12,
+                              }}
+                            >
+                              {getSessionDisplayLabel(session, sessionNameOverrides)}
+                            </span>
+                          )}
+                          {!isRenamingSession && (
+                            <button
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleCloseSession(workspace.id, session.id);
+                              }}
+                              title="Close Tab"
+                              style={{
+                                width: 18,
+                                height: 18,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: 'none',
+                                borderRadius: '50%',
+                                backgroundColor: 'transparent',
+                                color: 'var(--color-text-muted)',
+                                cursor: 'pointer',
+                                padding: 0,
+                                flexShrink: 0,
+                              }}
+                              onMouseEnter={(event) => {
+                                event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+                              }}
+                              onMouseLeave={(event) => {
+                                event.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
                         </div>
                       );
                     })}

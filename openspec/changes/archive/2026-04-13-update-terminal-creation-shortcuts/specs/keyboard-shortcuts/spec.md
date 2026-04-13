@@ -1,8 +1,5 @@
-# Capability: keyboard-shortcuts
+## MODIFIED Requirements
 
-## Purpose
-应用级快捷键系统，负责默认快捷键定义、用户自定义绑定持久化以及保存前的配置校验。
-## Requirements
 ### Requirement: 默认快捷键定义
 系统 SHALL 为首批支持的应用动作提供默认快捷键绑定。
 
@@ -18,17 +15,6 @@
 - **THEN** 关闭当前 workspace SHALL 默认绑定为 `Command + Shift + W`
 - **THEN** 上一个 terminal tab SHALL 默认绑定为 `Command + Shift + [`
 - **THEN** 下一个 terminal tab SHALL 默认绑定为 `Command + Shift + ]`
-
-### Requirement: 快捷键配置持久化
-系统 SHALL 支持保存用户自定义快捷键，并在后续启动时恢复。
-
-#### Scenario: 保存自定义绑定
-- **WHEN** 用户在设置面板中修改快捷键并执行保存
-- **THEN** 系统 SHALL 持久化保存新的快捷键绑定
-
-#### Scenario: 重新启动后恢复自定义绑定
-- **WHEN** 用户已经保存过自定义快捷键后重新启动应用
-- **THEN** 系统 SHALL 加载并使用上一次保存的快捷键绑定，而不是回退到默认值
 
 ### Requirement: 快捷键配置校验
 系统 SHALL 阻止无效或冲突的快捷键配置被保存。快捷键触发判断 SHALL 能正确区分真实用户可编辑输入元素（`<input>`、`<select>`、`contentEditable` 元素及非终端 `<textarea>`）与 xterm.js 内部键盘捕获元素，在终端获焦时不得屏蔽全局面板、terminal 创建、rename、close 和 terminal tab 切换快捷键的触发。
@@ -60,4 +46,3 @@
 - **WHEN** 用户正在 workspace 或 terminal tab 的重命名输入框中输入内容
 - **THEN** 按下任意快捷键组合
 - **THEN** 系统 SHALL 不触发全局面板快捷键，避免干扰用户输入
-
