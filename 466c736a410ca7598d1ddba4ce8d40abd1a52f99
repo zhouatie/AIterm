@@ -1,0 +1,23 @@
+src/components/TerminalPanel.tsx
+  3a314cefc543f832 43,759-800,815-846
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "466c736a410ca7598d1ddba4ce8d40abd1a52f99",
+  "prompts": {
+    "3a314cefc543f832": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d85ea-3c4c-7b92-ae9b-06bab1846fb3",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 75,
+      "total_deletions": 31,
+      "accepted_lines": 75,
+      "overriden_lines": 0
+    }
+  }
+}
