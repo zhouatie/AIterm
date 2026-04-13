@@ -84,6 +84,123 @@ function getOrderedSessionIds(workspaces: WorkspaceNode[]): string[] {
   return workspaces.flatMap((workspace) => workspace.sessions.map((session) => session.id));
 }
 
+function resolveWorkspaceActiveSessionId(workspace: WorkspaceNode): string {
+  if (workspace.lastActiveSessionId
+    && workspace.sessions.some((session) => session.id === workspace.lastActiveSessionId)) {
+    return workspace.lastActiveSessionId;
+  }
+  return workspace.sessions[0]?.id || '';
+}
+
+function resolveActiveSessionId(workspaces: WorkspaceNode[], preferredSessionId: string): string {
+  if (preferredSessionId
+    && workspaces.some((workspace) =>
+      workspace.sessions.some((session) => session.id === preferredSessionId),
+    )) {
+    return preferredSessionId;
+  }
+
+  const fallbackWorkspace = workspaces[0];
+  if (!fallbackWorkspace) return '';
+  return resolveWorkspaceActiveSessionId(fallbackWorkspace);
+}
+
+interface CloseMutationResult {
+  nextWorkspaces: WorkspaceNode[];
+  nextActiveSessionId: string;
+  shouldCreateWorkspace: boolean;
+}
+
+function computeWorkspacesAfterSessionClose(
+  workspaces: WorkspaceNode[],
+  workspaceId: string,
+  sessionId: string,
+  activeSessionId: string,
+): CloseMutationResult {
+  let preferredNextActiveSessionId = activeSessionId === sessionId ? '' : activeSessionId;
+  const nextWorkspaces: WorkspaceNode[] = [];
+
+  for (const workspace of workspaces) {
+    if (workspace.id !== workspaceId) {
+      nextWorkspaces.push(workspace);
+      continue;
+    }
+
+    const closingIndex = workspace.sessions.findIndex((session) => session.id === sessionId);
+    if (closingIndex === -1) {
+      nextWorkspaces.push(workspace);
+      continue;
+    }
+
+    const remainingSessions = workspace.sessions.filter((session) => session.id !== sessionId);
+    if (remainingSessions.length === 0) {
+      continue;
+    }
+
+    const fallbackSession = remainingSessions[Math.min(closingIndex, remainingSessions.length - 1)];
+    const nextLastActiveSessionId = resolveActiveSessionId(
+      [{
+        ...workspace,
+        sessions: remainingSessions,
+      }],
+      workspace.lastActiveSessionId === sessionId ? fallbackSession.id : workspace.lastActiveSessionId || '',
+    );
+
+    nextWorkspaces.push({
+      ...workspace,
+      currentPath:
+        nextLastActiveSessionId === fallbackSession.id
+          ? fallbackSession.cwd || workspace.currentPath
+          : workspace.currentPath,
+      lastActiveSessionId: nextLastActiveSessionId,
+      sessions: remainingSessions,
+    });
+
+    if (activeSessionId === sessionId) {
+      preferredNextActiveSessionId = fallbackSession.id;
+    }
+  }
+
+  return {
+    nextWorkspaces,
+    nextActiveSessionId: resolveActiveSessionId(nextWorkspaces, preferredNextActiveSessionId),
+    shouldCreateWorkspace: nextWorkspaces.length === 0,
+  };
+}
+
+function computeWorkspacesAfterWorkspaceClose(
+  workspaces: WorkspaceNode[],
+  workspaceId: string,
+  activeSessionId: string,
+): CloseMutationResult {
+  const closingIndex = workspaces.findIndex((workspace) => workspace.id === workspaceId);
+  if (closingIndex === -1) {
+    return {
+      nextWorkspaces: workspaces,
+      nextActiveSessionId: resolveActiveSessionId(workspaces, activeSessionId),
+      shouldCreateWorkspace: workspaces.length === 0,
+    };
+  }
+
+  const workspaceToClose = workspaces[closingIndex];
+  const nextWorkspaces = workspaces.filter((workspace) => workspace.id !== workspaceId);
+  const isClosingActiveWorkspace = workspaceToClose.sessions.some(
+    (session) => session.id === activeSessionId,
+  );
+  const fallbackWorkspace = nextWorkspaces[Math.min(closingIndex, nextWorkspaces.length - 1)];
+  const preferredNextActiveSessionId = isClosingActiveWorkspace
+    ? fallbackWorkspace
+      ? resolveWorkspaceActiveSessionId(fallbackWorkspace)
+      : ''
+    : activeSessionId;
+
+  return {
+    nextWorkspaces,
+    nextActiveSessionId: resolveActiveSessionId(nextWorkspaces, preferredNextActiveSessionId),
+    shouldCreateWorkspace: nextWorkspaces.length === 0,
+  };
+}
+
 function getSessionDisplayLabel(
   session: TerminalSessionInfo,
   sessionNameOverrides: Record<string, string>,
@@ -251,6 +368,13 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [activeSessionId, onActiveSessionChange]);
 
   useEffect(() => {
+    const nextActiveSessionId = resolveActiveSessionId(workspaces, activeSessionId);
+    if (nextActiveSessionId !== activeSessionId) {
+      setActiveSessionId(nextActiveSessionId);
+    }
+  }, [activeSessionId, workspaces]);
+
+  useEffect(() => {
     const unsubscribe = window.terminalApi.onSessionInfoChanged((info) => {
       applySessionInfo(info);
     });
@@ -357,69 +481,24 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, []);
 
   const handleCloseSession = useCallback(async (workspaceId: string, sessionId: string) => {
+    const {
+      nextWorkspaces,
+      nextActiveSessionId,
+      shouldCreateWorkspace,
+    } = computeWorkspacesAfterSessionClose(
+      workspacesRef.current,
+      workspaceId,
+      sessionId,
+      activeSessionId,
+    );
+
     try {
       await window.terminalApi.dispose(sessionId);
     } catch {
       // Ignore dispose failures for already-closed sessions.
     }
     clearSessionAttention(sessionId);
-
-    let nextActiveSessionId = '';
-    let shouldCreateWorkspace = false;
-
-    setWorkspaces((prev) => {
-      const currentActiveSessionId = activeSessionId;
-      const nextWorkspaces: WorkspaceNode[] = [];
-
-      for (const workspace of prev) {
-        if (workspace.id !== workspaceId) {
-          nextWorkspaces.push(workspace);
-          continue;
-        }
-
-        const closingIndex = workspace.sessions.findIndex((session) => session.id === sessionId);
-        if (closingIndex === -1) {
-          nextWorkspaces.push(workspace);
-          continue;
-        }
-
-        const remainingSessions = workspace.sessions.filter((session) => session.id !== sessionId);
-        if (remainingSessions.length === 0) {
-          continue;
-        }
-
-        const nextIndex = Math.min(closingIndex, remainingSessions.length - 1);
-        const nextWorkspaceSession = remainingSessions[nextIndex];
-        const nextLastActiveSessionId =
-          workspace.lastActiveSessionId === sessionId
-            ? nextWorkspaceSession.id
-            : workspace.lastActiveSessionId;
-
-        nextWorkspaces.push({
-          ...workspace,
-          currentPath:
-            nextLastActiveSessionId === nextWorkspaceSession.id
-              ? nextWorkspaceSession.cwd || workspace.currentPath
-              : workspace.currentPath,
-          lastActiveSessionId: nextLastActiveSessionId,
-          sessions: remainingSessions,
-        });
-
-        if (currentActiveSessionId === sessionId) {
-          nextActiveSessionId = nextWorkspaceSession.id;
-        }
-      }
-
-      if (nextWorkspaces.length === 0) {
-        shouldCreateWorkspace = true;
-      } else if (!nextActiveSessionId && activeSessionId !== sessionId) {
-        nextActiveSessionId = currentActiveSessionId;
-      } else if (!nextActiveSessionId) {
-        nextActiveSessionId = nextWorkspaces[0].lastActiveSessionId || nextWorkspaces[0].sessions[0].id;
-      }
-
-      return nextWorkspaces;
-    });
+    setWorkspaces(nextWorkspaces);
 
     setSessionNameOverrides((prev) => {
       if (!(sessionId in prev)) return prev;
@@ -452,9 +531,17 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [activeSessionId, clearSessionAttention, createWorkspace, initialDirectory]);
 
   const handleCloseWorkspace = useCallback(async (workspaceId: string) => {
-    const currentActiveSessionId = activeSessionId;
     const workspaceToClose = workspacesRef.current.find((workspace) => workspace.id === workspaceId);
     if (!workspaceToClose) return;
+    const {
+      nextWorkspaces,
+      nextActiveSessionId,
+      shouldCreateWorkspace,
+    } = computeWorkspacesAfterWorkspaceClose(
+      workspacesRef.current,
+      workspaceId,
+      activeSessionId,
+    );
 
     for (const session of workspaceToClose.sessions) {
       try {
@@ -464,30 +551,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       }
       clearSessionAttention(session.id);
     }
-
-    let nextActiveSessionId = '';
-    let shouldCreateWorkspace = false;
-
-    setWorkspaces((prev) => {
-      const closingIndex = prev.findIndex((workspace) => workspace.id === workspaceId);
-      if (closingIndex === -1) return prev;
-
-      const nextWorkspaces = prev.filter((workspace) => workspace.id !== workspaceId);
-      const isClosingActiveWorkspace = workspaceToClose.sessions.some(
-        (session) => session.id === currentActiveSessionId,
-      );
-
-      if (nextWorkspaces.length === 0) {
-        shouldCreateWorkspace = true;
-      } else if (isClosingActiveWorkspace) {
-        const fallbackWorkspace = nextWorkspaces[Math.min(closingIndex, nextWorkspaces.length - 1)];
-        nextActiveSessionId = fallbackWorkspace.lastActiveSessionId || fallbackWorkspace.sessions[0].id;
-      } else {
-        nextActiveSessionId = currentActiveSessionId;
-      }
-
-      return nextWorkspaces;
-    });
+    setWorkspaces(nextWorkspaces);
 
     setSessionNameOverrides((prev) => {
       const nextOverrides = { ...prev };
