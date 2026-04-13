@@ -1,0 +1,38 @@
+src/ShortcutContext.tsx
+  a3bcdea3a57e58cf 200-208
+openspec/specs/keyboard-shortcuts/spec.md
+  a98b71f44ff83c2a 29,38-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "3d3e78626491d50e4fe9bf81560155fe5fe92099",
+  "prompts": {
+    "a3bcdea3a57e58cf": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27aca1552ffetQUp2QX420O7uT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 130,
+      "total_deletions": 6,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    },
+    "a98b71f44ff83c2a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ab7b5b2ffeznbfLQbC475ceD",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 11,
+      "total_deletions": 1,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    }
+  }
+}
