@@ -1,0 +1,39 @@
+src/components/FilePreviewPanel.tsx
+  0742876b448b92ee 21,23,276-277,280
+src/components/SplitLayout.tsx
+  0742876b448b92ee 212,217-232,255-258
+  25db579073b76545 7,24-30,35-37,40-41,45,47,49,57,64,72-73,75-77,82-84,99-103,110,124,130-131,133-137,141,143,148,150-151,153-154,157,160-164,180
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "73081b8f1b15b9a70e720f9e2fed5bd8a2dc2aad",
+  "prompts": {
+    "0742876b448b92ee": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8776-7294-7f32-ad84-fab44f79d9c9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 29,
+      "total_deletions": 8,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    },
+    "25db579073b76545": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8760-6f61-7362-bf8c-abecd22707ea",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 95,
+      "total_deletions": 73,
+      "accepted_lines": 64,
+      "overriden_lines": 3
+    }
+  }
+}
