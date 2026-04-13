@@ -1,0 +1,23 @@
+src/components/FileTree.tsx
+  f749fd880fb70e3b 169-185,549-550,605-611,613-615,617-647,649-656,661-665,667-669
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "42485f5a5c9c52a45d0a6be5f57db0d049710c11",
+  "prompts": {
+    "f749fd880fb70e3b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8706-1e4e-7f22-b081-8c98685826af",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 76,
+      "total_deletions": 17,
+      "accepted_lines": 76,
+      "overriden_lines": 0
+    }
+  }
+}
