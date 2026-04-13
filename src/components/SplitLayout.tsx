@@ -98,31 +98,36 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           height: '100%',
           overflow: 'hidden',
           flexShrink: 0,
+          transition: 'width 0.18s ease',
         }}
       >
         {left}
       </div>
 
       {/* Divider: invisible wide hit area with a thin visual line in the center */}
-      {!leftCollapsed && (
       <div
-        onMouseDown={handleMouseDown}
-        onMouseEnter={() => setIsHovering(true)}
+        onMouseDown={leftCollapsed ? undefined : handleMouseDown}
+        onMouseEnter={() => {
+          if (!leftCollapsed) setIsHovering(true);
+        }}
         onMouseLeave={() => {
           if (!isDragging.current) setIsHovering(false);
         }}
         style={{
-          width: HIT_AREA_WIDTH,
-          marginLeft: -HIT_AREA_WIDTH / 2,
-          marginRight: -HIT_AREA_WIDTH / 2,
+          width: leftCollapsed ? 0 : HIT_AREA_WIDTH,
+          marginLeft: leftCollapsed ? 0 : -HIT_AREA_WIDTH / 2,
+          marginRight: leftCollapsed ? 0 : -HIT_AREA_WIDTH / 2,
           height: '100%',
           position: 'relative',
-          cursor: 'col-resize',
+          cursor: leftCollapsed ? 'default' : 'col-resize',
           flexShrink: 0,
           zIndex: 10,
           display: 'flex',
           alignItems: 'stretch',
           justifyContent: 'center',
+          overflow: 'hidden',
+          pointerEvents: leftCollapsed ? 'none' : 'auto',
+          transition: 'width 0.18s ease, margin 0.18s ease',
         }}
       >
         {/* The visible line */}
@@ -131,12 +136,12 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
             width: showAccent ? 2 : 1,
             height: '100%',
             backgroundColor: showAccent ? 'var(--color-accent-divider)' : 'var(--color-border-secondary)',
-            transition: 'background-color 0.15s, width 0.15s',
+            opacity: leftCollapsed ? 0 : 1,
+            transition: 'background-color 0.15s, width 0.15s, opacity 0.18s ease',
             borderRadius: showAccent ? 1 : 0,
           }}
         />
       </div>
-      )}
 
       {/* Right pane */}
       <div

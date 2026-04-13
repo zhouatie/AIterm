@@ -11,6 +11,12 @@ interface FilePreviewPanelProps {
   visible?: boolean;
 }
 
+interface FilePreviewSnapshot {
+  selectedFile: string | null;
+  fileContent: string | null;
+  expandedPaths: string[];
+}
+
 const MD_ONLY_KEY = 'file-tree-md-only';
 
 const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, visible = true }) => {
@@ -19,13 +25,35 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [loadingFile, setLoadingFile] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [mdOnly, setMdOnly] = useState<boolean>(() => {
     const stored = localStorage.getItem(MD_ONLY_KEY);
     return stored === null ? true : stored === 'true';
   });
   const rootPathRef = useRef(rootPath);
+  const snapshotRef = useRef<Record<string, FilePreviewSnapshot>>({});
+  const fileLoadTokenRef = useRef(0);
   rootPathRef.current = rootPath;
   const prevVisibleRef = useRef(visible);
+
+  const restoreSnapshot = useCallback((nextRootPath: string) => {
+    fileLoadTokenRef.current += 1;
+    const snapshot = snapshotRef.current[nextRootPath];
+    setRootPath(nextRootPath);
+    setSelectedFile(snapshot?.selectedFile ?? null);
+    setFileContent(snapshot?.fileContent ?? null);
+    setExpandedPaths(snapshot?.expandedPaths ?? []);
+    setLoadingFile(false);
+  }, []);
+
+  useEffect(() => {
+    if (!rootPath) return;
+    snapshotRef.current[rootPath] = {
+      selectedFile,
+      fileContent,
+      expandedPaths,
+    };
+  }, [rootPath, selectedFile, fileContent, expandedPaths]);
 
   // Sync root path with active terminal's cwd (on session switch) — only when visible
   useEffect(() => {
@@ -34,16 +62,14 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
 
     window.terminalApi.getSessionInfo(activeSessionId).then((result) => {
       if (!cancelled && result?.cwd && result.cwd !== rootPathRef.current) {
-        setRootPath(result.cwd);
-        setSelectedFile(null);
-        setFileContent(null);
+        restoreSnapshot(result.cwd);
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [activeSessionId, visible]);
+  }, [activeSessionId, visible, restoreSnapshot]);
 
   // When becoming visible again, re-sync CWD immediately
   useEffect(() => {
@@ -53,26 +79,22 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     if (visible && wasHidden && activeSessionId) {
       window.terminalApi.getSessionInfo(activeSessionId).then((result) => {
         if (result?.cwd) {
-          setRootPath(result.cwd);
-          setSelectedFile(null);
-          setFileContent(null);
+          restoreSnapshot(result.cwd);
         }
       });
     }
-  }, [visible, activeSessionId]);
+  }, [visible, activeSessionId, restoreSnapshot]);
 
   // Listen for terminal CWD changes and auto-update file tree
   useEffect(() => {
     if (!visible) return;
     const unsubscribe = window.terminalApi.onSessionInfoChanged((data) => {
       if (data.id === activeSessionId && data.cwd !== rootPathRef.current) {
-        setRootPath(data.cwd);
-        setSelectedFile(null);
-        setFileContent(null);
+        restoreSnapshot(data.cwd);
       }
     });
     return unsubscribe;
-  }, [activeSessionId, visible]);
+  }, [activeSessionId, visible, restoreSnapshot]);
 
   // Toggle mdOnly filter with localStorage persistence
   const handleToggleMdOnly = useCallback(() => {
@@ -93,32 +115,34 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
           // Same path — increment refreshKey to force rescan
           setRefreshKey((k) => k + 1);
         } else {
-          // Path changed — update rootPath which naturally triggers rescan
-          setRootPath(result.cwd);
-          setSelectedFile(null);
-          setFileContent(null);
+          restoreSnapshot(result.cwd);
         }
       }
     } catch {
       // Ignore refresh errors
     }
-  }, [activeSessionId]);
+  }, [activeSessionId, restoreSnapshot]);
 
   // Load file content when selection changes
   const handleSelectFile = useCallback(async (filePath: string) => {
+    const loadToken = ++fileLoadTokenRef.current;
     setSelectedFile(filePath);
     setLoadingFile(true);
     try {
       const result = await window.fileApi.readFile(filePath);
+      if (fileLoadTokenRef.current !== loadToken) return;
       if (result.error) {
         setFileContent(`Error: ${result.error}`);
       } else {
         setFileContent(result.content ?? null);
       }
     } catch (err) {
+      if (fileLoadTokenRef.current !== loadToken) return;
       setFileContent(`Error: ${(err as Error).message}`);
     } finally {
-      setLoadingFile(false);
+      if (fileLoadTokenRef.current === loadToken) {
+        setLoadingFile(false);
+      }
     }
   }, []);
 
@@ -143,6 +167,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             refreshKey={refreshKey}
             mdOnly={mdOnly}
             onToggleMdOnly={handleToggleMdOnly}
+            expandedPaths={expandedPaths}
+            onExpandedPathsChange={setExpandedPaths}
           />
         ) : (
           <div

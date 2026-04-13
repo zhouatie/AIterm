@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   ChevronRight,
-  ChevronDown,
   Folder,
   FolderOpen,
   FileText,
@@ -22,7 +21,6 @@ interface TreeNode {
   isDirectory: boolean;
   mtime?: number;
   children?: TreeNode[];
-  isExpanded?: boolean;
 }
 
 interface FileTreeProps {
@@ -33,20 +31,35 @@ interface FileTreeProps {
   refreshKey?: number;
   mdOnly: boolean;
   onToggleMdOnly: () => void;
+  expandedPaths: string[];
+  onExpandedPathsChange: (paths: string[]) => void;
 }
 
 // --- Helpers ---
 
-/** Convert ScanTreeNode[] from IPC into local TreeNode[] (all directories collapsed). */
+/** Convert ScanTreeNode[] from IPC into local TreeNode[]. */
 function toTreeNodes(scanNodes: ScanTreeNode[]): TreeNode[] {
   return scanNodes.map((n) => ({
     name: n.name,
     path: n.path,
     isDirectory: n.isDirectory,
     mtime: n.mtime,
-    isExpanded: false,
     children: n.children ? toTreeNodes(n.children) : undefined,
   }));
+}
+
+function collectDirectoryPaths(nodes: TreeNode[]): string[] {
+  const paths: string[] = [];
+
+  for (const node of nodes) {
+    if (!node.isDirectory) continue;
+    paths.push(node.path);
+    if (node.children) {
+      paths.push(...collectDirectoryPaths(node.children));
+    }
+  }
+
+  return paths;
 }
 
 // --- Constants ---
@@ -157,6 +170,7 @@ interface TreeNodeItemProps {
   onSelectFile: (filePath: string) => void;
   onToggleDir: (node: TreeNode) => void;
   onContextMenu: (e: React.MouseEvent, nodePath: string) => void;
+  expandedPathSet: Set<string>;
   /** For each ancestor depth, whether that ancestor has more siblings below */
   guideFlags: boolean[];
 }
@@ -168,9 +182,11 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
   onSelectFile,
   onToggleDir,
   onContextMenu,
+  expandedPathSet,
   guideFlags,
 }) => {
   const isSelected = !node.isDirectory && node.path === selectedFile;
+  const isExpanded = node.isDirectory && expandedPathSet.has(node.path);
 
   const handleClick = () => {
     if (node.isDirectory) {
@@ -259,14 +275,11 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
             height: ROW_HEIGHT,
             flexShrink: 0,
             color: 'var(--color-icon-chevron)',
+            transition: 'transform 0.18s ease',
+            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
           }}
         >
-          {node.isDirectory &&
-            (node.isExpanded ? (
-              <ChevronDown size={14} />
-            ) : (
-              <ChevronRight size={14} />
-            ))}
+          {node.isDirectory && <ChevronRight size={14} />}
         </span>
 
         {/* Icon */}
@@ -282,7 +295,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
           }}
         >
           {node.isDirectory ? (
-            node.isExpanded ? (
+            isExpanded ? (
               <FolderOpen size={ICON_SIZE} />
             ) : (
               <Folder size={ICON_SIZE} />
@@ -299,24 +312,34 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
       </div>
 
       {/* Children */}
-      {node.isDirectory && node.isExpanded && node.children && (
-        <>
-          {node.children.map((child, idx) => (
-            <TreeNodeItem
-              key={child.path}
-              node={child}
-              depth={depth + 1}
-              selectedFile={selectedFile}
-              onSelectFile={onSelectFile}
-              onToggleDir={onToggleDir}
-              onContextMenu={onContextMenu}
-              guideFlags={[
-                ...guideFlags,
-                idx < node.children!.length - 1, // true if more siblings below
-              ]}
-            />
-          ))}
-        </>
+      {node.isDirectory && node.children && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateRows: isExpanded ? '1fr' : '0fr',
+            opacity: isExpanded ? 1 : 0,
+            transition: 'grid-template-rows 0.18s ease, opacity 0.18s ease',
+          }}
+        >
+          <div style={{ overflow: 'hidden' }}>
+            {node.children.map((child, idx) => (
+              <TreeNodeItem
+                key={child.path}
+                node={child}
+                depth={depth + 1}
+                selectedFile={selectedFile}
+                onSelectFile={onSelectFile}
+                onToggleDir={onToggleDir}
+                onContextMenu={onContextMenu}
+                expandedPathSet={expandedPathSet}
+                guideFlags={[
+                  ...guideFlags,
+                  idx < node.children!.length - 1, // true if more siblings below
+                ]}
+              />
+            ))}
+          </div>
+        </div>
       )}
     </>
   );
@@ -324,18 +347,29 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
 
 // --- Main FileTree ---
 
-const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFile, onRefresh, refreshKey, mdOnly, onToggleMdOnly }) => {
+const FileTree: React.FC<FileTreeProps> = ({
+  rootPath,
+  selectedFile,
+  onSelectFile,
+  onRefresh,
+  refreshKey,
+  mdOnly,
+  onToggleMdOnly,
+  expandedPaths,
+  onExpandedPathsChange,
+}) => {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(false);
-  const [allExpanded, setAllExpanded] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const expandedPathSet = new Set(expandedPaths);
+  const allDirectoryPaths = collectDirectoryPaths(nodes);
+  const allExpanded = allDirectoryPaths.length > 0 && allDirectoryPaths.every((path) => expandedPathSet.has(path));
 
   // Load entire tree when rootPath, mdOnly, or refreshKey changes
   useEffect(() => {
     if (!rootPath) return;
     let cancelled = false;
     setLoading(true);
-    setAllExpanded(false);
     setContextMenu(null);
 
     const scanFn = mdOnly
@@ -363,59 +397,25 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
     };
   }, [rootPath, mdOnly, refreshKey]);
 
-  // Deep update a node in the tree by path
-  const updateNode = useCallback(
-    (nodePath: string, updater: (n: TreeNode) => TreeNode) => {
-      const updateRecursive = (list: TreeNode[]): TreeNode[] =>
-        list.map((n) => {
-          if (n.path === nodePath) return updater(n);
-          if (n.isDirectory && n.children) {
-            return { ...n, children: updateRecursive(n.children) };
-          }
-          return n;
-        });
-      setNodes((prev) => updateRecursive(prev));
-    },
-    [],
-  );
-
   const handleToggleDir = useCallback(
     (node: TreeNode) => {
-      if (node.isExpanded) {
-        updateNode(node.path, (n) => ({ ...n, isExpanded: false }));
-        setAllExpanded(false);
-      } else {
-        updateNode(node.path, (n) => ({ ...n, isExpanded: true }));
-      }
+      const nextExpandedPaths = expandedPathSet.has(node.path)
+        ? expandedPaths.filter((path) => path !== node.path)
+        : [...expandedPaths, node.path];
+      onExpandedPathsChange(nextExpandedPaths);
     },
-    [updateNode],
+    [expandedPathSet, expandedPaths, onExpandedPathsChange],
   );
 
-  // Expand all: recursively set isExpanded = true (tree is already fully loaded)
+  // Expand all directories in the current tree
   const handleExpandAll = useCallback(() => {
-    function expandRecursive(list: TreeNode[]): TreeNode[] {
-      return list.map((n) =>
-        n.isDirectory
-          ? { ...n, isExpanded: true, children: n.children ? expandRecursive(n.children) : undefined }
-          : n,
-      );
-    }
-    setNodes((prev) => expandRecursive(prev));
-    setAllExpanded(true);
-  }, []);
+    onExpandedPathsChange(allDirectoryPaths);
+  }, [allDirectoryPaths, onExpandedPathsChange]);
 
   // Collapse all
   const handleCollapseAll = useCallback(() => {
-    function collapseRecursive(list: TreeNode[]): TreeNode[] {
-      return list.map((n) =>
-        n.isDirectory
-          ? { ...n, isExpanded: false, children: n.children ? collapseRecursive(n.children) : undefined }
-          : n,
-      );
-    }
-    setNodes((prev) => collapseRecursive(prev));
-    setAllExpanded(false);
-  }, []);
+    onExpandedPathsChange([]);
+  }, [onExpandedPathsChange]);
 
   // Context menu handlers
   const handleContextMenu = useCallback((e: React.MouseEvent, nodePath: string) => {
@@ -488,6 +488,7 @@ const FileTree: React.FC<FileTreeProps> = ({ rootPath, selectedFile, onSelectFil
               onSelectFile={onSelectFile}
               onToggleDir={handleToggleDir}
               onContextMenu={handleContextMenu}
+              expandedPathSet={expandedPathSet}
               guideFlags={[idx < nodes.length - 1]}
             />
           ))
