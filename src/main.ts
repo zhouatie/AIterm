@@ -1,7 +1,9 @@
-import { app, BrowserWindow, ipcMain, shell, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, nativeTheme, Notification } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import http from 'node:http';
+import { randomBytes } from 'node:crypto';
 import { execFile, execFileSync } from 'node:child_process';
 import started from 'electron-squirrel-startup';
 import {
@@ -12,7 +14,14 @@ import {
   disposeAllSessions,
   getSessionInfo,
   checkAndUpdateSessionInfo,
+  hasSession,
+  type PtyNotificationEnv,
 } from './pty-manager';
+import {
+  TERMINAL_ATTENTION_AGENTS,
+  type TerminalAttention,
+  type TerminalAttentionAgent,
+} from './terminal-attention';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -20,6 +29,163 @@ if (started) {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let attentionServer: http.Server | null = null;
+let attentionNotifyUrl = '';
+let attentionNotifyToken = '';
+const attentionSessionIds = new Set<string>();
+
+function getAttentionNotificationEnv(): PtyNotificationEnv | undefined {
+  if (!attentionNotifyUrl || !attentionNotifyToken) return undefined;
+  return {
+    url: attentionNotifyUrl,
+    token: attentionNotifyToken,
+  };
+}
+
+function isTerminalAttentionAgent(value: unknown): value is TerminalAttentionAgent {
+  return typeof value === 'string'
+    && TERMINAL_ATTENTION_AGENTS.includes(value as TerminalAttentionAgent);
+}
+
+function getAgentDisplayName(agent: TerminalAttentionAgent): string {
+  if (agent === 'claude-code') return 'Claude Code';
+  if (agent === 'opencode') return 'OpenCode';
+  return 'Codex';
+}
+
+function sendTerminalAttention(attention: TerminalAttention): void {
+  attentionSessionIds.add(attention.id);
+
+  try {
+    if (Notification.isSupported()) {
+      new Notification({
+        title: `${getAgentDisplayName(attention.agent)} 需要处理`,
+        body: attention.message || '请回到 GUI 终端继续处理。',
+      }).show();
+    }
+  } catch (error) {
+    console.error('[terminal-attention] Failed to show notification:', error);
+  }
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('terminal:attention', attention);
+  }
+}
+
+function clearTerminalAttention(id: string): void {
+  if (!attentionSessionIds.delete(id)) return;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('terminal:attentionCleared', { id });
+  }
+}
+
+function parseAttentionPayload(payload: unknown): TerminalAttention | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const data = payload as Record<string, unknown>;
+
+  if (data.token !== attentionNotifyToken) return null;
+  if (typeof data.id !== 'string' || !hasSession(data.id)) return null;
+  if (!isTerminalAttentionAgent(data.agent)) return null;
+  if (typeof data.event !== 'string' || data.event.trim() === '') return null;
+
+  const message = typeof data.message === 'string' && data.message.trim()
+    ? data.message.trim()
+    : `${getAgentDisplayName(data.agent)} 等待处理`;
+
+  return {
+    id: data.id,
+    agent: data.agent,
+    event: data.event,
+    message,
+    timestamp: typeof data.timestamp === 'number' ? data.timestamp : Date.now(),
+  };
+}
+
+function writeHttpResponse(response: http.ServerResponse, statusCode: number, body = ''): void {
+  response.statusCode = statusCode;
+  response.setHeader('content-type', 'text/plain; charset=utf-8');
+  response.end(body);
+}
+
+function readRequestBody(request: http.IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    request.setEncoding('utf8');
+    request.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 64 * 1024) {
+        reject(new Error('Request body too large'));
+        request.destroy();
+      }
+    });
+    request.on('end', () => resolve(body));
+    request.on('error', reject);
+  });
+}
+
+async function handleAttentionRequest(
+  request: http.IncomingMessage,
+  response: http.ServerResponse,
+): Promise<void> {
+  if (request.method !== 'POST' || request.url !== '/terminal-attention') {
+    writeHttpResponse(response, 404, 'not found');
+    return;
+  }
+
+  try {
+    const body = await readRequestBody(request);
+    const payload = JSON.parse(body) as unknown;
+    const attention = parseAttentionPayload(payload);
+    if (!attention) {
+      writeHttpResponse(response, 403, 'forbidden');
+      return;
+    }
+
+    sendTerminalAttention(attention);
+    writeHttpResponse(response, 204);
+  } catch (error) {
+    console.error('[terminal-attention] Failed to handle request:', error);
+    if (!response.headersSent) {
+      writeHttpResponse(response, 400, 'bad request');
+    }
+  }
+}
+
+function startAttentionServer(): Promise<void> {
+  if (attentionServer) return Promise.resolve();
+
+  attentionNotifyToken = randomBytes(24).toString('hex');
+
+  return new Promise((resolve) => {
+    const server = http.createServer((request, response) => {
+      void handleAttentionRequest(request, response);
+    });
+
+    server.on('error', (error) => {
+      console.error('[terminal-attention] Failed to start server:', error);
+      attentionNotifyUrl = '';
+      attentionNotifyToken = '';
+      resolve();
+    });
+
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      if (address && typeof address === 'object') {
+        attentionNotifyUrl = `http://127.0.0.1:${address.port}/terminal-attention`;
+        attentionServer = server;
+      }
+      resolve();
+    });
+  });
+}
+
+function stopAttentionServer(): void {
+  attentionServer?.close();
+  attentionServer = null;
+  attentionNotifyUrl = '';
+  attentionNotifyToken = '';
+  attentionSessionIds.clear();
+}
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
@@ -85,7 +251,7 @@ const createWindow = () => {
 ipcMain.handle(
   'terminal:create',
   (_event, { cols, rows, cwd }: { cols: number; rows: number; cwd?: string }) => {
-    const session = createSession(cols, rows, cwd);
+    const session = createSession(cols, rows, cwd, getAttentionNotificationEnv());
 
     // Push PTY stdout to renderer
     session.ptyProcess.onData((data: string) => {
@@ -121,6 +287,7 @@ ipcMain.handle(
     // Notify renderer when PTY exits
     session.ptyProcess.onExit(
       ({ exitCode, signal }: { exitCode: number; signal?: number }) => {
+        clearTerminalAttention(session.id);
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send('terminal:exit', {
             id: session.id,
@@ -139,6 +306,7 @@ ipcMain.handle(
 ipcMain.on(
   'terminal:input',
   (_event, { id, data }: { id: string; data: string }) => {
+    clearTerminalAttention(id);
     writeToSession(id, data);
   },
 );
@@ -153,6 +321,7 @@ ipcMain.on(
 
 // terminal:dispose — kill PTY and release resources
 ipcMain.handle('terminal:dispose', (_event, { id }: { id: string }) => {
+  clearTerminalAttention(id);
   disposeSession(id);
 });
 
@@ -856,8 +1025,9 @@ ipcMain.on('theme:set', (_event, { mode }: { mode: 'light' | 'dark' | 'system' }
   nativeTheme.themeSource = mode;
 });
 
-app.on('ready', () => {
+app.on('ready', async () => {
   fdPath = detectFd();
+  await startAttentionServer();
   createWindow();
 });
 
@@ -878,5 +1048,6 @@ app.on('activate', () => {
 
 // Clean up all PTY sessions before quitting
 app.on('before-quit', () => {
+  stopAttentionServer();
   disposeAllSessions();
 });

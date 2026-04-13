@@ -8,7 +8,7 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import type { TerminalSessionInfo } from '../preload';
+import type { TerminalAttention, TerminalSessionInfo } from '../preload';
 import { useKeyboardShortcuts } from '../ShortcutContext';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './ContextMenu';
@@ -106,6 +106,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
   const [workspaces, setWorkspaces] = useState<WorkspaceNode[]>([]);
   const [sessionNameOverrides, setSessionNameOverrides] = useState<Record<string, string>>({});
+  const [attentionBySessionId, setAttentionBySessionId] = useState<Record<string, TerminalAttention>>({});
   const [activeSessionId, setActiveSessionId] = useState<string>('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [menuState, setMenuState] = useState<SidebarMenuState | null>(null);
@@ -130,6 +131,15 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
   workspacesRef.current = workspaces;
   sessionNameOverridesRef.current = sessionNameOverrides;
+
+  const clearSessionAttention = useCallback((sessionId: string) => {
+    setAttentionBySessionId((prev) => {
+      if (!(sessionId in prev)) return prev;
+      const next = { ...prev };
+      delete next[sessionId];
+      return next;
+    });
+  }, []);
 
   const applySessionInfo = useCallback((info: TerminalSessionInfo) => {
     setWorkspaces((prev) =>
@@ -247,6 +257,23 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [applySessionInfo]);
 
   useEffect(() => {
+    const unsubscribe = window.terminalApi.onAttention((attention) => {
+      setAttentionBySessionId((prev) => ({
+        ...prev,
+        [attention.id]: attention,
+      }));
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = window.terminalApi.onAttentionCleared(({ id }) => {
+      clearSessionAttention(id);
+    });
+    return unsubscribe;
+  }, [clearSessionAttention]);
+
+  useEffect(() => {
     if (sidebarCollapsed) {
       setMenuState(null);
       return;
@@ -272,6 +299,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [renameTargetKey]);
 
   const handleSelectSession = useCallback((sessionId: string) => {
+    clearSessionAttention(sessionId);
     setWorkspaces((prev) =>
       prev.map((workspace) => {
         const selectedSession = workspace.sessions.find((session) => session.id === sessionId);
@@ -284,7 +312,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       }),
     );
     setActiveSessionId(sessionId);
-  }, []);
+  }, [clearSessionAttention]);
 
   const selectRelativeTerminalTab = useCallback((direction: -1 | 1) => {
     const sessionIds = getOrderedSessionIds(workspacesRef.current);
@@ -333,6 +361,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     } catch {
       // Ignore dispose failures for already-closed sessions.
     }
+    clearSessionAttention(sessionId);
 
     let nextActiveSessionId = '';
     let shouldCreateWorkspace = false;
@@ -419,7 +448,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     if (nextActiveSessionId) {
       setActiveSessionId(nextActiveSessionId);
     }
-  }, [activeSessionId, createWorkspace, initialDirectory]);
+  }, [activeSessionId, clearSessionAttention, createWorkspace, initialDirectory]);
 
   const handleCloseWorkspace = useCallback(async (workspaceId: string) => {
     const currentActiveSessionId = activeSessionId;
@@ -432,6 +461,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       } catch {
         // Ignore dispose failures for already-closed sessions.
       }
+      clearSessionAttention(session.id);
     }
 
     let nextActiveSessionId = '';
@@ -477,7 +507,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     if (nextActiveSessionId) {
       setActiveSessionId(nextActiveSessionId);
     }
-  }, [activeSessionId, createWorkspace, initialDirectory]);
+  }, [activeSessionId, clearSessionAttention, createWorkspace, initialDirectory]);
 
   const handleStartWorkspaceRename = useCallback((workspaceId: string) => {
     const workspace = workspacesRef.current.find((item) => item.id === workspaceId);
@@ -856,6 +886,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                   <div style={{ marginTop: 2 }}>
                     {workspace.sessions.map((session) => {
                       const isActive = session.id === activeSessionId;
+                      const attention = attentionBySessionId[session.id];
+                      const hasAttention = !!attention;
                       const isRenamingSession =
                         renameState?.type === 'session' && renameState.sessionId === session.id;
                       const sessionRenameState =
@@ -911,13 +943,17 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                           }}
                         >
                           <span
+                            title={attention?.message}
                             style={{
                               width: 6,
                               height: 6,
                               borderRadius: '50%',
-                              backgroundColor: isActive
+                              backgroundColor: hasAttention
+                                ? '#d93025'
+                                : isActive
                                 ? 'var(--color-accent-primary)'
                                 : 'var(--color-icon-default)',
+                              boxShadow: hasAttention ? '0 0 0 2px rgba(217, 48, 37, 0.18)' : 'none',
                               flexShrink: 0,
                             }}
                           />

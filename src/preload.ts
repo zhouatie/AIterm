@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { TerminalAttention, TerminalAttentionCleared } from './terminal-attention';
 
 export interface TerminalApi {
   create(cols: number, rows: number, cwd?: string): Promise<{ id: string }>;
@@ -11,7 +12,11 @@ export interface TerminalApi {
     callback: (data: { id: string; exitCode: number; signal?: number }) => void,
   ): () => void;
   onSessionInfoChanged(callback: (data: TerminalSessionInfo) => void): () => void;
+  onAttention(callback: (data: TerminalAttention) => void): () => void;
+  onAttentionCleared(callback: (data: TerminalAttentionCleared) => void): () => void;
 }
+
+export type { TerminalAttention, TerminalAttentionCleared } from './terminal-attention';
 
 export interface TerminalSessionInfo {
   id: string;
@@ -108,6 +113,28 @@ contextBridge.exposeInMainWorld('terminalApi', {
     ipcRenderer.on('terminal:sessionInfoChanged', listener);
     return () => {
       ipcRenderer.removeListener('terminal:sessionInfoChanged', listener);
+    };
+  },
+
+  onAttention: (callback: (data: TerminalAttention) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: TerminalAttention,
+    ) => callback(data);
+    ipcRenderer.on('terminal:attention', listener);
+    return () => {
+      ipcRenderer.removeListener('terminal:attention', listener);
+    };
+  },
+
+  onAttentionCleared: (callback: (data: TerminalAttentionCleared) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: TerminalAttentionCleared,
+    ) => callback(data);
+    ipcRenderer.on('terminal:attentionCleared', listener);
+    return () => {
+      ipcRenderer.removeListener('terminal:attentionCleared', listener);
     };
   },
 } satisfies TerminalApi);

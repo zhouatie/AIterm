@@ -1,4 +1,15 @@
-import type { TerminalApi, FileApi, ThemeApi } from './preload';
+import type {
+  TerminalApi,
+  FileApi,
+  ThemeApi,
+  TerminalAttention,
+  TerminalAttentionCleared,
+} from './preload';
+
+export type {
+  TerminalAttention,
+  TerminalAttentionCleared,
+};
 
 declare global {
   interface Window {

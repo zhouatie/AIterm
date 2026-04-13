@@ -20,6 +20,11 @@ export interface PtySession {
   lastInfo: TerminalSessionInfo;
 }
 
+export interface PtyNotificationEnv {
+  url: string;
+  token: string;
+}
+
 const sessions = new Map<string, PtySession>();
 const nonGitPathInfoCache = new Map<string, Omit<TerminalSessionInfo, 'id'>>();
 
@@ -27,7 +32,11 @@ function getDefaultShell(): string {
   return process.env.SHELL || '/bin/zsh';
 }
 
-function getPtyEnv(shell: string): Record<string, string> {
+function getPtyEnv(
+  shell: string,
+  sessionId: string,
+  notificationEnv?: PtyNotificationEnv,
+): Record<string, string> {
   const env = Object.fromEntries(
     Object.entries(process.env).filter((entry): entry is [string, string] => (
       typeof entry[1] === 'string'
@@ -39,6 +48,13 @@ function getPtyEnv(shell: string): Record<string, string> {
     SHELL: shell,
     TERM: 'xterm-256color',
     COLORTERM: 'truecolor',
+    ...(notificationEnv
+      ? {
+          AITEM_TERMINAL_SESSION_ID: sessionId,
+          AITEM_NOTIFY_URL: notificationEnv.url,
+          AITEM_NOTIFY_TOKEN: notificationEnv.token,
+        }
+      : {}),
   };
 }
 
@@ -106,7 +122,12 @@ async function resolveSessionInfo(id: string): Promise<TerminalSessionInfo | nul
   };
 }
 
-export function createSession(cols: number, rows: number, cwd?: string): PtySession {
+export function createSession(
+  cols: number,
+  rows: number,
+  cwd?: string,
+  notificationEnv?: PtyNotificationEnv,
+): PtySession {
   const id = randomUUID();
   const shell = getDefaultShell();
   const initialCwd = cwd || process.env.HOME || process.cwd();
@@ -116,7 +137,7 @@ export function createSession(cols: number, rows: number, cwd?: string): PtySess
     cols,
     rows,
     cwd: initialCwd,
-    env: getPtyEnv(shell),
+    env: getPtyEnv(shell, id, notificationEnv),
   });
 
   const session: PtySession = {
@@ -137,6 +158,10 @@ export function createSession(cols: number, rows: number, cwd?: string): PtySess
 
 export function getSession(id: string): PtySession | undefined {
   return sessions.get(id);
+}
+
+export function hasSession(id: string): boolean {
+  return sessions.has(id);
 }
 
 export function getSessionCwd(id: string): string | undefined {
