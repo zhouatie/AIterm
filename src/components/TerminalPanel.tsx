@@ -67,6 +67,10 @@ function findWorkspaceBySessionId(workspaces: WorkspaceNode[], sessionId: string
   );
 }
 
+function getOrderedSessionIds(workspaces: WorkspaceNode[]): string[] {
+  return workspaces.flatMap((workspace) => workspace.sessions.map((session) => session.id));
+}
+
 const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) => {
   const { registerAction } = useKeyboardShortcuts();
   const workspaceCounterRef = useRef(1);
@@ -240,6 +244,32 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
     );
     setActiveSessionId(sessionId);
   }, []);
+
+  const selectRelativeTerminalTab = useCallback((direction: -1 | 1) => {
+    const sessionIds = getOrderedSessionIds(workspacesRef.current);
+    if (sessionIds.length <= 1) return;
+
+    const currentIndex = sessionIds.findIndex((sessionId) => sessionId === activeSessionId);
+    if (currentIndex === -1) return;
+
+    const nextIndex = (currentIndex + direction + sessionIds.length) % sessionIds.length;
+    const nextSessionId = sessionIds[nextIndex];
+    if (!nextSessionId || nextSessionId === activeSessionId) return;
+
+    handleSelectSession(nextSessionId);
+  }, [activeSessionId, handleSelectSession]);
+
+  useEffect(() => {
+    return registerAction('select-previous-terminal-tab', () => {
+      selectRelativeTerminalTab(-1);
+    });
+  }, [registerAction, selectRelativeTerminalTab]);
+
+  useEffect(() => {
+    return registerAction('select-next-terminal-tab', () => {
+      selectRelativeTerminalTab(1);
+    });
+  }, [registerAction, selectRelativeTerminalTab]);
 
   const handleToggleWorkspace = useCallback((workspaceId: string) => {
     setWorkspaces((prev) =>

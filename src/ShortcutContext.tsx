@@ -11,7 +11,9 @@ import React, {
 export type ShortcutActionId =
   | 'toggle-file-tree'
   | 'toggle-terminal-sidebar'
-  | 'create-workspace';
+  | 'create-workspace'
+  | 'select-previous-terminal-tab'
+  | 'select-next-terminal-tab';
 
 export type ShortcutBindings = Record<ShortcutActionId, string>;
 
@@ -53,12 +55,24 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
     title: '新增 Workspace',
     description: '创建一个新的 workspace 及其首个终端',
   },
+  {
+    id: 'select-previous-terminal-tab',
+    title: '上一个 Terminal Tab',
+    description: '切换到左侧导航顺序中的上一个 terminal tab',
+  },
+  {
+    id: 'select-next-terminal-tab',
+    title: '下一个 Terminal Tab',
+    description: '切换到左侧导航顺序中的下一个 terminal tab',
+  },
 ];
 
 export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindings = {
   'toggle-file-tree': 'Meta+S',
   'toggle-terminal-sidebar': 'Meta+B',
   'create-workspace': 'Meta+T',
+  'select-previous-terminal-tab': 'Meta+Shift+[',
+  'select-next-terminal-tab': 'Meta+Shift+]',
 };
 
 const MODIFIER_DISPLAY_LABEL: Record<string, string> = {
@@ -78,6 +92,8 @@ function normalizePrimaryKey(key: string): string | null {
 
   if (key === ' ') return 'Space';
   if (key === 'Esc') return 'Escape';
+  if (key === '{') return '[';
+  if (key === '}') return ']';
   if (key.length === 1) return key.toUpperCase();
 
   if (key === 'Tab' || key === 'Enter' || key === 'Escape') {

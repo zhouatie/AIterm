@@ -202,12 +202,15 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
     };
   }, [sessionId]);
 
-  // Re-fit when becoming active (task 1.3)
+  // Re-fit and focus when becoming active.
   useEffect(() => {
     if (isActive && terminalRef.current) {
       // Small delay to ensure the container is visible before fitting
       requestAnimationFrame(() => {
-        if (terminalRef.current) fitTerminal(terminalRef.current);
+        if (terminalRef.current) {
+          fitTerminal(terminalRef.current);
+          terminalRef.current.focus();
+        }
       });
     }
   }, [isActive]);
