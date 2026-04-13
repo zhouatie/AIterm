@@ -1,0 +1,25 @@
+src/pty-manager.ts
+  9f795e45660c27ad 30-44,119
+forge.config.ts
+  9f795e45660c27ad 13,17-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "593f031ff103959f5d572554a9e0fc1ff6a49234",
+  "prompts": {
+    "9f795e45660c27ad": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8685-91b5-7331-ac94-6bfe7d4044ea",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 1,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    }
+  }
+}
