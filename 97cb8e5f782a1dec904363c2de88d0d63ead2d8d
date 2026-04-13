@@ -1,0 +1,51 @@
+openspec/changes/archive/2026-04-13-polish-terminal-workbench-visual-design/proposal.md
+  a0206c08d77bd684 1-32
+openspec/changes/archive/2026-04-13-polish-terminal-workbench-visual-design/tasks.md
+  a0206c08d77bd684 1-20
+src/index.css
+  a0206c08d77bd684 4-26,29-34,37-42,45-50,53-56,59-60,63-64,68-76,100-122,125-130,133-138,141-146,149-152,155-156,159-160,164-172,208-209
+openspec/specs/theme-system/spec.md
+  a0206c08d77bd684 83-109
+openspec/changes/archive/2026-04-13-polish-terminal-workbench-visual-design/.openspec.yaml
+  a0206c08d77bd684 1-2
+openspec/specs/panel-layout/spec.md
+  a0206c08d77bd684 95-120
+openspec/specs/terminal-tabs/spec.md
+  a0206c08d77bd684 286-316
+src/components/TerminalPanel.tsx
+  a0206c08d77bd684 54-57,115,650-659,664-665,670-671,681-682,692-693,708-710,714,717,720-723,727-729,742,748,779-781,783-788,791-795,811,867-877,880-913,917,922,959-961,963-967,970-972,975,978,988,992,1021-1022,1037-1038,1058,1061,1064-1066,1069-1070,1074,1097-1098,1112,1117,1119,1122-1124,1127-1129,1138-1145,1164,1171,1177-1178,1181-1183,1186-1188
+openspec/changes/archive/2026-04-13-polish-terminal-workbench-visual-design/specs/panel-layout/spec.md
+  a0206c08d77bd684 1-27
+openspec/changes/archive/2026-04-13-polish-terminal-workbench-visual-design/specs/theme-system/spec.md
+  a0206c08d77bd684 1-27
+src/App.tsx
+  a0206c08d77bd684 77,83-85,87,91,96-111,176,187-192,201,204,215,218,225-232
+openspec/changes/archive/2026-04-13-polish-terminal-workbench-visual-design/design.md
+  a0206c08d77bd684 1-104
+src/components/TerminalInstance.css
+  a0206c08d77bd684 3-5,9-11,16
+openspec/changes/archive/2026-04-13-polish-terminal-workbench-visual-design/specs/terminal-tabs/spec.md
+  a0206c08d77bd684 1-32
+src/components/SplitLayout.tsx
+  a0206c08d77bd684 151,161,201-203,214,216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "97cb8e5f782a1dec904363c2de88d0d63ead2d8d",
+  "prompts": {
+    "a0206c08d77bd684": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8737-2989-70c2-a882-dceca7b5967d",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 658,
+      "total_deletions": 201,
+      "accepted_lines": 656,
+      "overriden_lines": 0
+    }
+  }
+}
