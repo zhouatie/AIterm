@@ -40,6 +40,7 @@ interface TerminalPanelProps {
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_HEADER_HEIGHT = 40;
+const SIDEBAR_FOOTER_HEIGHT = 40;
 const ROW_HEIGHT = 32;
 const SIDEBAR_TOGGLE_SIZE = 24;
 
@@ -755,6 +756,48 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
             );
           })}
         </div>
+
+        {!sidebarCollapsed && (
+          <div
+            style={{
+              height: SIDEBAR_FOOTER_HEIGHT,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              padding: '0 8px 8px',
+              borderTop: '1px solid var(--color-border-light)',
+              flexShrink: 0,
+            }}
+          >
+            <button
+              onClick={() => setSidebarCollapsed(true)}
+              title="Collapse Terminal Sidebar"
+              style={{
+                width: SIDEBAR_TOGGLE_SIZE,
+                height: SIDEBAR_TOGGLE_SIZE,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid var(--color-border-primary)',
+                backgroundColor: 'var(--color-bg-primary)',
+                color: 'var(--color-text-tertiary)',
+                cursor: 'pointer',
+                borderRadius: 999,
+                padding: 0,
+                boxShadow: '0 2px 6px var(--color-shadow)',
+                flexShrink: 0,
+              }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
+              }}
+            >
+              <PanelLeftClose size={14} />
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
@@ -769,37 +812,38 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ onActiveSessionChange }) 
         )}
       </div>
 
-      <button
-        onClick={() => setSidebarCollapsed((prev) => !prev)}
-        title={sidebarCollapsed ? 'Expand Terminal Sidebar' : 'Collapse Terminal Sidebar'}
-        style={{
-          position: 'absolute',
-          bottom: 12,
-          left: sidebarCollapsed ? 8 : sidebarWidth + 8,
-          width: SIDEBAR_TOGGLE_SIZE,
-          height: SIDEBAR_TOGGLE_SIZE,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '1px solid var(--color-border-primary)',
-          backgroundColor: 'var(--color-bg-primary)',
-          color: 'var(--color-text-tertiary)',
-          cursor: 'pointer',
-          borderRadius: 999,
-          padding: 0,
-          zIndex: 20,
-          boxShadow: '0 2px 6px var(--color-shadow)',
-          transition: 'left 0.18s ease, background-color 0.15s ease',
-        }}
-        onMouseEnter={(event) => {
-          event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
-        }}
-        onMouseLeave={(event) => {
-          event.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
-        }}
-      >
-        {sidebarCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
-      </button>
+      {sidebarCollapsed && (
+        <button
+          onClick={() => setSidebarCollapsed(false)}
+          title="Expand Terminal Sidebar"
+          style={{
+            position: 'absolute',
+            bottom: 12,
+            left: 8,
+            width: SIDEBAR_TOGGLE_SIZE,
+            height: SIDEBAR_TOGGLE_SIZE,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid var(--color-border-primary)',
+            backgroundColor: 'var(--color-bg-primary)',
+            color: 'var(--color-text-tertiary)',
+            cursor: 'pointer',
+            borderRadius: 999,
+            padding: 0,
+            zIndex: 20,
+            boxShadow: '0 2px 6px var(--color-shadow)',
+          }}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.backgroundColor = 'var(--color-bg-primary)';
+          }}
+        >
+          <PanelLeftOpen size={14} />
+        </button>
+      )}
 
       {menuState && menuItems.length > 0 && (
         <ContextMenu

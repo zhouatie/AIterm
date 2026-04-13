@@ -2,9 +2,7 @@
 
 ## Purpose
 终端分组导航能力，提供基于 workspace / 终端会话的侧边双层结构、终端会话切换与关闭、以及围绕当前终端上下文自动更新标签名称的交互。
-
 ## Requirements
-
 ### Requirement: Tab 栏显示
 终端面板 SHALL 在左侧显示一个双层导航区域，以 workspace 为一级节点、终端会话为二级节点。
 
@@ -219,3 +217,22 @@ terminal 面板 SHALL 支持通过当前配置的快捷键在二级 terminal tab
 - **WHEN** 目标二级 terminal tab 所属 workspace 当前处于折叠状态
 - **THEN** 用户通过快捷键切换到该 terminal tab 后，目标终端内容 SHALL 显示在终端面板中
 - **THEN** 系统 SHALL 不因为快捷键切换而强制展开该 workspace
+
+### Requirement: 侧边栏切换控件布局
+系统 SHALL 在不遮挡 terminal 内容区的前提下展示 terminal 侧边 tab 栏的收起 / 展开控件。
+
+#### Scenario: 展开态将控件放入 tab 面板内侧
+- **WHEN** terminal 侧边 tab 栏处于展开状态
+- **THEN** 收起控件 SHALL 显示在 terminal tab 面板自身的可视边界内
+- **THEN** 该控件 SHALL 不悬浮在 terminal 内容区之上
+
+#### Scenario: 收起态保留稳定的展开入口
+- **WHEN** terminal 侧边 tab 栏处于收起状态
+- **THEN** 系统 SHALL 保留一个稳定可点击的展开入口
+- **THEN** 该入口 SHALL 不遮挡 terminal 内容区的主要可视区域
+
+#### Scenario: 切换控件不额外压缩终端内容
+- **WHEN** 用户在 terminal 中查看普通输出或运行 TUI 应用时切换侧边 tab 栏
+- **THEN** terminal 可见区域 SHALL 只受侧边栏本身宽度变化影响
+- **THEN** 系统 SHALL 不因为切换控件的悬浮定位而额外覆盖终端内容
+
