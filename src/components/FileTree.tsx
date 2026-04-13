@@ -166,6 +166,23 @@ function replaceNodeChildren(
   });
 }
 
+function findNodeByPath(nodes: TreeNode[], nodePath: string): TreeNode | null {
+  for (const node of nodes) {
+    if (node.path === nodePath) return node;
+
+    if (node.children) {
+      const found = findNodeByPath(node.children, nodePath);
+      if (found) return found;
+    }
+  }
+
+  return null;
+}
+
+function getPathDepth(nodePath: string): number {
+  return nodePath.split('/').filter(Boolean).length;
+}
+
 function normalizePathForCompare(filePath: string): string {
   const normalized = filePath.replace(/\/+$/, '');
   return normalized || '/';
@@ -529,6 +546,8 @@ const FileTree: React.FC<FileTreeProps> = ({
   const [specOnly, setSpecOnly] = useState(() => localStorage.getItem(SPEC_ONLY_KEY) === 'true');
   const [specDirectoryNames, setSpecDirectoryNames] = useState(readSpecDirectoryNames);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const expandedPathsRef = useRef(expandedPaths);
+  expandedPathsRef.current = expandedPaths;
   const expandedPathSet = useMemo(() => new Set(expandedPaths), [expandedPaths]);
   const allDirectoryPaths = useMemo(() => collectDirectoryPaths(nodes), [nodes]);
   const loadedRows = useMemo(
@@ -580,34 +599,74 @@ const FileTree: React.FC<FileTreeProps> = ({
     setLoading(true);
     setContextMenu(null);
     setTreeFullyLoaded(false);
-    onExpandedPathsChange([]);
     setScrollTop(0);
     scrollContainerRef.current?.scrollTo({ top: 0 });
 
-    const readOptions = getSpecOptions();
-    window.fileApi.readTreeDirectory(rootPath, readOptions).then((result) => {
-      if (!cancelled) {
+    async function loadTree() {
+      const readOptions = getSpecOptions();
+
+      try {
+        const result = await window.fileApi.readTreeDirectory(rootPath, readOptions);
+        if (cancelled) return;
+
         if (result.tree) {
-          const nextNodes = toTreeNodes(result.tree);
-          setNodes(nextNodes);
+          let nextNodes = toTreeNodes(result.tree);
+          let nextExpandedPaths = expandedPathsRef.current;
+
           if (readOptions) {
-            onExpandedPathsChange(
-              nextNodes
-                .filter((node) => node.isDirectory && node.childrenLoaded)
-                .map((node) => node.path),
-            );
+            const specRootPaths = nextNodes
+              .filter((node) => node.isDirectory && node.childrenLoaded)
+              .map((node) => node.path);
+
+            if (nextExpandedPaths.length === 0) {
+              nextExpandedPaths = specRootPaths;
+              onExpandedPathsChange(specRootPaths);
+            }
           }
+
+          const expandedPathsByDepth = [...new Set(nextExpandedPaths)]
+            .sort((a, b) => getPathDepth(a) - getPathDepth(b));
+
+          for (const expandedPath of expandedPathsByDepth) {
+            if (cancelled) return;
+
+            const node = findNodeByPath(nextNodes, expandedPath);
+            if (!node?.isDirectory || node.childrenLoaded) continue;
+
+            try {
+              const childResult = await window.fileApi.readTreeDirectory(node.path, readOptions);
+              if (cancelled) return;
+              nextNodes = replaceNodeChildren(
+                nextNodes,
+                node.path,
+                toTreeNodes(childResult.tree ?? []),
+              );
+            } catch {
+              if (cancelled) return;
+              nextNodes = replaceNodeChildren(nextNodes, node.path, []);
+            }
+          }
+
+          const nextExpandedPathSet = new Set(nextExpandedPaths);
+          const nextDirectoryPaths = collectDirectoryPaths(nextNodes);
+          setTreeFullyLoaded(
+            nextDirectoryPaths.length > 0
+              && nextDirectoryPaths.every((path) => nextExpandedPathSet.has(path)),
+          );
+          setNodes(nextNodes);
         } else {
           setNodes([]);
         }
         setLoading(false);
+      } catch {
+        if (!cancelled) {
+          setNodes([]);
+          setLoading(false);
+        }
       }
-    }).catch(() => {
-      if (!cancelled) {
-        setNodes([]);
-        setLoading(false);
-      }
-    });
+    }
+
+    loadTree();
 
     return () => {
       cancelled = true;
