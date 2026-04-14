@@ -1,0 +1,38 @@
+openspec/specs/terminal-tabs/spec.md
+  ed404e5644d3fb6e 308-313
+src/components/TerminalPanel.tsx
+  5f9ecd86a5847dd5 1251-1252,1270
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a301046354f1368276059159bb5bae9be8a3e1eb",
+  "prompts": {
+    "5f9ecd86a5847dd5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_271c4136cffe5LToRLPbsUCO4v",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 145,
+      "total_deletions": 10,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "ed404e5644d3fb6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_271a1d049ffev403O4XjSsUCtl",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 1,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
