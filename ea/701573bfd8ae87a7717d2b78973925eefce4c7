@@ -1,0 +1,35 @@
+src/components/SettingsPanel.tsx
+  4a302fdc82a261d1 2,20,24,133,137,143-144,155-156,161,194-195,203-204,243,557-690
+src/components/FileTree.tsx
+  4a302fdc82a261d1 20-21,550,583-584,586-594,605-613
+src/App.tsx
+  4a302fdc82a261d1 18-19,141,190-194,298,302
+src/utils/file-tree-settings.ts
+  4a302fdc82a261d1 6-8,51-79
+openspec/specs/settings-panel/spec.md
+  4a302fdc82a261d1 4,51-84
+src/main.ts
+  4a302fdc82a261d1 699,735,758,769,807,811,814,832,834,848,886,889,895,918,1059
+src/preload.ts
+  4a302fdc82a261d1 48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "ea701573bfd8ae87a7717d2b78973925eefce4c7",
+  "prompts": {
+    "4a302fdc82a261d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27454b038ffe04PemalnNeGBSX",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 439,
+      "total_deletions": 37,
+      "accepted_lines": 267,
+      "overriden_lines": 0
+    }
+  }
+}
