@@ -1,0 +1,52 @@
+openspec/changes/archive/2026-04-14-notification-click-activate-tab/tasks.md
+  aba905160470d728 1-17
+src/components/TerminalPanel.tsx
+  aba905160470d728 582-588
+openspec/changes/archive/2026-04-14-notification-click-activate-tab/design.md
+  aba905160470d728 1-60
+openspec/specs/agent-attention-notifications/spec.md
+  29685d7e378d6e2a 88,103-121
+openspec/changes/archive/2026-04-14-notification-click-activate-tab/specs/agent-attention-notifications/spec.md
+  aba905160470d728 1-37
+openspec/changes/archive/2026-04-14-notification-click-activate-tab/.openspec.yaml
+  aba905160470d728 1-2
+src/main.ts
+  aba905160470d728 61,64-73
+openspec/changes/archive/2026-04-14-notification-click-activate-tab/proposal.md
+  aba905160470d728 1-26
+src/preload.ts
+  aba905160470d728 17,142-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "6d75a875334b3776b55ba8c98f22dbe96b931eb0",
+  "prompts": {
+    "29685d7e378d6e2a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_275bd5dfaffewATobP6l7jpYKy",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 21,
+      "total_deletions": 1,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    },
+    "aba905160470d728": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_275d18ef5ffeq1C5DNyXqnta2R",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 332,
+      "total_deletions": 19,
+      "accepted_lines": 172,
+      "overriden_lines": 0
+    }
+  }
+}
