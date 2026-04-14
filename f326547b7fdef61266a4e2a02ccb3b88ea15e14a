@@ -1,0 +1,23 @@
+openspec/changes/archive/2026-04-14-fix-agent-notification-wiring/tasks.md
+  733ba57c13d051b4 14-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "f326547b7fdef61266a4e2a02ccb3b88ea15e14a",
+  "prompts": {
+    "733ba57c13d051b4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2786a5967ffe49klC0WjT4nxm8",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 2,
+      "accepted_lines": 15,
+      "overriden_lines": 0
+    }
+  }
+}
