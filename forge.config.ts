@@ -50,6 +50,9 @@ const config: ForgeConfig = {
       // Include node-pty native module (and let its subtree through)
       if (file === '/node_modules') return false;
       if (file.startsWith('/node_modules/node-pty')) return false;
+      // Include rrweb dist files — the live-view HTTP server reads
+      // rrweb.min.js and rrweb.css from node_modules at runtime via fs.readFile()
+      if (file.startsWith('/node_modules/rrweb')) return false;
       // Exclude everything else (src/, tsconfig, other node_modules, etc.)
       return true;
     },
