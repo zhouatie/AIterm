@@ -305,7 +305,12 @@ terminal 侧边导航 SHALL 以毛玻璃导航表面呈现 workspace 与二级 t
 - **THEN** 该节点 SHALL 使用顶部 inset 高光模拟顶部光源
 - **THEN** 该节点 SHALL 使用独立的 `backdrop-filter` 毛玻璃效果，与侧边栏整体模糊叠加
 - **THEN** 该节点背景 SHALL 使用高不透明度半透明色（light ≥ 0.90，dark ≥ 0.96），使卡片比侧边栏背景更"实"
-- **THEN** 该节点 SHALL 通过上下 margin 与相邻的非活跃 tab 行拉开间距（≥ 3px），形成独立的卡片边界
+- **THEN** 该节点 SHALL 通过 box-shadow 的视觉扩展与统一的上下 margin 共同营造与相邻非活跃 tab 的视觉间距感（视觉间距 ≥ 3px）
+
+#### Scenario: Tab 切换零布局抖动
+- **WHEN** 用户在二级 terminal tab 之间切换活跃状态
+- **THEN** 所有 tab 行的总垂直占位（height + marginTop + marginBottom）SHALL 保持恒定，不因活跃状态变化而改变
+- **THEN** 列表中未参与切换的 tab 行位置 SHALL 不发生任何位移
 
 #### Scenario: 非活跃 terminal tab 大幅弱化
 - **WHEN** 某个二级 terminal tab 不是当前活跃 session

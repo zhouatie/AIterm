@@ -1248,8 +1248,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                             alignItems: 'center',
                             gap: 8,
                             padding: '0 10px 0 18px',
-                            marginTop: isActive ? 4 : 2,
-                            marginBottom: isActive ? 4 : 0,
+                            marginTop: 2,
+                            marginBottom: 2,
                             borderRadius: 10,
                             cursor: 'pointer',
                             backgroundColor: isActive
@@ -1267,7 +1267,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                               : 'none',
                             backdropFilter: isActive ? 'blur(12px) saturate(150%)' : undefined,
                             WebkitBackdropFilter: isActive ? 'blur(12px) saturate(150%)' : undefined,
-                            transition: 'background-color 0.2s ease-out, border-color 0.2s ease-out, box-shadow 0.2s ease-out, margin 0.2s ease-out, color 0.2s ease-out',
+                            transition: 'background-color 0.2s ease-out, border-color 0.2s ease-out, box-shadow 0.2s ease-out, color 0.2s ease-out',
                           }}
                           onMouseEnter={(event) => {
                             setHoveredSessionId(session.id);
