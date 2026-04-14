@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Check, Keyboard, Settings2, X } from 'lucide-react';
+import { BookOpen, Check, EyeOff, Keyboard, Plus, Settings2, Trash2, X } from 'lucide-react';
 import {
   SHORTCUT_ACTIONS,
   type ShortcutActionId,
@@ -17,9 +17,11 @@ interface SettingsPanelProps {
   bindings: ShortcutBindings;
   specDirectoryNames: string[];
   terminalStartDirectory: string;
+  hiddenFolderNames: string[];
   onSave: (bindings: ShortcutBindings) => void;
   onSaveSpecDirectoryNames: (names: string[]) => void;
   onSaveTerminalStartDirectory: (value: string) => void;
+  onSaveHiddenFolderNames: (names: string[]) => void;
   onClose: () => void;
 }
 
@@ -128,14 +130,18 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   bindings,
   specDirectoryNames,
   terminalStartDirectory,
+  hiddenFolderNames,
   onSave,
   onSaveSpecDirectoryNames,
   onSaveTerminalStartDirectory,
+  onSaveHiddenFolderNames,
   onClose,
 }) => {
   const [draftBindings, setDraftBindings] = useState<ShortcutBindings>(bindings);
   const [draftSpecDirectories, setDraftSpecDirectories] = useState(specDirectoryNames.join('\n'));
   const [draftTerminalStartDirectory, setDraftTerminalStartDirectory] = useState(terminalStartDirectory);
+  const [draftHiddenFolderNames, setDraftHiddenFolderNames] = useState<string[]>(hiddenFolderNames);
+  const [newHiddenFolderInput, setNewHiddenFolderInput] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ShortcutActionId, string>>>({});
   const [specDirectoryError, setSpecDirectoryError] = useState('');
   const [terminalDirectoryError, setTerminalDirectoryError] = useState('');
@@ -146,11 +152,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setDraftBindings(bindings);
     setDraftSpecDirectories(specDirectoryNames.join('\n'));
     setDraftTerminalStartDirectory(terminalStartDirectory);
+    setDraftHiddenFolderNames(hiddenFolderNames);
+    setNewHiddenFolderInput('');
     setFieldErrors({});
     setSpecDirectoryError('');
     setTerminalDirectoryError('');
     setSaveFeedback('');
-  }, [isOpen, bindings, specDirectoryNames, terminalStartDirectory]);
+  }, [isOpen, bindings, specDirectoryNames, terminalStartDirectory, hiddenFolderNames]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -183,7 +191,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const isDirty = useMemo(
     () => SHORTCUT_ACTIONS.some((action) => draftBindings[action.id] !== bindings[action.id])
       || draftSpecDirectoryKey !== normalizedSpecDirectoryKey
-      || normalizedTerminalStartDirectory !== terminalStartDirectory,
+      || normalizedTerminalStartDirectory !== terminalStartDirectory
+      || [...draftHiddenFolderNames].sort().join('\n') !== [...hiddenFolderNames].sort().join('\n'),
     [
       draftBindings,
       bindings,
@@ -191,6 +200,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       normalizedSpecDirectoryKey,
       normalizedTerminalStartDirectory,
       terminalStartDirectory,
+      draftHiddenFolderNames,
+      hiddenFolderNames,
     ],
   );
 
@@ -229,6 +240,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     onSave(draftBindings);
     onSaveSpecDirectoryNames(normalizedDraftSpecDirectories);
     onSaveTerminalStartDirectory(normalizedTerminalStartDirectory);
+    onSaveHiddenFolderNames(draftHiddenFolderNames);
     setSaveFeedback('所有更改已保存');
   };
 
@@ -540,6 +552,140 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     fontFamily: 'inherit',
                   }}
                 />
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) 260px',
+                  gap: 16,
+                  alignItems: 'start',
+                  padding: '16px 0',
+                  borderTop: '1px solid var(--color-border-light)',
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--color-text-primary)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    <EyeOff size={14} />
+                    隐藏文件夹
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                    文件树中需要隐藏的文件夹名称，精确匹配，保存后立即生效。
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {draftHiddenFolderNames.map((name) => (
+                    <div
+                      key={name}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '0 10px',
+                        height: 36,
+                        borderRadius: 8,
+                        backgroundColor: 'var(--color-bg-secondary)',
+                        border: '1px solid var(--color-border-primary)',
+                      }}
+                    >
+                      <span style={{ flex: 1, fontSize: 13, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDraftHiddenFolderNames((prev) => prev.filter((n) => n !== name));
+                          setSaveFeedback('');
+                        }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 22,
+                          height: 22,
+                          border: 'none',
+                          background: 'transparent',
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                          color: 'var(--color-text-muted)',
+                          flexShrink: 0,
+                          padding: 0,
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      type="text"
+                      value={newHiddenFolderInput}
+                      onChange={(e) => setNewHiddenFolderInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Enter') return;
+                        e.preventDefault();
+                        const trimmed = newHiddenFolderInput.trim();
+                        if (trimmed && !draftHiddenFolderNames.includes(trimmed)) {
+                          setDraftHiddenFolderNames((prev) => [...prev, trimmed]);
+                          setSaveFeedback('');
+                        }
+                        setNewHiddenFolderInput('');
+                      }}
+                      placeholder="输入文件夹名称"
+                      spellCheck={false}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        height: 36,
+                        borderRadius: 8,
+                        border: '1px solid var(--color-border-primary)',
+                        backgroundColor: 'var(--color-bg-secondary)',
+                        color: 'var(--color-text-primary)',
+                        padding: '0 10px',
+                        fontSize: 13,
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const trimmed = newHiddenFolderInput.trim();
+                        if (trimmed && !draftHiddenFolderNames.includes(trimmed)) {
+                          setDraftHiddenFolderNames((prev) => [...prev, trimmed]);
+                          setSaveFeedback('');
+                        }
+                        setNewHiddenFolderInput('');
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 36,
+                        height: 36,
+                        borderRadius: 8,
+                        border: '1px solid var(--color-border-primary)',
+                        backgroundColor: 'var(--color-bg-secondary)',
+                        color: 'var(--color-text-tertiary)',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        padding: 0,
+                      }}
+                    >
+                      <Plus size={15} />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

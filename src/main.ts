@@ -696,6 +696,7 @@ function getExcludedDirNames(rootPath: string): string[] {
 interface ReadTreeDirectoryOptions {
   specRootPath?: string;
   specDirectoryNames?: string[];
+  hiddenFolderNames?: string[];
 }
 
 function isSpecRootDirectory(dirPath: string, options?: ReadTreeDirectoryOptions): boolean {
@@ -731,7 +732,7 @@ async function readSpecRootDirectory(
         path: dirPath,
         isDirectory: true,
         mtime: stat.mtimeMs,
-        children: await readTreeDirectory(dirPath),
+        children: await readTreeDirectory(dirPath, options),
       });
     } catch {
       // Missing or unreadable configured spec directories are simply omitted.
@@ -754,6 +755,7 @@ async function readTreeDirectory(
   }
 
   const excludedSet = new Set(getExcludedDirNames(dirPath));
+  const hiddenSet = new Set(options?.hiddenFolderNames ?? []);
   const rawEntries = await fs.promises.readdir(dirPath, { withFileTypes: true });
   const names = rawEntries.map((e) => e.name);
   const ignored = await getGitIgnoredNames(dirPath, names);
@@ -764,6 +766,7 @@ async function readTreeDirectory(
     if (entry.name.startsWith('.')) continue;
     if (ignored.has(entry.name)) continue;
     if (excludedSet.has(entry.name)) continue;
+    if (entry.isDirectory() && hiddenSet.has(entry.name)) continue;
     const entryPath = path.join(dirPath, entry.name);
     if (shouldSkipScanningRoot(entryPath)) continue;
 
@@ -801,13 +804,14 @@ async function readTreeDirectory(
  * Scan ALL files using `fd` — single subprocess, respects .gitignore automatically.
  * Excludes common large directories.
  */
-function scanAllWithFd(rootPath: string): Promise<ScanTreeNode[]> {
+function scanAllWithFd(rootPath: string, options?: ReadTreeDirectoryOptions): Promise<ScanTreeNode[]> {
   return new Promise((resolve, reject) => {
     const fd = fdPath as string;
     const excludeArgs = getExcludedDirNames(rootPath).flatMap((d) => ['--exclude', d]);
+    const hiddenExcludeArgs = (options?.hiddenFolderNames ?? []).flatMap((d) => ['--exclude', d]);
     execFile(
       fd,
-      ['--type', 'f', '--no-hidden', ...excludeArgs],
+      ['--type', 'f', '--no-hidden', ...excludeArgs, ...hiddenExcludeArgs],
       { cwd: rootPath, timeout: 10000, maxBuffer: 10 * 1024 * 1024 },
       (error, stdout) => {
         if (error && !stdout) {
@@ -825,8 +829,9 @@ function scanAllWithFd(rootPath: string): Promise<ScanTreeNode[]> {
  * Fallback scan ALL files using Node.js fs — recursive traversal with git check-ignore.
  * Excludes hidden files, gitignored files, and common large directories.
  */
-async function scanAllWithNodeFs(rootPath: string): Promise<ScanTreeNode[]> {
+async function scanAllWithNodeFs(rootPath: string, options?: ReadTreeDirectoryOptions): Promise<ScanTreeNode[]> {
   const excludedSet = new Set(getExcludedDirNames(rootPath));
+  const hiddenSet = new Set(options?.hiddenFolderNames ?? []);
 
   async function scanDir(dirPath: string): Promise<ScanTreeNode[]> {
     const rawEntries = await fs.promises.readdir(dirPath, { withFileTypes: true });
@@ -840,6 +845,7 @@ async function scanAllWithNodeFs(rootPath: string): Promise<ScanTreeNode[]> {
       if (entry.name.startsWith('.')) continue;
       if (ignored.has(entry.name)) continue;
       if (excludedSet.has(entry.name)) continue;
+      if (entry.isDirectory() && hiddenSet.has(entry.name)) continue;
       const entryPath = path.join(dirPath, entry.name);
 
       if (entry.isDirectory()) {
@@ -877,16 +883,16 @@ async function scanAllWithNodeFs(rootPath: string): Promise<ScanTreeNode[]> {
   }
 }
 
-async function scanAllTree(rootPath: string): Promise<ScanTreeNode[]> {
+async function scanAllTree(rootPath: string, options?: ReadTreeDirectoryOptions): Promise<ScanTreeNode[]> {
   if (fdPath) {
     try {
-      return await scanAllWithFd(rootPath);
+      return await scanAllWithFd(rootPath, options);
     } catch {
       // fd failed for this directory, fall back to Node.js
     }
   }
 
-  return scanAllWithNodeFs(rootPath);
+  return scanAllWithNodeFs(rootPath, options);
 }
 
 async function scanAllSpecDirectories(
@@ -909,7 +915,7 @@ async function scanAllSpecDirectories(
         path: dirPath,
         isDirectory: true,
         mtime: stat.mtimeMs,
-        children: await scanAllTree(dirPath),
+        children: await scanAllTree(dirPath, options),
       });
     } catch {
       // Missing or unreadable configured spec directories are simply omitted.
@@ -1050,7 +1056,7 @@ ipcMain.handle(
 
       const tree = isSpecRootDirectory(resolved, options)
         ? await scanAllSpecDirectories(resolved, options)
-        : await scanAllTree(resolved);
+        : await scanAllTree(resolved, options);
 
       return { tree };
     } catch (err) {

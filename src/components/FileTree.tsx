@@ -17,6 +17,8 @@ import {
   readSpecDirectoryNames,
   SPEC_DIRECTORY_NAMES_CHANGED_EVENT,
   SPEC_ONLY_KEY,
+  getHiddenFolderNames,
+  HIDDEN_FOLDER_NAMES_CHANGED_EVENT,
 } from '../utils/file-tree-settings';
 
 // --- Types ---
@@ -545,6 +547,7 @@ const FileTree: React.FC<FileTreeProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [specOnly, setSpecOnly] = useState(() => localStorage.getItem(SPEC_ONLY_KEY) === 'true');
   const [specDirectoryNames, setSpecDirectoryNames] = useState(readSpecDirectoryNames);
+  const [hiddenFolderNames, setHiddenFolderNames] = useState(getHiddenFolderNames);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const expandedPathsRef = useRef(expandedPaths);
   expandedPathsRef.current = expandedPaths;
@@ -577,11 +580,18 @@ const FileTree: React.FC<FileTreeProps> = ({
   );
   const virtualRows = visibleRows.slice(startIndex, endIndex);
 
-  const getSpecOptions = useCallback((): SpecTreeOptions | undefined => (
-    specOnly && !specDirectoryNames.includes(rootPath.split('/').filter(Boolean).at(-1) ?? '')
+  const getSpecOptions = useCallback((): SpecTreeOptions | undefined => {
+    const specOpts = specOnly && !specDirectoryNames.includes(rootPath.split('/').filter(Boolean).at(-1) ?? '')
       ? { specRootPath: rootPath, specDirectoryNames }
-      : undefined
-  ), [rootPath, specDirectoryNames, specOnly]);
+      : undefined;
+
+    if (!specOpts && hiddenFolderNames.length === 0) return undefined;
+
+    return {
+      ...specOpts,
+      ...(hiddenFolderNames.length > 0 ? { hiddenFolderNames } : {}),
+    };
+  }, [rootPath, specDirectoryNames, specOnly, hiddenFolderNames]);
 
   useEffect(() => {
     const handleSpecDirectoriesChanged = () => {
@@ -590,6 +600,15 @@ const FileTree: React.FC<FileTreeProps> = ({
 
     window.addEventListener(SPEC_DIRECTORY_NAMES_CHANGED_EVENT, handleSpecDirectoriesChanged);
     return () => window.removeEventListener(SPEC_DIRECTORY_NAMES_CHANGED_EVENT, handleSpecDirectoriesChanged);
+  }, []);
+
+  useEffect(() => {
+    const handleHiddenFoldersChanged = () => {
+      setHiddenFolderNames(getHiddenFolderNames());
+    };
+
+    window.addEventListener(HIDDEN_FOLDER_NAMES_CHANGED_EVENT, handleHiddenFoldersChanged);
+    return () => window.removeEventListener(HIDDEN_FOLDER_NAMES_CHANGED_EVENT, handleHiddenFoldersChanged);
   }, []);
 
   // Normal mode loads root's direct children; spec mode jumps directly into configured spec directories.

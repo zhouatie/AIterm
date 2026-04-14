@@ -3,6 +3,9 @@ export const SPEC_DIRECTORY_NAMES_KEY = 'file-tree-spec-directory-names';
 export const SPEC_ONLY_KEY = 'file-tree-spec-only';
 export const SPEC_DIRECTORY_NAMES_CHANGED_EVENT = 'file-tree-spec-directory-names-changed';
 
+export const HIDDEN_FOLDER_NAMES_KEY = 'file-tree-hidden-folder-names';
+export const HIDDEN_FOLDER_NAMES_CHANGED_EVENT = 'file-tree-hidden-folder-names-changed';
+
 export function normalizeSpecDirectoryNames(value: string): string[] {
   const names = value
     .split(/[\n,]+/)
@@ -44,4 +47,33 @@ export function saveSpecDirectoryNames(names: string[]): void {
     JSON.stringify(normalized.length > 0 ? normalized : DEFAULT_SPEC_DIRECTORY_NAMES),
   );
   window.dispatchEvent(new Event(SPEC_DIRECTORY_NAMES_CHANGED_EVENT));
+}
+
+export function getHiddenFolderNames(): string[] {
+  const stored = localStorage.getItem(HIDDEN_FOLDER_NAMES_KEY);
+  if (!stored) return [];
+
+  try {
+    const parsed = JSON.parse(stored);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => item.trim().replace(/^\/+|\/+$/g, ''))
+        .filter(Boolean);
+    }
+  } catch {
+    // ignore malformed value
+  }
+
+  return [];
+}
+
+export function setHiddenFolderNames(names: string[]): void {
+  const normalized = [...new Set(
+    names
+      .map((item) => item.trim().replace(/^\/+|\/+$/g, ''))
+      .filter(Boolean),
+  )];
+  localStorage.setItem(HIDDEN_FOLDER_NAMES_KEY, JSON.stringify(normalized));
+  window.dispatchEvent(new Event(HIDDEN_FOLDER_NAMES_CHANGED_EVENT));
 }

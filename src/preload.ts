@@ -45,6 +45,7 @@ export interface ScanTreeNode {
 export interface SpecTreeOptions {
   specRootPath?: string;
   specDirectoryNames?: string[];
+  hiddenFolderNames?: string[];
 }
 
 export interface FileApi {

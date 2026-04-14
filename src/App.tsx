@@ -15,6 +15,8 @@ import type { PanelDefinition } from './components/PanelManager';
 import {
   readSpecDirectoryNames,
   saveSpecDirectoryNames,
+  getHiddenFolderNames,
+  setHiddenFolderNames,
 } from './utils/file-tree-settings';
 import {
   readTerminalStartDirectory,
@@ -136,6 +138,7 @@ const AppContent: React.FC = () => {
   });
   const [specDirectoryNames, setSpecDirectoryNames] = useState(readSpecDirectoryNames);
   const [terminalStartDirectory, setTerminalStartDirectory] = useState(readTerminalStartDirectory);
+  const [hiddenFolderNames, setHiddenFolderNamesState] = useState(getHiddenFolderNames);
   const fileTreeToggleTitle = getIconButtonTooltip({
     label: panelVisible ? '收起文件树' : '展开文件树',
     bindings,
@@ -182,6 +185,11 @@ const AppContent: React.FC = () => {
   const handleSaveTerminalStartDirectory = useCallback((value: string) => {
     saveTerminalStartDirectory(value);
     setTerminalStartDirectory(readTerminalStartDirectory());
+  }, []);
+
+  const handleSaveHiddenFolderNames = useCallback((names: string[]) => {
+    setHiddenFolderNames(names);
+    setHiddenFolderNamesState(getHiddenFolderNames());
   }, []);
 
   useEffect(() => {
@@ -287,9 +295,11 @@ const AppContent: React.FC = () => {
         bindings={bindings}
         specDirectoryNames={specDirectoryNames}
         terminalStartDirectory={terminalStartDirectory}
+        hiddenFolderNames={hiddenFolderNames}
         onSave={saveBindings}
         onSaveSpecDirectoryNames={handleSaveSpecDirectoryNames}
         onSaveTerminalStartDirectory={handleSaveTerminalStartDirectory}
+        onSaveHiddenFolderNames={handleSaveHiddenFolderNames}
         onClose={closeSettings}
       />
 
