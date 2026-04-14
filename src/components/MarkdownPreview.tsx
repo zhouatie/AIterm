@@ -6,9 +6,16 @@ import rehypeHighlight from 'rehype-highlight';
 interface MarkdownPreviewProps {
   content: string | null;
   filePath: string | null;
+  onTaskCheckboxToggle?: (taskIndex: number) => void;
+  taskCheckboxDisabled?: boolean;
 }
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, filePath }) => {
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
+  content,
+  filePath,
+  onTaskCheckboxToggle,
+  taskCheckboxDisabled = false,
+}) => {
   if (!content || !filePath) {
     return (
       <div
@@ -27,6 +34,8 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, filePath }) 
     );
   }
 
+  let taskCheckboxIndex = 0;
+
   return (
     <div
       style={{
@@ -36,7 +45,35 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, filePath }) 
       }}
     >
       <div className="markdown-body">
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeHighlight]}
+          components={{
+            input: ({ type, checked, disabled, ...props }) => {
+              if (type !== 'checkbox') {
+                return <input type={type} checked={checked} disabled={disabled} {...props} />;
+              }
+
+              const taskIndex = taskCheckboxIndex;
+              taskCheckboxIndex += 1;
+
+              return (
+                <input
+                  {...props}
+                  type="checkbox"
+                  checked={checked}
+                  disabled={taskCheckboxDisabled}
+                  onChange={(event) => {
+                    event.preventDefault();
+                    if (!taskCheckboxDisabled) {
+                      onTaskCheckboxToggle?.(taskIndex);
+                    }
+                  }}
+                />
+              );
+            },
+          }}
+        >
           {content}
         </ReactMarkdown>
       </div>

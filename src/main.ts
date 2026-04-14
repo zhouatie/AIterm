@@ -441,6 +441,23 @@ ipcMain.handle('fs:readfile', async (_event, { filePath }: { filePath: string })
   }
 });
 
+// fs:writefile — write file text content (max 1MB)
+ipcMain.handle(
+  'fs:writefile',
+  async (_event, { filePath, content }: { filePath: string; content: string }) => {
+    try {
+      const resolved = path.resolve(filePath);
+      if (Buffer.byteLength(content, 'utf-8') > MAX_FILE_SIZE) {
+        return { error: `File too large (${(Buffer.byteLength(content, 'utf-8') / 1024 / 1024).toFixed(1)}MB). Maximum is 1MB.` };
+      }
+      await fs.promises.writeFile(resolved, content, 'utf-8');
+      return { success: true };
+    } catch (err) {
+      return { error: (err as Error).message };
+    }
+  },
+);
+
 // fs:read-tree-directory — read direct children for lazy file tree loading
 ipcMain.handle(
   'fs:read-tree-directory',

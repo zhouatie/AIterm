@@ -5,6 +5,7 @@ import MarkdownPreview from './MarkdownPreview';
 import CodePreview from './CodePreview';
 import SplitLayout from './SplitLayout';
 import { isMarkdownFile } from '../utils/file-types';
+import { toggleMarkdownTaskMarker } from '../utils/markdown-task';
 
 interface FilePreviewPanelProps {
   activeSessionId: string | null;
@@ -50,6 +51,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [loadingFile, setLoadingFile] = useState(false);
+  const [writeError, setWriteError] = useState<string | null>(null);
+  const [writingTask, setWritingTask] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [fileTreeVisible, setFileTreeVisible] = useState(readFileTreeVisible);
@@ -66,6 +69,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     setRootPath(nextRootPath);
     setSelectedFile(snapshot?.selectedFile ?? null);
     setFileContent(snapshot?.fileContent ?? null);
+    setWriteError(null);
+    setWritingTask(false);
     setExpandedPaths(snapshot?.expandedPaths ?? []);
     setLoadingFile(false);
   }, []);
@@ -185,6 +190,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     const loadToken = ++fileLoadTokenRef.current;
     setSelectedFile(filePath);
     setLoadingFile(true);
+    setWriteError(null);
+    setWritingTask(false);
     try {
       const result = await window.fileApi.readFile(filePath);
       if (fileLoadTokenRef.current !== loadToken) return;
@@ -202,6 +209,31 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
       }
     }
   }, []);
+
+  const handleTaskCheckboxToggle = useCallback(async (taskIndex: number) => {
+    if (!selectedFile || fileContent === null || writingTask) return;
+
+    const result = toggleMarkdownTaskMarker(fileContent, taskIndex);
+    if (!result.content) {
+      setWriteError(result.error ?? '无法定位对应的任务项。');
+      return;
+    }
+
+    setWritingTask(true);
+    setWriteError(null);
+    try {
+      const writeResult = await window.fileApi.writeFile(selectedFile, result.content);
+      if (writeResult.error) {
+        setWriteError(writeResult.error);
+        return;
+      }
+      setFileContent(result.content);
+    } catch (err) {
+      setWriteError((err as Error).message);
+    } finally {
+      setWritingTask(false);
+    }
+  }, [fileContent, selectedFile, writingTask]);
 
   const fileTreePane = (
     <div
@@ -262,7 +294,33 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
       ) : selectedFile && !isMarkdownFile(selectedFile) ? (
         <CodePreview content={fileContent} filePath={selectedFile} />
       ) : (
-        <MarkdownPreview content={fileContent} filePath={selectedFile} />
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+          {writeError && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 12,
+                zIndex: 10,
+                maxWidth: '70%',
+                padding: '6px 10px',
+                borderRadius: 6,
+                background: 'var(--color-bg-secondary)',
+                color: 'var(--color-text-primary)',
+                boxShadow: '0 2px 8px var(--color-shadow)',
+                fontSize: 12,
+              }}
+            >
+              写入失败：{writeError}
+            </div>
+          )}
+          <MarkdownPreview
+            content={fileContent}
+            filePath={selectedFile}
+            onTaskCheckboxToggle={handleTaskCheckboxToggle}
+            taskCheckboxDisabled={writingTask}
+          />
+        </div>
       )}
     </div>
   );

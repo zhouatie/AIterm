@@ -49,6 +49,7 @@ export interface SpecTreeOptions {
 export interface FileApi {
   readDir(dirPath: string): Promise<{ entries?: DirEntry[]; error?: string }>;
   readFile(filePath: string): Promise<{ content?: string; error?: string }>;
+  writeFile(filePath: string, content: string): Promise<{ success?: boolean; error?: string }>;
   readTreeDirectory(
     dirPath: string,
     options?: SpecTreeOptions,
@@ -145,6 +146,9 @@ contextBridge.exposeInMainWorld('fileApi', {
 
   readFile: (filePath: string) =>
     ipcRenderer.invoke('fs:readfile', { filePath }),
+
+  writeFile: (filePath: string, content: string) =>
+    ipcRenderer.invoke('fs:writefile', { filePath, content }),
 
   readTreeDirectory: (
     dirPath: string,

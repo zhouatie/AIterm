@@ -103,7 +103,7 @@
 - **THEN** 文件树 SHALL 不显示 Markdown-only / 全部文件切换按钮
 
 ### Requirement: Markdown 文件预览
-系统 SHALL 使用 react-markdown 渲染选中的 Markdown 文件内容，支持 GFM 语法和代码高亮。仅当选中文件的扩展名为 `.md` 时才使用此渲染模式。
+系统 SHALL 使用 react-markdown 渲染选中的 Markdown 文件内容，支持 GFM 语法和代码高亮。仅当选中文件的扩展名为 `.md` 时才使用此渲染模式。Markdown 预览中的 GFM 任务列表 checkbox SHALL 支持点击切换状态，并将变更写回源 Markdown 文件。
 
 #### Scenario: 渲染选中文件
 - **WHEN** 用户在文件树中选中一个 `.md` 文件
@@ -112,6 +112,26 @@
 #### Scenario: GFM 语法支持
 - **WHEN** Markdown 文件包含 GFM 扩展语法（表格、任务列表、删除线等）
 - **THEN** 预览区 SHALL 正确渲染这些扩展语法元素
+
+#### Scenario: 点击任务 checkbox 勾选
+- **WHEN** 用户点击 Markdown 预览中由 `- [ ]`、`* [ ]` 或 `+ [ ]` 渲染出的未完成任务 checkbox
+- **THEN** 系统 SHALL 将源 Markdown 文件中对应任务 marker 写回为已完成状态 `[x]`
+- **AND** 预览区 SHALL 使用写回后的内容重新渲染为勾选状态
+
+#### Scenario: 点击任务 checkbox 取消勾选
+- **WHEN** 用户点击 Markdown 预览中由 `[x]` 或 `[X]` 渲染出的已完成任务 checkbox
+- **THEN** 系统 SHALL 将源 Markdown 文件中对应任务 marker 写回为未完成状态 `[ ]`
+- **AND** 预览区 SHALL 使用写回后的内容重新渲染为未勾选状态
+
+#### Scenario: 嵌套任务 checkbox 写回
+- **WHEN** Markdown 文件包含缩进的嵌套 GFM 任务列表，且用户点击其中一个任务 checkbox
+- **THEN** 系统 SHALL 按任务项在源文件中的出现顺序定位对应 marker
+- **AND** 系统 SHALL 只切换该 marker 的状态，不改变该行缩进或正文内容
+
+#### Scenario: checkbox 写回失败
+- **WHEN** 用户点击任务 checkbox 但源文件写入失败
+- **THEN** 系统 SHALL 保持当前预览内容与写入前一致
+- **AND** 系统 SHALL 向用户展示写入失败反馈
 
 #### Scenario: 代码块语法高亮
 - **WHEN** Markdown 文件包含带语言标识的代码块（如 ```typescript）
@@ -168,7 +188,7 @@
 - **THEN** 主进程 SHALL 以节流方式（不超过每秒一次）检测 PTY 的实际工作目录，若发生变化则推送事件到渲染进程
 
 ### Requirement: 文件系统 IPC 通道
-主进程 SHALL 提供文件系统读取相关的 IPC 通道，渲染进程通过 preload 暴露的 API 调用。扫描结果的每个节点 SHALL 包含修改时间信息。
+主进程 SHALL 提供文件系统读取与受控写入相关的 IPC 通道，渲染进程通过 preload 暴露的 API 调用。扫描结果的每个节点 SHALL 包含修改时间信息。
 
 #### Scenario: 读取目录内容
 - **WHEN** 渲染进程调用 `fileApi.readDir(path)` 
@@ -182,9 +202,13 @@
 - **WHEN** 渲染进程调用 `fileApi.readFile(path)` 
 - **THEN** 主进程 SHALL 读取指定文件的文本内容并返回
 
+#### Scenario: 写入文件内容
+- **WHEN** 渲染进程调用 `fileApi.writeFile(path, content)`
+- **THEN** 主进程 SHALL 将 `content` 作为 UTF-8 文本写入指定文件，并返回成功或错误结果
+
 #### Scenario: 文件大小限制
-- **WHEN** 请求读取的文件大小超过 1MB
-- **THEN** 主进程 SHALL 返回错误提示，而非加载完整内容
+- **WHEN** 请求读取或写入的文件内容大小超过 1MB
+- **THEN** 主进程 SHALL 返回错误提示，而非读取或写入完整内容
 
 #### Scenario: 路径安全校验
 - **WHEN** 渲染进程请求的路径包含 `..` 路径遍历
