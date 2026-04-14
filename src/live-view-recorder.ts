@@ -15,7 +15,7 @@ function createRecordOptions() {
     // Throttle high-frequency events to reduce IPC call volume.
     // mousemove at 60 fps would otherwise generate 60 IPC calls/s.
     sampling: {
-      mousemove: 50,  // at most one mouse-move event per 50 ms (20/s max)
+      mousemove: 20,  // at most one mouse-move event per 20 ms (50/s max)
       scroll: 150,    // at most one scroll event per 150 ms
       input: 'last' as const, // only the final value of an input, not every keystroke
     },
