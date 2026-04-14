@@ -61,6 +61,8 @@ const SIDEBAR_HEADER_HEIGHT = 46;
 const SIDEBAR_FOOTER_HEIGHT = 48;
 const ROW_HEIGHT = 34;
 const SIDEBAR_TOGGLE_SIZE = 28;
+/** Duration (ms) for the sidebar collapse/expand animation. */
+const SIDEBAR_COLLAPSE_MS = 180;
 
 function getLastPathSegment(cwd: string): string {
   const trimmed = cwd.replace(/\/+$/, '');
@@ -931,21 +933,36 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         background: 'var(--color-workbench-bg)',
       }}
     >
+      {/* Outer wrapper — controls layout width; delays width→0 until animation ends */}
       <div
         style={{
           width: sidebarWidth,
           height: '100%',
-          borderRight: sidebarCollapsed ? 'none' : '1px solid var(--color-window-chrome-border)',
-          background: 'var(--color-surface-sidebar)',
-          display: 'flex',
-          flexDirection: 'column',
           flexShrink: 0,
           overflow: 'hidden',
-          boxShadow: 'var(--color-shadow-inset)',
-          backdropFilter: 'blur(18px) saturate(160%)',
-          transition: 'width 0.18s ease',
+          // Collapse: delay width→0 until transform animation finishes (no reflow during animation)
+          // Expand: restore width immediately so terminal area shrinks in sync with slide-in
+          transition: sidebarCollapsed
+            ? `width 0s ${SIDEBAR_COLLAPSE_MS}ms`
+            : 'width 0s',
         }}
       >
+        {/* Inner content — compositor-only transform animation, no layout reflow */}
+        <div
+          style={{
+            width: SIDEBAR_WIDTH,
+            height: '100%',
+            borderRight: '1px solid var(--color-window-chrome-border)',
+            background: 'var(--color-surface-sidebar)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: 'var(--color-shadow-inset)',
+            backdropFilter: 'blur(18px) saturate(160%)',
+            transform: sidebarCollapsed ? 'translateX(-100%)' : 'translateX(0)',
+            transition: `transform ${SIDEBAR_COLLAPSE_MS}ms ease`,
+          }}
+        >
         <div
           style={{
             height: SIDEBAR_HEADER_HEIGHT,
@@ -1424,6 +1441,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             </button>
           </div>
         )}
+        </div>
       </div>
 
       <div
