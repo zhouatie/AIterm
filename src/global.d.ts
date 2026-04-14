@@ -3,6 +3,7 @@ import type {
   FileApi,
   ThemeApi,
   TabStateApi,
+  LiveViewApi,
   TerminalAttention,
   TerminalAttentionCleared,
 } from './preload';
@@ -18,5 +19,6 @@ declare global {
     fileApi: FileApi;
     themeApi: ThemeApi;
     tabStateApi: TabStateApi;
+    liveViewApi: LiveViewApi;
   }
 }

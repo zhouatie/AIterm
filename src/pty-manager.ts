@@ -257,7 +257,11 @@ export function writeToSession(id: string, data: string): void {
 export function resizeSession(id: string, cols: number, rows: number): void {
   const session = sessions.get(id);
   if (session) {
-    session.ptyProcess.resize(cols, rows);
+    try {
+      session.ptyProcess.resize(cols, rows);
+    } catch {
+      // PTY process may already be closed (EBADF); silently ignore
+    }
   }
 }
 

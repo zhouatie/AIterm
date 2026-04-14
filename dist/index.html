@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Terminal Workbench</title>
+    <script>
+      // Sync theme before first paint to prevent FOUC
+      (function() {
+        var pref = localStorage.getItem('theme-mode') || 'system';
+        var theme;
+        if (pref === 'system') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        } else {
+          theme = pref;
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-C4ViVQSC.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D6QssqWy.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

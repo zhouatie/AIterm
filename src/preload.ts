@@ -182,6 +182,16 @@ export interface ThemeApi {
   setNativeTheme(mode: 'light' | 'dark' | 'system'): void;
 }
 
+export interface LiveViewApi {
+  start(): Promise<{ url: string } | { error: string }>;
+  stop(): void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sendEvent(event: any): void;
+  /** Register a callback invoked when the server needs a fresh FullSnapshot.
+   *  Returns an unsubscribe function. */
+  onForceCheckout(cb: () => void): () => void;
+}
+
 export interface TabStateApi {
   save(json: string): void;
   saveSync(json: string): void;
@@ -192,6 +202,18 @@ contextBridge.exposeInMainWorld('themeApi', {
   setNativeTheme: (mode: 'light' | 'dark' | 'system') =>
     ipcRenderer.send('theme:set', { mode }),
 } satisfies ThemeApi);
+
+contextBridge.exposeInMainWorld('liveViewApi', {
+  start: () => ipcRenderer.invoke('live-view:start'),
+  stop: () => ipcRenderer.send('live-view:stop'),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sendEvent: (event: any) => ipcRenderer.send('rrweb:event', event),
+  onForceCheckout: (cb: () => void) => {
+    const listener = () => cb();
+    ipcRenderer.on('live-view:force-checkout', listener);
+    return () => ipcRenderer.removeListener('live-view:force-checkout', listener);
+  },
+} satisfies LiveViewApi);
 
 contextBridge.exposeInMainWorld('tabStateApi', {
   save: (json: string) =>

@@ -22,6 +22,21 @@ import {
   type TerminalAttention,
   type TerminalAttentionAgent,
 } from './terminal-attention';
+import {
+  startLiveViewServer,
+  stopLiveViewServer,
+  broadcastEvent,
+  setCheckoutTrigger,
+} from './live-view-server';
+
+// Register checkout trigger: when the server needs a fresh FullSnapshot
+// (stale buffer + new client connected), it calls this to tell the renderer
+// to stop and restart rrweb recording, which emits a fresh Meta+FullSnapshot.
+setCheckoutTrigger(() => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('live-view:force-checkout');
+  }
+});
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -1086,6 +1101,14 @@ ipcMain.handle('tab-state:load', () => {
   }
 });
 
+// --- Live View IPC handlers ---
+ipcMain.handle('live-view:start', () => startLiveViewServer());
+
+ipcMain.on('live-view:stop', () => stopLiveViewServer());
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ipcMain.on('rrweb:event', (_event, rrwebEvent: any) => broadcastEvent(rrwebEvent));
+
 app.on('ready', async () => {
   fdPath = detectFd();
   await startAttentionServer();
@@ -1110,5 +1133,6 @@ app.on('activate', () => {
 // Clean up all PTY sessions before quitting
 app.on('before-quit', () => {
   stopAttentionServer();
+  stopLiveViewServer();
   disposeAllSessions();
 });

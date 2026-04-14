@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
-import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
+import LiveViewPanel from './components/LiveViewPanel';
 import SplitLayout from './components/SplitLayout';
 import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
@@ -21,6 +22,7 @@ import {
   TERMINAL_START_DIRECTORY_CHANGED_EVENT,
 } from './utils/terminal-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
+import { startRecording, stopLiveRecording, forceCheckout } from './live-view-recorder';
 
 // --- Active Session Context ---
 // Shared between TerminalPanel (writer) and FilePreviewPanel (reader)
@@ -140,6 +142,30 @@ const AppContent: React.FC = () => {
     actionId: 'toggle-file-tree',
   });
 
+  // Live View state
+  const [isLiveViewOpen, setIsLiveViewOpen] = useState(false);
+  const [liveViewActive, setLiveViewActive] = useState(false);
+
+  // Start/stop rrweb recording in sync with live view active state
+  useEffect(() => {
+    if (liveViewActive) {
+      startRecording();
+    } else {
+      stopLiveRecording();
+    }
+    return () => {
+      stopLiveRecording();
+    };
+  }, [liveViewActive]);
+
+  // When live view is active, register the force-checkout handler so the
+  // server can request a fresh FullSnapshot when a new client connects.
+  useEffect(() => {
+    if (!liveViewActive) return;
+    const unsubscribe = window.liveViewApi.onForceCheckout(forceCheckout);
+    return unsubscribe;
+  }, [liveViewActive]);
+
   const togglePanel = useCallback(() => {
     setPanelVisible((prev) => {
       const next = !prev;
@@ -220,6 +246,20 @@ const AppContent: React.FC = () => {
           >
             <ThemeIcon size={16} />
           </button>
+
+          {/* Live View toggle — shows green dot while recording */}
+          <div style={{ position: 'relative', display: 'inline-flex', marginLeft: 4 }}>
+            <button
+              onClick={() => setIsLiveViewOpen((v) => !v)}
+              title={liveViewActive ? 'Live View（录制中）' : 'Live View'}
+              style={toggleButtonStyle}
+              onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
+              onMouseLeave={(e) => resetChromeButtonHover(e.currentTarget)}
+            >
+              <Cast size={16} />
+            </button>
+            {liveViewActive && <span className="live-dot" />}
+          </div>
         </div>
 
         <div
@@ -251,6 +291,12 @@ const AppContent: React.FC = () => {
         onSaveSpecDirectoryNames={handleSaveSpecDirectoryNames}
         onSaveTerminalStartDirectory={handleSaveTerminalStartDirectory}
         onClose={closeSettings}
+      />
+
+      <LiveViewPanel
+        isOpen={isLiveViewOpen}
+        onClose={() => setIsLiveViewOpen(false)}
+        onActiveChange={setLiveViewActive}
       />
     </>
   );
