@@ -23,6 +23,9 @@ interface SplitLayoutProps {
  */
 const HIT_AREA_WIDTH = 8;
 
+/** Duration (ms) for the left-pane collapse/expand animation. */
+const COLLAPSE_TRANSITION_MS = 180;
+
 type LeftSizeMode = 'percent' | 'px';
 
 function readStoredSize(
@@ -177,21 +180,40 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
         background: 'var(--color-workbench-bg)',
       }}
     >
-      {/* Left pane */}
+      {/* Left pane — outer wrapper controls layout width */}
       <div
         style={{
           width: leftWidth,
           height: '100%',
           overflow: 'hidden',
           flexShrink: 0,
-          backgroundColor: 'var(--color-surface-content)',
-          ...(shadow && shadowSide === 'left'
-            ? { boxShadow: 'inset -1px 0 0 var(--color-border-light)', zIndex: 1 }
-            : {}),
-          transition: isDraggingState ? 'none' : 'width 0.18s ease',
+          ...(shadow && shadowSide === 'left' ? { zIndex: 1 } : {}),
+          // Collapse: delay width→0 until transform animation finishes (no reflow during animation)
+          // Expand: restore width immediately so right pane shrinks in sync with slide-in
+          transition: isDraggingState
+            ? 'none'
+            : leftCollapsed
+              ? `width 0s ${COLLAPSE_TRANSITION_MS}ms`
+              : 'width 0s',
         }}
       >
-        {left}
+        {/* Inner content — compositor-only transform animation, no layout reflow */}
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'var(--color-surface-content)',
+            ...(shadow && shadowSide === 'left'
+              ? { boxShadow: 'inset -1px 0 0 var(--color-border-light)' }
+              : {}),
+            transform: leftCollapsed ? 'translateX(-100%)' : 'translateX(0)',
+            transition: isDraggingState
+              ? 'none'
+              : `transform ${COLLAPSE_TRANSITION_MS}ms ease`,
+          }}
+        >
+          {left}
+        </div>
       </div>
 
       {/* Divider: invisible wide hit area with a thin visual line in the center */}
@@ -217,7 +239,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
           justifyContent: 'center',
           overflow: shadow && !leftCollapsed ? 'visible' : 'hidden',
           pointerEvents: leftCollapsed ? 'none' : 'auto',
-          transition: isDraggingState ? 'none' : 'width 0.18s ease, margin 0.18s ease',
+          transition: isDraggingState ? 'none' : `width ${COLLAPSE_TRANSITION_MS}ms ease, margin ${COLLAPSE_TRANSITION_MS}ms ease`,
         }}
       >
         {shadow && !leftCollapsed && (
@@ -245,7 +267,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
             height: '100%',
             backgroundColor: showAccent ? 'var(--color-accent-divider)' : 'var(--color-border-secondary)',
             opacity: leftCollapsed ? 0 : 1,
-            transition: 'background-color 0.16s ease, width 0.16s ease, opacity 0.18s ease, box-shadow 0.16s ease',
+            transition: `background-color 0.16s ease, width 0.16s ease, opacity ${COLLAPSE_TRANSITION_MS}ms ease, box-shadow 0.16s ease`,
             borderRadius: 999,
             boxShadow: showAccent ? '0 0 0 3px var(--color-focus-soft)' : 'none',
           }}
