@@ -170,7 +170,22 @@ export interface ThemeApi {
   setNativeTheme(mode: 'light' | 'dark' | 'system'): void;
 }
 
+export interface TabStateApi {
+  save(json: string): void;
+  saveSync(json: string): void;
+  load(): Promise<string | null>;
+}
+
 contextBridge.exposeInMainWorld('themeApi', {
   setNativeTheme: (mode: 'light' | 'dark' | 'system') =>
     ipcRenderer.send('theme:set', { mode }),
 } satisfies ThemeApi);
+
+contextBridge.exposeInMainWorld('tabStateApi', {
+  save: (json: string) =>
+    ipcRenderer.send('tab-state:save', json),
+  saveSync: (json: string) =>
+    ipcRenderer.sendSync('tab-state:save-sync', json),
+  load: () =>
+    ipcRenderer.invoke('tab-state:load'),
+} satisfies TabStateApi);

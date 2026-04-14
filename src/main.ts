@@ -1042,6 +1042,41 @@ ipcMain.on('theme:set', (_event, { mode }: { mode: 'light' | 'dark' | 'system' }
   nativeTheme.themeSource = mode;
 });
 
+// --- Tab State Persistence (file-based) ---
+// Renderer localStorage is unreliable in Electron (Chromium LevelDB may not
+// flush to disk before process exit).  Use a plain JSON file in userData instead.
+
+const tabStatePath = path.join(app.getPath('userData'), 'tab-state.json');
+
+// Async fire-and-forget save (used during normal operation)
+ipcMain.on('tab-state:save', (_event, json: string) => {
+  try {
+    fs.writeFileSync(tabStatePath, json, 'utf-8');
+  } catch (error) {
+    console.warn('[main] Failed to save tab state:', error);
+  }
+});
+
+// Sync save (used in renderer beforeunload to guarantee write before exit)
+ipcMain.on('tab-state:save-sync', (event, json: string) => {
+  try {
+    fs.writeFileSync(tabStatePath, json, 'utf-8');
+    event.returnValue = true;
+  } catch (error) {
+    console.warn('[main] Failed to save tab state (sync):', error);
+    event.returnValue = false;
+  }
+});
+
+// Load saved tab state
+ipcMain.handle('tab-state:load', () => {
+  try {
+    return fs.readFileSync(tabStatePath, 'utf-8');
+  } catch {
+    return null;
+  }
+});
+
 app.on('ready', async () => {
   fdPath = detectFd();
   await startAttentionServer();

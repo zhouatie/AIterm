@@ -11,6 +11,12 @@ import {
 import type { TerminalAttention, TerminalSessionInfo } from '../preload';
 import { useKeyboardShortcuts } from '../ShortcutContext';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
+import {
+  loadTabState,
+  saveTabState,
+  saveTabStateSync,
+  type PersistedTabState,
+} from '../utils/tab-persistence';
 import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './ContextMenu';
 import TerminalInstance from './TerminalInstance';
 
@@ -347,14 +353,148 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-    void createWorkspace(initialDirectory);
-  }, [createWorkspace, initialDirectory]);
+
+    const restoreFromPersistedState = async () => {
+      const persisted = await loadTabState();
+      if (!persisted) {
+        void createWorkspace(initialDirectory);
+        return;
+      }
+
+      try {
+        const idMap = new Map<string, string>();
+        const restoredWorkspaces: WorkspaceNode[] = [];
+
+        for (const pWorkspace of persisted.workspaces) {
+          const restoredSessions: TerminalSessionInfo[] = [];
+
+          for (const pSession of pWorkspace.sessions) {
+            try {
+              const { id: newSessionId } = await window.terminalApi.create(80, 24, pSession.cwd || undefined);
+              idMap.set(pSession.id, newSessionId);
+              restoredSessions.push(createPlaceholderSessionInfo(newSessionId, pSession.cwd || undefined));
+            } catch {
+              // cwd may not exist; retry with no cwd (HOME directory)
+              try {
+                const { id: newSessionId } = await window.terminalApi.create(80, 24);
+                idMap.set(pSession.id, newSessionId);
+                restoredSessions.push(createPlaceholderSessionInfo(newSessionId));
+              } catch {
+                // Skip this session entirely
+              }
+            }
+          }
+
+          if (restoredSessions.length === 0) continue;
+
+          const mappedLastActive = pWorkspace.sessions.find(
+            (s) => idMap.has(s.id) && restoredSessions.some((rs) => rs.id === idMap.get(s.id)),
+          );
+          const lastActiveSessionId = mappedLastActive
+            ? idMap.get(mappedLastActive.id) || restoredSessions[0].id
+            : restoredSessions[0].id;
+
+          restoredWorkspaces.push({
+            id: pWorkspace.id,
+            name: pWorkspace.name,
+            currentPath: pWorkspace.currentPath,
+            lastActiveSessionId,
+            isExpanded: pWorkspace.isExpanded,
+            sessions: restoredSessions,
+          });
+        }
+
+        if (restoredWorkspaces.length === 0) {
+          void createWorkspace(initialDirectory);
+          return;
+        }
+
+        // Restore workspace counter from workspace names
+        let maxCounter = 0;
+        for (const ws of restoredWorkspaces) {
+          const match = ws.name.match(/^workspace_(\d+)$/);
+          if (match) {
+            maxCounter = Math.max(maxCounter, parseInt(match[1], 10));
+          }
+        }
+        workspaceCounterRef.current = maxCounter + 1;
+
+        // Restore sessionNameOverrides with mapped IDs
+        const restoredOverrides: Record<string, string> = {};
+        for (const [oldId, name] of Object.entries(persisted.sessionNameOverrides)) {
+          const newId = idMap.get(oldId);
+          if (newId) {
+            restoredOverrides[newId] = name;
+          }
+        }
+
+        // Restore activeSessionId with mapped ID
+        const restoredActiveSessionId = idMap.get(persisted.activeSessionId)
+          || resolveActiveSessionId(restoredWorkspaces, '');
+
+        setWorkspaces(restoredWorkspaces);
+        setActiveSessionId(restoredActiveSessionId);
+        setSessionNameOverrides(restoredOverrides);
+        setSidebarCollapsed(persisted.sidebarCollapsed);
+
+        // Fetch live session info for all restored sessions
+        for (const ws of restoredWorkspaces) {
+          for (const session of ws.sessions) {
+            window.terminalApi.getSessionInfo(session.id).then((info) => {
+              if (info) applySessionInfo(info);
+            }).catch(() => { /* ignore */ });
+          }
+        }
+      } catch {
+        void createWorkspace(initialDirectory);
+      }
+    };
+
+    void restoreFromPersistedState();
+  }, [createWorkspace, initialDirectory, applySessionInfo]);
 
   useEffect(() => {
     return registerAction('toggle-terminal-sidebar', () => {
       setSidebarCollapsed((prev) => !prev);
     });
   }, [registerAction]);
+
+  // Build the persisted state snapshot from current React state
+  const buildPersistedState = useCallback((): PersistedTabState => ({
+    version: 1,
+    workspaces: workspacesRef.current.map((ws) => ({
+      id: ws.id,
+      name: ws.name,
+      currentPath: ws.currentPath,
+      isExpanded: ws.isExpanded,
+      sessions: ws.sessions.map((s) => ({
+        id: s.id,
+        cwd: s.cwd,
+      })),
+    })),
+    activeSessionId,
+    sessionNameOverrides: sessionNameOverridesRef.current,
+    sidebarCollapsed,
+  }), [activeSessionId, sidebarCollapsed]);
+
+  // Auto-save tab state on changes (fire-and-forget IPC → main process writes to disk)
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    if (workspaces.length === 0) return;
+    saveTabState(buildPersistedState());
+  }, [workspaces, activeSessionId, sessionNameOverrides, sidebarCollapsed, buildPersistedState]);
+
+  // Sync save on window close — guarantees file is written before process exits
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (workspacesRef.current.length === 0) return;
+      saveTabStateSync(buildPersistedState());
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [buildPersistedState]);
 
   useEffect(() => {
     return registerAction('create-workspace', () => {
