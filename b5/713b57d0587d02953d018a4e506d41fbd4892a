@@ -1,0 +1,33 @@
+openspec/specs/electron-shell/spec.md
+  6a74582189e2f687 98-125
+openspec/specs/browser-panel/spec.md
+  6a74582189e2f687 135,139-150
+src/components/BrowserPanel.tsx
+  6a74582189e2f687 352,376-385
+src/main.ts
+  6a74582189e2f687 1119-1142
+src/preload.ts
+  6a74582189e2f687 227-243
+src/global.d.ts
+  6a74582189e2f687 7,24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "b5713b57d0587d02953d018a4e506d41fbd4892a",
+  "prompts": {
+    "6a74582189e2f687": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27348d55bffeUApHqk0GQ3QIl5",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 269,
+      "total_deletions": 23,
+      "accepted_lines": 97,
+      "overriden_lines": 0
+    }
+  }
+}
