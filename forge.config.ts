@@ -7,10 +7,12 @@ import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-nati
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import path from 'path';
 
 const config: ForgeConfig = {
   packagerConfig: {
     appBundleId: 'com.zhoushitie.aiterm',
+    icon: path.resolve(__dirname, 'assets/icon'),
     asar: {
       unpack: '**/node_modules/node-pty/**',
     },
