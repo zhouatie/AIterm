@@ -31,6 +31,10 @@ Electron 主进程外壳，负责应用窗口管理、进程安全隔离、IPC �
 - **WHEN** 渲染进程需要与主进程通信
 - **THEN** SHALL 通过 preload 脚本在 `window` 上暴露的 API 进行，而非直接使用 ipcRenderer
 
+#### Scenario: webview 标签启用
+- **WHEN** 主窗口创建时
+- **THEN** webPreferences SHALL 包含 `webviewTag: true`，以允许渲染进程使用 `<webview>` 标签嵌入网页内容
+
 ### Requirement: IPC 通信通道
 主进程 SHALL 提供 IPC 通道供渲染进程调用终端相关操作。
 

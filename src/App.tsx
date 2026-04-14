@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
-import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast, Globe } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
 import LiveViewPanel from './components/LiveViewPanel';
+import BrowserPanel from './components/BrowserPanel';
 import SplitLayout from './components/SplitLayout';
 import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
@@ -149,6 +150,9 @@ const AppContent: React.FC = () => {
   const [isLiveViewOpen, setIsLiveViewOpen] = useState(false);
   const [liveViewActive, setLiveViewActive] = useState(false);
 
+  // Browser panel state
+  const [isBrowserOpen, setIsBrowserOpen] = useState(false);
+
   // Start/stop rrweb recording in sync with live view active state
   useEffect(() => {
     if (liveViewActive) {
@@ -197,6 +201,16 @@ const AppContent: React.FC = () => {
       togglePanel();
     });
   }, [registerAction, togglePanel]);
+
+  const toggleBrowser = useCallback(() => {
+    setIsBrowserOpen((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    return registerAction('toggle-browser', () => {
+      toggleBrowser();
+    });
+  }, [registerAction, toggleBrowser]);
 
   return (
     <>
@@ -268,6 +282,34 @@ const AppContent: React.FC = () => {
             </button>
             {liveViewActive && <span className="live-dot" />}
           </div>
+
+          {/* Browser panel toggle */}
+          <button
+            onClick={toggleBrowser}
+            title={getIconButtonTooltip({
+              label: isBrowserOpen ? '关闭浏览器' : '打开浏览器',
+              bindings,
+              actionId: 'toggle-browser',
+            })}
+            style={{
+              ...toggleButtonStyle,
+              marginLeft: 4,
+              ...(isBrowserOpen
+                ? {
+                    backgroundColor: 'var(--color-surface-content-elevated)',
+                    borderColor: 'var(--color-border-primary)',
+                    color: ICON_COLOR_ACTIVE,
+                    boxShadow: 'var(--color-shadow-soft)',
+                  }
+                : {}),
+            }}
+            onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
+            onMouseLeave={(e) => {
+              if (!isBrowserOpen) resetChromeButtonHover(e.currentTarget);
+            }}
+          >
+            <Globe size={16} />
+          </button>
         </div>
 
         <div
@@ -286,6 +328,10 @@ const AppContent: React.FC = () => {
             shadow
             shadowSide="left"
             leftCollapsed={!panelVisible}
+          />
+          <BrowserPanel
+            isOpen={isBrowserOpen}
+            onClose={() => setIsBrowserOpen(false)}
           />
         </div>
       </div>

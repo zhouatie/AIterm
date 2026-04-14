@@ -11,6 +11,7 @@ import React, {
 export type ShortcutActionId =
   | 'toggle-file-tree'
   | 'toggle-terminal-sidebar'
+  | 'toggle-browser'
   | 'create-workspace'
   | 'create-terminal-tab'
   | 'rename-current-workspace'
@@ -63,6 +64,11 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
     id: 'toggle-terminal-sidebar',
     title: 'Terminal Tab 展示/收起',
     description: '切换 terminal 导航侧边栏的显示状态',
+  },
+  {
+    id: 'toggle-browser',
+    title: '浏览器面板展示/收起',
+    description: '切换内嵌浏览器面板的显示状态',
   },
   {
     id: 'create-workspace',
@@ -154,6 +160,7 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
 export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindings = {
   'toggle-file-tree': 'Meta+S',
   'toggle-terminal-sidebar': 'Meta+B',
+  'toggle-browser': 'Meta+L',
   'create-workspace': 'Meta+N',
   'create-terminal-tab': 'Meta+T',
   'rename-current-workspace': 'Meta+Shift+R',
