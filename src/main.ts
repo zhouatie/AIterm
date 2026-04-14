@@ -58,10 +58,19 @@ function sendTerminalAttention(attention: TerminalAttention): void {
 
   try {
     if (Notification.isSupported()) {
-      new Notification({
+      const notification = new Notification({
         title: `${getAgentDisplayName(attention.agent)} 需要处理`,
         body: attention.message || '请回到 GUI 终端继续处理。',
-      }).show();
+      });
+      notification.on('click', () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          if (mainWindow.isMinimized()) mainWindow.restore();
+          mainWindow.show();
+          mainWindow.focus();
+          mainWindow.webContents.send('terminal:activateSession', { id: attention.id });
+        }
+      });
+      notification.show();
     }
   } catch (error) {
     console.error('[terminal-attention] Failed to show notification:', error);

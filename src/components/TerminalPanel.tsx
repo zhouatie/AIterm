@@ -579,6 +579,14 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     setActiveSessionId(sessionId);
   }, [clearSessionAttention]);
 
+  useEffect(() => {
+    const unsubscribe = window.terminalApi.onActivateSession(({ id }) => {
+      setSidebarCollapsed(false);
+      handleSelectSession(id);
+    });
+    return unsubscribe;
+  }, [handleSelectSession]);
+
   const selectRelativeTerminalTab = useCallback((direction: -1 | 1) => {
     const sessionIds = getOrderedSessionIds(workspacesRef.current);
     if (sessionIds.length <= 1) return;

@@ -14,6 +14,7 @@ export interface TerminalApi {
   onSessionInfoChanged(callback: (data: TerminalSessionInfo) => void): () => void;
   onAttention(callback: (data: TerminalAttention) => void): () => void;
   onAttentionCleared(callback: (data: TerminalAttentionCleared) => void): () => void;
+  onActivateSession(callback: (data: { id: string }) => void): () => void;
 }
 
 export type { TerminalAttention, TerminalAttentionCleared } from './terminal-attention';
@@ -136,6 +137,17 @@ contextBridge.exposeInMainWorld('terminalApi', {
     ipcRenderer.on('terminal:attentionCleared', listener);
     return () => {
       ipcRenderer.removeListener('terminal:attentionCleared', listener);
+    };
+  },
+
+  onActivateSession: (callback: (data: { id: string }) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: { id: string },
+    ) => callback(data);
+    ipcRenderer.on('terminal:activateSession', listener);
+    return () => {
+      ipcRenderer.removeListener('terminal:activateSession', listener);
     };
   },
 } satisfies TerminalApi);
