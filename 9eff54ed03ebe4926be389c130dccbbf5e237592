@@ -1,0 +1,46 @@
+src/preload.ts
+  5fcfed45dd6815b5 173-178,183-191
+src/main.ts
+  5fcfed45dd6815b5 1045-1079
+openspec/specs/terminal-tabs/spec.md
+  4a31963fd89b7688 10,14-25,330-373
+src/global.d.ts
+  5fcfed45dd6815b5 5,20
+src/utils/tab-persistence.ts
+  5fcfed45dd6815b5 1-91
+src/components/TerminalPanel.tsx
+  5fcfed45dd6815b5 14-19,356-454,462-498
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "9eff54ed03ebe4926be389c130dccbbf5e237592",
+  "prompts": {
+    "4a31963fd89b7688": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_275d335d3ffeuzhzN3n3m9GKwJ",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 58,
+      "total_deletions": 1,
+      "accepted_lines": 58,
+      "overriden_lines": 0
+    },
+    "5fcfed45dd6815b5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_276217e73ffeVz8fHuPL9rrMgv",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 708,
+      "total_deletions": 149,
+      "accepted_lines": 285,
+      "overriden_lines": 0
+    }
+  }
+}
