@@ -200,10 +200,10 @@ function isHighLevelRoot(rootPath: string): boolean {
 // --- Constants ---
 
 const INDENT_PX = 20;
-const ICON_SIZE = 15;
+const ICON_SIZE = 16;
 const ICON_COLOR = 'var(--color-icon-default)';
 const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
-const ROW_HEIGHT = 28;
+const ROW_HEIGHT = 34;
 const OVERSCAN_ROWS = 6;
 
 interface ContextMenuState {
@@ -449,29 +449,36 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
       style={{
         position: 'absolute',
         top,
-        left: 0,
-        right: 0,
+        left: 4,
+        right: 4,
         display: 'flex',
         alignItems: 'center',
         height: ROW_HEIGHT,
         paddingRight: 8,
+        paddingLeft: isSelected ? 0 : 0,
+        borderLeft: isSelected ? '3px solid var(--color-tree-indicator)' : '3px solid transparent',
+        borderRadius: 8,
         cursor: 'pointer',
         backgroundColor: isSelected ? 'var(--color-bg-selected)' : 'transparent',
+        boxShadow: 'none',
         fontSize: 13,
         color: 'var(--color-text-secondary)',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         userSelect: 'none',
+        transition: 'background-color 150ms ease, box-shadow 150ms ease',
       }}
       onMouseEnter={(e) => {
         if (!isSelected) {
-          e.currentTarget.style.backgroundColor = 'var(--color-bg-hover)';
+          e.currentTarget.style.backgroundColor = 'var(--color-tree-row-hover)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-tree-row-hover)';
         }
       }}
       onMouseLeave={(e) => {
         if (!isSelected) {
           e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.boxShadow = 'none';
         }
       }}
     >
@@ -492,7 +499,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
           transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
         }}
       >
-        {node.isDirectory && <ChevronRight size={14} />}
+        {node.isDirectory && <ChevronRight size={15} />}
       </span>
 
       {/* Icon */}
@@ -502,7 +509,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           width: 18,
-          marginRight: 5,
+          marginRight: 8,
           flexShrink: 0,
           color: node.isDirectory ? 'var(--color-icon-folder)' : ICON_COLOR,
         }}
@@ -519,7 +526,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({
       </span>
 
       {/* Name */}
-      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: node.isDirectory ? 550 : 'normal' }}>
         {node.name}
       </span>
     </div>

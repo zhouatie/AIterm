@@ -12,7 +12,7 @@
   --color-window-chrome-bg: rgba(243, 245, 248, 0.92);
   --color-window-chrome-border: rgba(95, 110, 138, 0.18);
   --color-workbench-bg: linear-gradient(180deg, #f6f8fb 0%, #eef2f7 100%);
-  --color-surface-sidebar: rgba(255, 255, 255, 0.72);
+  --color-surface-sidebar: rgba(255, 255, 255, 0.55);
   --color-surface-sidebar-elevated: rgba(255, 255, 255, 0.9);
   --color-surface-content: rgba(255, 255, 255, 0.68);
   --color-surface-content-elevated: rgba(255, 255, 255, 0.9);
@@ -52,7 +52,7 @@
   /* Icons */
   --color-icon-default: #7d8799;
   --color-icon-active: #344053;
-  --color-icon-folder: #a38046;
+  --color-icon-folder: #6b87b5;
   --color-icon-chevron: #8d97a8;
 
   /* Pill Tabs */
@@ -74,6 +74,25 @@
   --color-shadow-soft: 0 10px 30px rgba(36, 50, 70, 0.08);
   --color-shadow-medium: 0 18px 48px rgba(28, 39, 57, 0.14);
   --color-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+
+  /* Tab card depth */
+  --shadow-tab-active:
+    0 1px 2px rgba(0, 20, 60, 0.08),
+    0 4px 12px rgba(0, 20, 60, 0.06),
+    0 12px 32px rgba(0, 20, 60, 0.05);
+  --shadow-tab-hover:
+    0 1px 3px rgba(0, 20, 60, 0.05),
+    0 4px 10px rgba(0, 20, 60, 0.03);
+  --color-tab-active-bg: rgba(255, 255, 255, 0.92);
+  --color-tab-active-inset: inset 0 0.5px 0 rgba(255, 255, 255, 0.9);
+  --color-tab-active-border: rgba(106, 128, 169, 0.22);
+  --color-tab-inactive-text: rgba(52, 64, 83, 0.55);
+  --color-tab-inactive-dot: rgba(125, 135, 153, 0.40);
+
+  /* File tree refinement */
+  --color-tree-indicator: var(--color-accent-primary);
+  --color-tree-row-hover: rgba(49, 67, 93, 0.06);
+  --shadow-tree-row-hover: 0 1px 3px rgba(0, 20, 60, 0.04);
 
   /* highlight.js */
   --hljs-color: #24292e;
@@ -108,7 +127,7 @@
   --color-window-chrome-bg: rgba(17, 19, 24, 0.92);
   --color-window-chrome-border: rgba(154, 173, 216, 0.14);
   --color-workbench-bg: linear-gradient(180deg, #12161d 0%, #0f1319 100%);
-  --color-surface-sidebar: rgba(27, 33, 43, 0.82);
+  --color-surface-sidebar: rgba(27, 33, 43, 0.65);
   --color-surface-sidebar-elevated: rgba(34, 41, 53, 0.94);
   --color-surface-content: rgba(23, 28, 37, 0.84);
   --color-surface-content-elevated: rgba(28, 34, 45, 0.94);
@@ -148,7 +167,7 @@
   /* Icons */
   --color-icon-default: #8190a8;
   --color-icon-active: #dce6f8;
-  --color-icon-folder: #d7b075;
+  --color-icon-folder: #8aa3d4;
   --color-icon-chevron: #7887a0;
 
   /* Pill Tabs */
@@ -170,6 +189,25 @@
   --color-shadow-soft: 0 16px 42px rgba(0, 0, 0, 0.28);
   --color-shadow-medium: 0 26px 56px rgba(0, 0, 0, 0.34);
   --color-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* Tab card depth */
+  --shadow-tab-active:
+    0 1px 3px rgba(0, 0, 0, 0.32),
+    0 4px 14px rgba(0, 0, 0, 0.24),
+    0 14px 36px rgba(0, 0, 0, 0.20);
+  --shadow-tab-hover:
+    0 1px 4px rgba(0, 0, 0, 0.20),
+    0 4px 12px rgba(0, 0, 0, 0.14);
+  --color-tab-active-bg: rgba(39, 47, 61, 0.98);
+  --color-tab-active-inset: inset 0 0.5px 0 rgba(255, 255, 255, 0.10);
+  --color-tab-active-border: rgba(126, 151, 217, 0.22);
+  --color-tab-inactive-text: rgba(197, 208, 226, 0.50);
+  --color-tab-inactive-dot: rgba(129, 144, 168, 0.35);
+
+  /* File tree refinement */
+  --color-tree-indicator: var(--color-accent-primary);
+  --color-tree-row-hover: rgba(214, 225, 255, 0.06);
+  --shadow-tree-row-hover: 0 1px 4px rgba(0, 0, 0, 0.16);
 
   /* highlight.js dark */
   --hljs-color: #d4d4d4;

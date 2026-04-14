@@ -958,7 +958,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             flexDirection: 'column',
             overflow: 'hidden',
             boxShadow: 'var(--color-shadow-inset)',
-            backdropFilter: 'blur(18px) saturate(160%)',
+            backdropFilter: 'blur(24px) saturate(180%)',
             transform: sidebarCollapsed ? 'translateX(-100%)' : 'translateX(0)',
             transition: `transform ${SIDEBAR_COLLAPSE_MS}ms ease`,
           }}
@@ -1248,19 +1248,26 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                             alignItems: 'center',
                             gap: 8,
                             padding: '0 10px 0 18px',
-                            marginTop: 2,
+                            marginTop: isActive ? 4 : 2,
+                            marginBottom: isActive ? 4 : 0,
                             borderRadius: 10,
                             cursor: 'pointer',
                             backgroundColor: isActive
-                              ? 'var(--color-sidebar-item-active)'
+                              ? 'var(--color-tab-active-bg)'
                               : isHovered
                               ? 'var(--color-sidebar-item-hover)'
                               : 'transparent',
-                            color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                            color: isActive ? 'var(--color-text-primary)' : 'var(--color-tab-inactive-text)',
                             userSelect: 'none',
-                            border: isActive ? '1px solid var(--color-sidebar-item-active-border)' : '1px solid transparent',
-                            boxShadow: isActive ? 'var(--color-shadow-inset)' : 'none',
-                            transition: 'background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease',
+                            border: isActive ? '1px solid var(--color-tab-active-border)' : '1px solid transparent',
+                            boxShadow: isActive
+                              ? 'var(--shadow-tab-active), var(--color-tab-active-inset)'
+                              : isHovered
+                              ? 'var(--shadow-tab-hover)'
+                              : 'none',
+                            backdropFilter: isActive ? 'blur(12px) saturate(150%)' : undefined,
+                            WebkitBackdropFilter: isActive ? 'blur(12px) saturate(150%)' : undefined,
+                            transition: 'background-color 0.2s ease-out, border-color 0.2s ease-out, box-shadow 0.2s ease-out, margin 0.2s ease-out, color 0.2s ease-out',
                           }}
                           onMouseEnter={(event) => {
                             setHoveredSessionId(session.id);
@@ -1279,7 +1286,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                  ? 'var(--color-attention)'
                                  : isActive
                                  ? 'var(--color-accent-primary)'
-                                 : 'var(--color-icon-default)',
+                                 : 'var(--color-tab-inactive-dot)',
                                boxShadow: hasAttention ? '0 0 0 4px var(--color-attention-soft)' : 'none',
                                flexShrink: 0,
                              }}
