@@ -1,0 +1,75 @@
+src/components/LiveViewPanel.tsx
+  847a223c4a651af2 1-219
+openspec/specs/live-view-server/spec.md
+  c9f28eb7bf742054 1-74
+src/main.ts
+  847a223c4a651af2 25-39,1104-1111,1136
+openspec/specs/rrweb-recorder/spec.md
+  c9f28eb7bf742054 1-39
+src/App.tsx
+  847a223c4a651af2 2,6,25,145-168,249-262,295-300
+openspec/specs/live-view-qrcode/spec.md
+  c9f28eb7bf742054 1-29
+dist/index.html
+  847a223c4a651af2 1-25
+src/live-view-server.ts
+  847a223c4a651af2 1-480
+package.json
+  847a223c4a651af2 32,53,59-60
+src/pty-manager.ts
+  847a223c4a651af2 260-264
+src/live-view-recorder.ts
+  847a223c4a651af2 1-51
+src/index.css
+  847a223c4a651af2 452-468
+src/preload.ts
+  847a223c4a651af2 185-194,206-217
+src/global.d.ts
+  847a223c4a651af2 6,22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "62e7fa3fcc42d5d88983713dd446b80cbcd60e27",
+  "prompts": {
+    "600f0909b6f64624": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d85d8-d4d0-78b0-9de1-5bca84c90e91",
+        "model": "gpt-5.4"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 10,
+      "overriden_lines": 1
+    },
+    "847a223c4a651af2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2759913b3ffevsZZRM6c2O6sdW",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 64924,
+      "total_deletions": 505,
+      "accepted_lines": 1581,
+      "overriden_lines": 10
+    },
+    "c9f28eb7bf742054": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_274ba4504ffe2S92l1mEyaGVwp",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 142,
+      "total_deletions": 0,
+      "accepted_lines": 142,
+      "overriden_lines": 0
+    }
+  }
+}
