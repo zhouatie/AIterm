@@ -1,0 +1,29 @@
+openspec/specs/keyboard-shortcuts/spec.md
+  b684315a67e4a3c5 21-29
+openspec/specs/terminal-tabs/spec.md
+  b684315a67e4a3c5 374-427
+src/components/TerminalPanel.tsx
+  b684315a67e4a3c5 239,463-482,637-666,912-922,1255-1286
+src/ShortcutContext.tsx
+  b684315a67e4a3c5 21-30,107-151,165-173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "3a50606df6297e12a6c76f6b4e02f511c3cf49cd",
+  "prompts": {
+    "b684315a67e4a3c5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2751d2178ffea5TBC8Gd1K4Z2a",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 542,
+      "total_deletions": 50,
+      "accepted_lines": 221,
+      "overriden_lines": 0
+    }
+  }
+}
