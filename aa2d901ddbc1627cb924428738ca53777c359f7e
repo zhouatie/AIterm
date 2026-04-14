@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "aa2d901ddbc1627cb924428738ca53777c359f7e",
+  "prompts": {
+    "41f485d557885be8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d879f-e447-7990-984b-a5d02da4f82f",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}
