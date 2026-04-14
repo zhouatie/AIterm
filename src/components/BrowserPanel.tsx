@@ -335,19 +335,11 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
         });
       };
 
-      // Handle new-window requests (target="_blank", window.open)
-      // Open in a new tab instead of a system browser
-      const onNewWindow = (e: Event & { url: string }) => {
-        e.preventDefault();
-        addTab(e.url);
-      };
-
       webview.addEventListener('page-title-updated', onTitleUpdated as EventListener);
       webview.addEventListener('did-navigate', onDidNavigate as EventListener);
       webview.addEventListener('did-navigate-in-page', onDidNavigateInPage as EventListener);
       webview.addEventListener('did-start-loading', onDidStartLoading);
       webview.addEventListener('did-stop-loading', onDidStopLoading);
-      webview.addEventListener('new-window', onNewWindow as EventListener);
 
       return () => {
         webview.removeEventListener('page-title-updated', onTitleUpdated as EventListener);
@@ -355,10 +347,9 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
         webview.removeEventListener('did-navigate-in-page', onDidNavigateInPage as EventListener);
         webview.removeEventListener('did-start-loading', onDidStartLoading);
         webview.removeEventListener('did-stop-loading', onDidStopLoading);
-        webview.removeEventListener('new-window', onNewWindow as EventListener);
       };
     },
-    [updateTab, addTab],
+    [updateTab],
   );
 
   // Ref callback for each webview
@@ -380,6 +371,17 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
   );
 
   const isEmpty = tabs.length === 0;
+
+  // -----------------------------------------------------------------------
+  // Listen for new-window URLs forwarded from main process via IPC
+  // -----------------------------------------------------------------------
+
+  useEffect(() => {
+    const unsubscribe = window.browserApi.onOpenUrl(({ url }) => {
+      addTab(url);
+    });
+    return unsubscribe;
+  }, [addTab]);
 
   // -----------------------------------------------------------------------
   // Render

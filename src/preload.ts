@@ -224,3 +224,20 @@ contextBridge.exposeInMainWorld('tabStateApi', {
   load: () =>
     ipcRenderer.invoke('tab-state:load'),
 } satisfies TabStateApi);
+
+export interface BrowserApi {
+  onOpenUrl(callback: (data: { url: string }) => void): () => void;
+}
+
+contextBridge.exposeInMainWorld('browserApi', {
+  onOpenUrl: (callback: (data: { url: string }) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: { url: string },
+    ) => callback(data);
+    ipcRenderer.on('browser:open-url', listener);
+    return () => {
+      ipcRenderer.removeListener('browser:open-url', listener);
+    };
+  },
+} satisfies BrowserApi);

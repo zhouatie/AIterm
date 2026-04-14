@@ -4,6 +4,7 @@ import type {
   ThemeApi,
   TabStateApi,
   LiveViewApi,
+  BrowserApi,
   TerminalAttention,
   TerminalAttentionCleared,
 } from './preload';
@@ -20,5 +21,6 @@ declare global {
     themeApi: ThemeApi;
     tabStateApi: TabStateApi;
     liveViewApi: LiveViewApi;
+    browserApi: BrowserApi;
   }
 }

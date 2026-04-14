@@ -1116,6 +1116,30 @@ ipcMain.on('live-view:stop', () => stopLiveViewServer());
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ipcMain.on('rrweb:event', (_event, rrwebEvent: any) => broadcastEvent(rrwebEvent));
 
+// --- Intercept new-window requests from browser-panel webviews ---
+// Use the recommended setWindowOpenHandler API instead of the deprecated
+// renderer-side 'new-window' event on <webview>.
+app.on('web-contents-created', (_event, contents) => {
+  if (contents.getType() === 'webview') {
+    contents.setWindowOpenHandler(({ url }) => {
+      // Only intercept webviews belonging to the browser panel (persist:browser partition)
+      const partition = contents.session?.storagePath;
+      // session.storagePath is only set for persist: partitions; for non-persist partitions
+      // it's undefined. We check via the partition property on the session.
+      // A simpler and reliable check: the browser panel webviews use 'persist:browser'.
+      // Electron exposes session via contents.session; we match by checking if this session
+      // is the same object as the one obtained via session.fromPartition('persist:browser').
+      // However, at this point the session module might not yet be imported.
+      // Instead, since all our webviews use persist:browser partition and there are no other
+      // webviews in the app, we can safely intercept all webview new-window requests.
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('browser:open-url', { url });
+      }
+      return { action: 'deny' };
+    });
+  }
+});
+
 app.on('ready', async () => {
   fdPath = detectFd();
   await startAttentionServer();
