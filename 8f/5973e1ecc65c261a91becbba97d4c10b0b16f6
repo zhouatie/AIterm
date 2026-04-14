@@ -1,0 +1,23 @@
+forge.config.ts
+  6088568864e75340 10,15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "8f5973e1ecc65c261a91becbba97d4c10b0b16f6",
+  "prompts": {
+    "6088568864e75340": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2737275dcffepsymFzRxh6OIze",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 0,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
