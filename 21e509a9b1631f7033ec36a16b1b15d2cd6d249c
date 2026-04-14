@@ -1,0 +1,38 @@
+src/components/TerminalPanel.tsx
+  c8442143ca6376c8 64-65,936,943-947,950-965,1444
+openspec/specs/terminal-tabs/spec.md
+  2812facc9451ca8d 427-451
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "21e509a9b1631f7033ec36a16b1b15d2cd6d249c",
+  "prompts": {
+    "2812facc9451ca8d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2739e17caffeC3LyQ9c7OT1mud",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 0,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    },
+    "c8442143ca6376c8": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_273b4c311ffeUpZ2OEFCJURZYN",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 169,
+      "total_deletions": 16,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    }
+  }
+}
