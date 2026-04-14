@@ -18,6 +18,15 @@
 - **THEN** 关闭当前 workspace SHALL 默认绑定为 `Command + Shift + W`
 - **THEN** 上一个 terminal tab SHALL 默认绑定为 `Command + Shift + [`
 - **THEN** 下一个 terminal tab SHALL 默认绑定为 `Command + Shift + ]`
+- **THEN** 跳转到第 1 个 terminal tab SHALL 默认绑定为 `Command + 1`
+- **THEN** 跳转到第 2 个 terminal tab SHALL 默认绑定为 `Command + 2`
+- **THEN** 跳转到第 3 个 terminal tab SHALL 默认绑定为 `Command + 3`
+- **THEN** 跳转到第 4 个 terminal tab SHALL 默认绑定为 `Command + 4`
+- **THEN** 跳转到第 5 个 terminal tab SHALL 默认绑定为 `Command + 5`
+- **THEN** 跳转到第 6 个 terminal tab SHALL 默认绑定为 `Command + 6`
+- **THEN** 跳转到第 7 个 terminal tab SHALL 默认绑定为 `Command + 7`
+- **THEN** 跳转到第 8 个 terminal tab SHALL 默认绑定为 `Command + 8`
+- **THEN** 跳转到最后一个 terminal tab SHALL 默认绑定为 `Command + 9`
 
 ### Requirement: 快捷键配置持久化
 系统 SHALL 支持保存用户自定义快捷键，并在后续启动时恢复。

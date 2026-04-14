@@ -236,6 +236,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const [renameState, setRenameState] = useState<RenameState | null>(null);
   const [hoveredWorkspaceId, setHoveredWorkspaceId] = useState<string | null>(null);
   const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
+  const [isCmdHeld, setIsCmdHeld] = useState(false);
   const sidebarWidth = sidebarCollapsed ? 0 : SIDEBAR_WIDTH;
   const renameTargetKey = renameState
     ? renameState.type === 'workspace'
@@ -459,6 +460,26 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     });
   }, [registerAction]);
 
+  // 按住 Command 时在 tab 旁边临时显示跳转序号
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Meta') setIsCmdHeld(true);
+    };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Meta') setIsCmdHeld(false);
+    };
+    const handleBlur = () => setIsCmdHeld(false);
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
+
   // Build the persisted state snapshot from current React state
   const buildPersistedState = useCallback((): PersistedTabState => ({
     version: 1,
@@ -612,6 +633,36 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       selectRelativeTerminalTab(1);
     });
   }, [registerAction, selectRelativeTerminalTab]);
+
+  // 按 1-based 编号直接跳转到指定 terminal tab；超出范围时静默无效
+  const selectTerminalTabByIndex = useCallback((oneBased: number) => {
+    const sessionIds = getOrderedSessionIds(workspacesRef.current);
+    if (oneBased < 1 || oneBased > sessionIds.length) return;
+    const targetId = sessionIds[oneBased - 1];
+    if (!targetId) return;
+    handleSelectSession(targetId);
+  }, [handleSelectSession]);
+
+  useEffect(() => {
+    const cleanups = [
+      registerAction('select-terminal-tab-1', () => selectTerminalTabByIndex(1)),
+      registerAction('select-terminal-tab-2', () => selectTerminalTabByIndex(2)),
+      registerAction('select-terminal-tab-3', () => selectTerminalTabByIndex(3)),
+      registerAction('select-terminal-tab-4', () => selectTerminalTabByIndex(4)),
+      registerAction('select-terminal-tab-5', () => selectTerminalTabByIndex(5)),
+      registerAction('select-terminal-tab-6', () => selectTerminalTabByIndex(6)),
+      registerAction('select-terminal-tab-7', () => selectTerminalTabByIndex(7)),
+      registerAction('select-terminal-tab-8', () => selectTerminalTabByIndex(8)),
+      // select-terminal-tab-9 固定跳转到最后一个 tab（与浏览器 / iTerm2 行为一致）
+      registerAction('select-terminal-tab-9', () => {
+        const sessionIds = getOrderedSessionIds(workspacesRef.current);
+        if (sessionIds.length === 0) return;
+        const lastId = sessionIds[sessionIds.length - 1];
+        if (lastId) handleSelectSession(lastId);
+      }),
+    ];
+    return () => cleanups.forEach((cleanup) => cleanup());
+  }, [registerAction, selectTerminalTabByIndex, handleSelectSession]);
 
   const getActiveWorkspace = useCallback(() => {
     if (!activeSessionId) return undefined;
@@ -857,6 +908,17 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       void handleCloseWorkspace(activeWorkspace.id);
     });
   }, [getActiveWorkspace, handleCloseWorkspace, registerAction]);
+
+  // 按编号跳转时每个 session 对应的显示数字：1–8 为位置序号，最后一个固定为 9，其余为 null
+  const orderedSessionIds = getOrderedSessionIds(workspaces);
+  const getTabShortcutNumber = (sessionId: string): string | null => {
+    const index = orderedSessionIds.indexOf(sessionId);
+    const total = orderedSessionIds.length;
+    if (index === -1) return null;
+    if (index === total - 1) return '9';
+    if (index < 8) return String(index + 1);
+    return null;
+  };
 
   return (
     <div
@@ -1190,21 +1252,38 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                             setHoveredSessionId((prev) => (prev === session.id ? null : prev));
                           }}
                         >
-                          <span
-                            title={attention?.message}
-                            style={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: '50%',
-                              backgroundColor: hasAttention
-                                ? 'var(--color-attention)'
-                                : isActive
-                                ? 'var(--color-accent-primary)'
-                                : 'var(--color-icon-default)',
-                              boxShadow: hasAttention ? '0 0 0 4px var(--color-attention-soft)' : 'none',
-                              flexShrink: 0,
-                            }}
-                          />
+                           <span
+                             title={attention?.message}
+                             style={{
+                               width: 6,
+                               height: 6,
+                               borderRadius: '50%',
+                               backgroundColor: hasAttention
+                                 ? 'var(--color-attention)'
+                                 : isActive
+                                 ? 'var(--color-accent-primary)'
+                                 : 'var(--color-icon-default)',
+                               boxShadow: hasAttention ? '0 0 0 4px var(--color-attention-soft)' : 'none',
+                               flexShrink: 0,
+                             }}
+                           />
+                           {/* 按住 Command 时显示跳转序号；固定宽度保持布局稳定 */}
+                           <span
+                             style={{
+                               width: '1.25rem',
+                               flexShrink: 0,
+                               fontSize: 10,
+                               fontVariantNumeric: 'tabular-nums',
+                               fontFamily: 'monospace',
+                               color: 'var(--color-text-muted)',
+                               opacity: isCmdHeld ? 0.75 : 0,
+                               textAlign: 'right',
+                               transition: 'opacity 0.1s ease',
+                               lineHeight: 1,
+                             }}
+                           >
+                             {getTabShortcutNumber(session.id)}
+                           </span>
                           {isRenamingSession ? (
                             <input
                               ref={renameInputRef}

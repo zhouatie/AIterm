@@ -18,7 +18,16 @@ export type ShortcutActionId =
   | 'close-current-terminal-tab'
   | 'close-current-workspace'
   | 'select-previous-terminal-tab'
-  | 'select-next-terminal-tab';
+  | 'select-next-terminal-tab'
+  | 'select-terminal-tab-1'
+  | 'select-terminal-tab-2'
+  | 'select-terminal-tab-3'
+  | 'select-terminal-tab-4'
+  | 'select-terminal-tab-5'
+  | 'select-terminal-tab-6'
+  | 'select-terminal-tab-7'
+  | 'select-terminal-tab-8'
+  | 'select-terminal-tab-9';
 
 export type ShortcutBindings = Record<ShortcutActionId, string>;
 
@@ -95,6 +104,51 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
     title: '下一个 Terminal Tab',
     description: '切换到左侧导航顺序中的下一个 terminal tab',
   },
+  {
+    id: 'select-terminal-tab-1',
+    title: '跳转到第 1 个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中第 1 个 terminal tab',
+  },
+  {
+    id: 'select-terminal-tab-2',
+    title: '跳转到第 2 个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中第 2 个 terminal tab',
+  },
+  {
+    id: 'select-terminal-tab-3',
+    title: '跳转到第 3 个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中第 3 个 terminal tab',
+  },
+  {
+    id: 'select-terminal-tab-4',
+    title: '跳转到第 4 个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中第 4 个 terminal tab',
+  },
+  {
+    id: 'select-terminal-tab-5',
+    title: '跳转到第 5 个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中第 5 个 terminal tab',
+  },
+  {
+    id: 'select-terminal-tab-6',
+    title: '跳转到第 6 个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中第 6 个 terminal tab',
+  },
+  {
+    id: 'select-terminal-tab-7',
+    title: '跳转到第 7 个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中第 7 个 terminal tab',
+  },
+  {
+    id: 'select-terminal-tab-8',
+    title: '跳转到第 8 个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中第 8 个 terminal tab',
+  },
+  {
+    id: 'select-terminal-tab-9',
+    title: '跳转到最后一个 Terminal Tab',
+    description: '直接跳转到侧边导航顺序中最后一个 terminal tab',
+  },
 ];
 
 export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindings = {
@@ -108,6 +162,15 @@ export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindings = {
   'close-current-workspace': 'Meta+Shift+W',
   'select-previous-terminal-tab': 'Meta+Shift+[',
   'select-next-terminal-tab': 'Meta+Shift+]',
+  'select-terminal-tab-1': 'Meta+1',
+  'select-terminal-tab-2': 'Meta+2',
+  'select-terminal-tab-3': 'Meta+3',
+  'select-terminal-tab-4': 'Meta+4',
+  'select-terminal-tab-5': 'Meta+5',
+  'select-terminal-tab-6': 'Meta+6',
+  'select-terminal-tab-7': 'Meta+7',
+  'select-terminal-tab-8': 'Meta+8',
+  'select-terminal-tab-9': 'Meta+9',
 };
 
 const MODIFIER_DISPLAY_LABEL: Record<string, string> = {
