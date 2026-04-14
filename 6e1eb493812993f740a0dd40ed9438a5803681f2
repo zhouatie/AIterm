@@ -1,0 +1,23 @@
+src/live-view-recorder.ts
+  0c0a011ba8b7b197 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "6e1eb493812993f740a0dd40ed9438a5803681f2",
+  "prompts": {
+    "0c0a011ba8b7b197": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_273a0541fffeTHkECdiSBDYwpm",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
