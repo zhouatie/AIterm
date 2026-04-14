@@ -1,0 +1,38 @@
+src/components/SplitLayout.tsx
+  89a0f6966a749c3d 26-28,183,190-197,200-216,242,270
+openspec/specs/panel-layout/spec.md
+  19b9b6370cc936f9 121-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a32f3a2f12884f8f99d052621a5b932d9e5133cb",
+  "prompts": {
+    "19b9b6370cc936f9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_274519a90ffeSJ0xtJ75YkXAcH",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 0,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    },
+    "89a0f6966a749c3d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_274b485abffer2yKyTqNu3AVD6",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 207,
+      "total_deletions": 15,
+      "accepted_lines": 31,
+      "overriden_lines": 0
+    }
+  }
+}
