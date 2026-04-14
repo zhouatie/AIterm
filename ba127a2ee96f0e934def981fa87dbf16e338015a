@@ -1,0 +1,36 @@
+forge.config.ts
+  8f249765ab2372b6 53-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "ba127a2ee96f0e934def981fa87dbf16e338015a",
+  "prompts": {
+    "0c0a011ba8b7b197": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_273a0541fffeTHkECdiSBDYwpm",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "8f249765ab2372b6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_274153fafffe9VzhDH2m58tAEp",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
