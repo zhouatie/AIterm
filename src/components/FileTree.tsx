@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { ScanTreeNode, SpecTreeOptions } from '../preload';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
-import ContextMenu, { createPathMenuItems } from './ContextMenu';
+import ContextMenu, { createPathMenuItems, type ContextMenuBounds } from './ContextMenu';
 import {
   readSpecDirectoryNames,
   SPEC_DIRECTORY_NAMES_CHANGED_EVENT,
@@ -210,6 +210,7 @@ interface ContextMenuState {
   x: number;
   y: number;
   nodePath: string;
+  bounds?: ContextMenuBounds;
 }
 
 // --- Toolbar ---
@@ -555,6 +556,7 @@ const FileTree: React.FC<FileTreeProps> = ({
   const [specOnly, setSpecOnly] = useState(() => localStorage.getItem(SPEC_ONLY_KEY) === 'true');
   const [specDirectoryNames, setSpecDirectoryNames] = useState(readSpecDirectoryNames);
   const [hiddenFolderNames, setHiddenFolderNames] = useState(getHiddenFolderNames);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const expandedPathsRef = useRef(expandedPaths);
   expandedPathsRef.current = expandedPaths;
@@ -773,7 +775,20 @@ const FileTree: React.FC<FileTreeProps> = ({
   }, []);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, nodePath: string) => {
-    setContextMenu({ x: e.clientX, y: e.clientY, nodePath });
+    const containerBounds = containerRef.current?.getBoundingClientRect();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      nodePath,
+      bounds: containerBounds
+        ? {
+          left: containerBounds.left + 8,
+          right: containerBounds.right - 8,
+          top: containerBounds.top + 8,
+          bottom: containerBounds.bottom - 8,
+        }
+        : undefined,
+    });
   }, []);
 
   const handleCloseContextMenu = useCallback(() => {
@@ -818,7 +833,7 @@ const FileTree: React.FC<FileTreeProps> = ({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Toolbar
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
@@ -873,6 +888,7 @@ const FileTree: React.FC<FileTreeProps> = ({
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
+          bounds={contextMenu.bounds}
           items={createPathMenuItems({
             nodePath: contextMenu.nodePath,
             rootPath,

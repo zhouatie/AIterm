@@ -13,12 +13,20 @@ export interface ContextMenuSeparatorItem {
 
 export type ContextMenuItem = ContextMenuActionItem | ContextMenuSeparatorItem;
 
+export interface ContextMenuBounds {
+  left: number;
+  right: number;
+  top?: number;
+  bottom?: number;
+}
+
 interface ContextMenuProps {
   x: number;
   y: number;
   items: ContextMenuItem[];
   onClose: () => void;
   width?: number;
+  bounds?: ContextMenuBounds;
 }
 
 const DEFAULT_MENU_WIDTH = 180;
@@ -110,6 +118,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   items,
   onClose,
   width = DEFAULT_MENU_WIDTH,
+  bounds,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -128,13 +137,24 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     return total + CONTEXT_MENU_ITEM_HEIGHT;
   }, 8);
 
+  const horizontalLeftBound = bounds?.left ?? 8;
+  const horizontalRightBound = bounds?.right ?? window.innerWidth - 8;
+  const verticalTopBound = bounds?.top ?? 8;
+  const verticalBottomBound = bounds?.bottom ?? window.innerHeight - 8;
+
   let adjustedX = x;
   let adjustedY = y;
-  if (x + width > window.innerWidth) {
-    adjustedX = Math.max(8, x - width);
+  if (x + width > horizontalRightBound) {
+    adjustedX = Math.max(horizontalLeftBound, x - width);
   }
-  if (y + menuHeight > window.innerHeight) {
-    adjustedY = Math.max(8, y - menuHeight);
+  if (adjustedX + width > horizontalRightBound) {
+    adjustedX = Math.max(horizontalLeftBound, horizontalRightBound - width);
+  }
+  if (y + menuHeight > verticalBottomBound) {
+    adjustedY = Math.max(verticalTopBound, y - menuHeight);
+  }
+  if (adjustedY + menuHeight > verticalBottomBound) {
+    adjustedY = Math.max(verticalTopBound, verticalBottomBound - menuHeight);
   }
 
   const menuItemStyle: React.CSSProperties = {
