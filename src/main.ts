@@ -1066,6 +1066,87 @@ ipcMain.handle(
   },
 );
 
+// --- Git IPC Handlers ---
+
+// git:diff — return raw `git diff HEAD` output for a given directory
+ipcMain.handle('git:diff', async (_event, { cwd }: { cwd: string }) => {
+  try {
+    const resolved = path.resolve(cwd);
+    return await new Promise<{ diff: string } | { error: string }>((resolve) => {
+      execFile(
+        'git',
+        ['-C', resolved, 'diff', 'HEAD'],
+        { timeout: 10_000, maxBuffer: 10 * 1024 * 1024 },
+        (error, stdout) => {
+          if (error && !stdout) {
+            resolve({ error: error.message });
+          } else {
+            resolve({ diff: stdout ?? '' });
+          }
+        },
+      );
+    });
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+});
+
+// git:status-summary — return parsed `git status --porcelain` output
+ipcMain.handle('git:status-summary', async (_event, { cwd }: { cwd: string }) => {
+  try {
+    const resolved = path.resolve(cwd);
+    return await new Promise<{ summary: GitStatusSummary } | { error: string }>((resolve) => {
+      execFile(
+        'git',
+        ['-C', resolved, 'status', '--porcelain'],
+        { timeout: 5000 },
+        (error, stdout) => {
+          if (error && !stdout) {
+            resolve({ error: error.message });
+          } else {
+            const lines = (stdout ?? '').trim().split('\n').filter(Boolean);
+            let modified = 0;
+            let added = 0;
+            let deleted = 0;
+            let untracked = 0;
+            const files: Array<{ status: string; path: string }> = [];
+
+            for (const line of lines) {
+              const statusCode = line.substring(0, 2);
+              const filePath = line.substring(3);
+              files.push({ status: statusCode.trim(), path: filePath });
+
+              if (statusCode === '??') {
+                untracked++;
+              } else if (statusCode.includes('D')) {
+                deleted++;
+              } else if (statusCode.includes('A')) {
+                added++;
+              } else {
+                modified++;
+              }
+            }
+
+            resolve({
+              summary: { modified, added, deleted, untracked, files },
+            });
+          }
+        },
+      );
+    });
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+});
+
+interface GitStatusSummary {
+  modified: number;
+  added: number;
+  deleted: number;
+  untracked: number;
+  files: Array<{ status: string; path: string }>;
+}
+
 // --- App Lifecycle ---
 
 // theme:set — sync Electron native theme with renderer

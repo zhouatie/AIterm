@@ -241,3 +241,24 @@ contextBridge.exposeInMainWorld('browserApi', {
     };
   },
 } satisfies BrowserApi);
+
+export interface GitStatusSummary {
+  modified: number;
+  added: number;
+  deleted: number;
+  untracked: number;
+  files: Array<{ status: string; path: string }>;
+}
+
+export interface GitApi {
+  diff(cwd: string): Promise<{ diff?: string; error?: string }>;
+  statusSummary(cwd: string): Promise<{ summary?: GitStatusSummary; error?: string }>;
+}
+
+contextBridge.exposeInMainWorld('gitApi', {
+  diff: (cwd: string) =>
+    ipcRenderer.invoke('git:diff', { cwd }),
+
+  statusSummary: (cwd: string) =>
+    ipcRenderer.invoke('git:status-summary', { cwd }),
+} satisfies GitApi);

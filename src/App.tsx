@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
-import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast, Globe } from 'lucide-react';
+import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from 'react';
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast, Globe, GitCompareArrows } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
 import LiveViewPanel from './components/LiveViewPanel';
 import BrowserPanel from './components/BrowserPanel';
+import GitDiffPanel from './components/GitDiffPanel';
 import SplitLayout from './components/SplitLayout';
 import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
@@ -26,6 +27,7 @@ import {
 } from './utils/terminal-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 import { startRecording, stopLiveRecording, forceCheckout } from './live-view-recorder';
+import type { TerminalSessionInfo } from './preload';
 
 // --- Active Session Context ---
 // Shared between TerminalPanel (writer) and FilePreviewPanel (reader)
@@ -150,8 +152,52 @@ const AppContent: React.FC = () => {
   const [isLiveViewOpen, setIsLiveViewOpen] = useState(false);
   const [liveViewActive, setLiveViewActive] = useState(false);
 
-  // Browser panel state
-  const [isBrowserOpen, setIsBrowserOpen] = useState(false);
+  // Overlay panel state — browser and git diff are mutually exclusive
+  type OverlayPanel = 'none' | 'browser' | 'git-diff';
+  const [activeOverlay, setActiveOverlay] = useState<OverlayPanel>('none');
+
+  // Track the active session's git info for icon state
+  const [activeSessionInfo, setActiveSessionInfo] = useState<TerminalSessionInfo | null>(null);
+  const activeSessionInfoRef = useRef<TerminalSessionInfo | null>(null);
+
+  // Fetch session info when activeSessionId changes
+  useEffect(() => {
+    if (!activeSessionId) {
+      setActiveSessionInfo(null);
+      activeSessionInfoRef.current = null;
+      return;
+    }
+
+    let cancelled = false;
+    window.terminalApi.getSessionInfo(activeSessionId).then((info) => {
+      if (!cancelled) {
+        setActiveSessionInfo(info);
+        activeSessionInfoRef.current = info;
+      }
+    });
+
+    // Also listen for session info changes (e.g. cwd change within same session)
+    const unsubscribe = window.terminalApi.onSessionInfoChanged((info) => {
+      if (info.id === activeSessionId) {
+        setActiveSessionInfo(info);
+        activeSessionInfoRef.current = info;
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [activeSessionId]);
+
+  // Auto-close git diff panel when switching to a non-git session
+  useEffect(() => {
+    if (activeOverlay === 'git-diff' && activeSessionInfo && !activeSessionInfo.isGitRepo) {
+      setActiveOverlay('none');
+    }
+  }, [activeOverlay, activeSessionInfo]);
+
+  const isGitRepo = activeSessionInfo?.isGitRepo ?? false;
 
   // Start/stop rrweb recording in sync with live view active state
   useEffect(() => {
@@ -203,7 +249,7 @@ const AppContent: React.FC = () => {
   }, [registerAction, togglePanel]);
 
   const toggleBrowser = useCallback(() => {
-    setIsBrowserOpen((prev) => !prev);
+    setActiveOverlay((prev) => (prev === 'browser' ? 'none' : 'browser'));
   }, []);
 
   useEffect(() => {
@@ -211,6 +257,17 @@ const AppContent: React.FC = () => {
       toggleBrowser();
     });
   }, [registerAction, toggleBrowser]);
+
+  const toggleGitDiff = useCallback(() => {
+    if (!activeSessionInfoRef.current?.isGitRepo) return;
+    setActiveOverlay((prev) => (prev === 'git-diff' ? 'none' : 'git-diff'));
+  }, []);
+
+  useEffect(() => {
+    return registerAction('toggle-git-diff', () => {
+      toggleGitDiff();
+    });
+  }, [registerAction, toggleGitDiff]);
 
   return (
     <>
@@ -283,18 +340,57 @@ const AppContent: React.FC = () => {
             {liveViewActive && <span className="live-dot" />}
           </div>
 
+          {/* Git Diff panel toggle */}
+          <button
+            onClick={isGitRepo ? toggleGitDiff : undefined}
+            title={
+              isGitRepo
+                ? getIconButtonTooltip({
+                    label: activeOverlay === 'git-diff' ? '关闭 Git Diff' : '打开 Git Diff',
+                    bindings,
+                    actionId: 'toggle-git-diff',
+                  })
+                : '当前目录不是 Git 仓库'
+            }
+            style={{
+              ...toggleButtonStyle,
+              marginLeft: 4,
+              ...(isGitRepo
+                ? activeOverlay === 'git-diff'
+                  ? {
+                      backgroundColor: 'var(--color-surface-content-elevated)',
+                      borderColor: 'var(--color-border-primary)',
+                      color: ICON_COLOR_ACTIVE,
+                      boxShadow: 'var(--color-shadow-soft)',
+                    }
+                  : {}
+                : {
+                    opacity: 0.35,
+                    cursor: 'not-allowed',
+                  }),
+            }}
+            onMouseEnter={(e) => {
+              if (isGitRepo) applyChromeButtonHover(e.currentTarget);
+            }}
+            onMouseLeave={(e) => {
+              if (isGitRepo && activeOverlay !== 'git-diff') resetChromeButtonHover(e.currentTarget);
+            }}
+          >
+            <GitCompareArrows size={16} />
+          </button>
+
           {/* Browser panel toggle */}
           <button
             onClick={toggleBrowser}
             title={getIconButtonTooltip({
-              label: isBrowserOpen ? '关闭浏览器' : '打开浏览器',
+              label: activeOverlay === 'browser' ? '关闭浏览器' : '打开浏览器',
               bindings,
               actionId: 'toggle-browser',
             })}
             style={{
               ...toggleButtonStyle,
               marginLeft: 4,
-              ...(isBrowserOpen
+              ...(activeOverlay === 'browser'
                 ? {
                     backgroundColor: 'var(--color-surface-content-elevated)',
                     borderColor: 'var(--color-border-primary)',
@@ -305,7 +401,7 @@ const AppContent: React.FC = () => {
             }}
             onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
             onMouseLeave={(e) => {
-              if (!isBrowserOpen) resetChromeButtonHover(e.currentTarget);
+              if (activeOverlay !== 'browser') resetChromeButtonHover(e.currentTarget);
             }}
           >
             <Globe size={16} />
@@ -330,8 +426,14 @@ const AppContent: React.FC = () => {
             leftCollapsed={!panelVisible}
           />
           <BrowserPanel
-            isOpen={isBrowserOpen}
-            onClose={() => setIsBrowserOpen(false)}
+            isOpen={activeOverlay === 'browser'}
+            onClose={() => setActiveOverlay('none')}
+          />
+          <GitDiffPanel
+            isOpen={activeOverlay === 'git-diff'}
+            onClose={() => setActiveOverlay('none')}
+            cwd={activeSessionInfo?.cwd ?? null}
+            branchName={activeSessionInfo?.branchName ?? null}
           />
         </div>
       </div>
