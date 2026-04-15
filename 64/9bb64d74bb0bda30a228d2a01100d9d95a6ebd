@@ -1,0 +1,38 @@
+openspec/specs/browser-url-autocomplete/spec.md
+  796293a96d698ec9 1-101
+src/components/BrowserPanel.tsx
+  0f8d0e48d5d7b8ed 1,8-9,25-30,43-44,76-118,121-140,205-206,208-212,223-255,309-316,326-327,330-358,424-425,432-455,457-458,460-466,469,495-507,517-521,789-889
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "649bb64d74bb0bda30a228d2a01100d9d95a6ebd",
+  "prompts": {
+    "0f8d0e48d5d7b8ed": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27038c754ffe3xE8ZacApLFD3X",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 625,
+      "total_deletions": 47,
+      "accepted_lines": 313,
+      "overriden_lines": 0
+    },
+    "796293a96d698ec9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26fd25f13ffeojbF1Hogsmqc8g",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 101,
+      "total_deletions": 0,
+      "accepted_lines": 101,
+      "overriden_lines": 0
+    }
+  }
+}
