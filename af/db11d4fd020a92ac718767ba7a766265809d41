@@ -1,0 +1,35 @@
+openspec/changes/archive/2026-04-15-terminal-tab-drag-across-workspaces/.openspec.yaml
+  46bf29425ba6feba 1-2
+openspec/changes/archive/2026-04-15-terminal-tab-drag-across-workspaces/proposal.md
+  46bf29425ba6feba 1-27
+src/components/TerminalPanel.tsx
+  46bf29425ba6feba 54-63,229-314,326-327,341-342,937-953,955-1049,1282-1287,1297-1299,1432-1441,1457,1461,1466-1469,1492-1495,1502-1509,1514-1515,1518,1520,1523,1527-1565,1567-1641
+openspec/changes/archive/2026-04-15-terminal-tab-drag-across-workspaces/specs/terminal-tabs/spec.md
+  46bf29425ba6feba 1-36
+openspec/changes/archive/2026-04-15-terminal-tab-drag-across-workspaces/tasks.md
+  46bf29425ba6feba 1-17
+openspec/specs/terminal-tabs/spec.md
+  46bf29425ba6feba 475-508
+openspec/changes/archive/2026-04-15-terminal-tab-drag-across-workspaces/design.md
+  46bf29425ba6feba 1-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "afdb11d4fd020a92ac718767ba7a766265809d41",
+  "prompts": {
+    "46bf29425ba6feba": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d902d-f696-7582-8a2a-84aa99dbb443",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 593,
+      "total_deletions": 127,
+      "accepted_lines": 591,
+      "overriden_lines": 0
+    }
+  }
+}
