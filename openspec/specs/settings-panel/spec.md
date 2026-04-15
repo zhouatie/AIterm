@@ -23,7 +23,7 @@
 
 #### Scenario: 展示可配置动作
 - **WHEN** 用户打开设置面板
-- **THEN** 系统 SHALL 展示文件树展示/收起、terminal tab 侧边栏展示/收起、新增 workspace、当前激活 workspace 下新增 terminal tab、重命名当前 workspace、重命名当前二级 terminal tab、关闭当前二级 terminal tab、关闭当前 workspace、上一个 terminal tab、下一个 terminal tab这 10 个动作的快捷键配置项
+- **THEN** 系统 SHALL 展示文件树展示/收起、terminal tab 侧边栏展示/收起、浏览器面板展示/收起、文件预览内容查找、新增 workspace、当前激活 workspace 下新增 terminal tab、重命名当前 workspace、重命名当前二级 terminal tab、关闭当前二级 terminal tab、关闭当前 workspace、上一个 terminal tab、下一个 terminal tab、跳转到第 1 个至第 9 个 terminal tab 这些动作的快捷键配置项
 
 #### Scenario: 展示当前生效值
 - **WHEN** 设置面板渲染快捷键配置项
@@ -81,4 +81,3 @@
 #### Scenario: 未配置时行为不变
 - **WHEN** 用户未配置任何隐藏文件夹（列表为空）
 - **THEN** 文件树 SHALL 保持与原有版本完全一致的展示行为
-

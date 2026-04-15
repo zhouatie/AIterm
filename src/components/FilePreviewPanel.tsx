@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Search, X } from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownPreview from './MarkdownPreview';
 import CodePreview from './CodePreview';
 import SplitLayout from './SplitLayout';
 import { isMarkdownFile } from '../utils/file-types';
 import { toggleMarkdownTaskMarker } from '../utils/markdown-task';
+import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
+import { useKeyboardShortcuts } from '../ShortcutContext';
 
 interface FilePreviewPanelProps {
   activeSessionId: string | null;
@@ -47,6 +49,7 @@ function readFileTreeVisible(): boolean {
 }
 
 const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, visible = true }) => {
+  const { bindings, registerAction } = useKeyboardShortcuts();
   const [rootPath, setRootPath] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
@@ -56,12 +59,36 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [refreshKey, setRefreshKey] = useState(0);
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [fileTreeVisible, setFileTreeVisible] = useState(readFileTreeVisible);
+  const [isFindOpen, setIsFindOpen] = useState(false);
+  const [findQuery, setFindQuery] = useState('');
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+  const [searchMatchCount, setSearchMatchCount] = useState(0);
   const fileTreeActive = visible && fileTreeVisible;
   const rootPathRef = useRef(rootPath);
   const snapshotRef = useRef<Record<string, FilePreviewSnapshot>>({});
   const fileLoadTokenRef = useRef(0);
+  const findInputRef = useRef<HTMLInputElement | null>(null);
   rootPathRef.current = rootPath;
   const prevFileTreeActiveRef = useRef(fileTreeActive);
+
+  const resetFindState = useCallback(() => {
+    setIsFindOpen(false);
+    setFindQuery('');
+    setCurrentSearchIndex(0);
+    setSearchMatchCount(0);
+  }, []);
+
+  const openFind = useCallback(() => {
+    if (!selectedFile || fileContent === null) return;
+    setIsFindOpen(true);
+    setCurrentSearchIndex(0);
+  }, [fileContent, selectedFile]);
+
+  const findActionTitle = getIconButtonTooltip({
+    label: '查找',
+    bindings,
+    actionId: 'find-in-file-preview',
+  });
 
   const restoreSnapshot = useCallback((nextRootPath: string) => {
     fileLoadTokenRef.current += 1;
@@ -73,7 +100,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     setWritingTask(false);
     setExpandedPaths(snapshot?.expandedPaths ?? []);
     setLoadingFile(false);
-  }, []);
+    resetFindState();
+  }, [resetFindState]);
 
   useEffect(() => {
     if (!rootPath) return;
@@ -83,6 +111,18 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
       expandedPaths,
     };
   }, [rootPath, selectedFile, fileContent, expandedPaths]);
+
+  useEffect(() => {
+    return registerAction('find-in-file-preview', () => {
+      openFind();
+    });
+  }, [openFind, registerAction]);
+
+  useEffect(() => {
+    if (!isFindOpen) return;
+    findInputRef.current?.focus();
+    findInputRef.current?.select();
+  }, [isFindOpen]);
 
   // Sync root path with active terminal's cwd (on session switch) — only when the tree is active
   useEffect(() => {
@@ -192,6 +232,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     setLoadingFile(true);
     setWriteError(null);
     setWritingTask(false);
+    resetFindState();
     try {
       const result = await window.fileApi.readFile(filePath);
       if (fileLoadTokenRef.current !== loadToken) return;
@@ -208,7 +249,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
         setLoadingFile(false);
       }
     }
-  }, []);
+  }, [resetFindState]);
 
   const handleTaskCheckboxToggle = useCallback(async (taskIndex: number) => {
     if (!selectedFile || fileContent === null || writingTask) return;
@@ -234,6 +275,148 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
       setWritingTask(false);
     }
   }, [fileContent, selectedFile, writingTask]);
+
+  const handleSearchMatchCountChange = useCallback((count: number) => {
+    setSearchMatchCount(count);
+    setCurrentSearchIndex((prev) => {
+      if (count === 0) return 0;
+      return Math.min(prev, count - 1);
+    });
+  }, []);
+
+  const handleSelectPreviousMatch = useCallback(() => {
+    if (searchMatchCount === 0) return;
+    setCurrentSearchIndex((prev) => (prev - 1 + searchMatchCount) % searchMatchCount);
+  }, [searchMatchCount]);
+
+  const handleSelectNextMatch = useCallback(() => {
+    if (searchMatchCount === 0) return;
+    setCurrentSearchIndex((prev) => (prev + 1) % searchMatchCount);
+  }, [searchMatchCount]);
+
+  const findBar = isFindOpen ? (
+    <div
+      style={{
+        position: 'absolute',
+        top: 10,
+        right: 14,
+        zIndex: 20,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '8px 10px',
+        borderRadius: 10,
+        border: '1px solid var(--color-border-primary)',
+        background: 'var(--color-surface-content-elevated)',
+        boxShadow: '0 14px 28px var(--color-shadow)',
+        backdropFilter: 'blur(10px)',
+      }}
+    >
+      <div
+        style={{
+          width: 18,
+          height: 18,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--color-text-muted)',
+        }}
+      >
+        <Search size={14} />
+      </div>
+      <input
+        ref={findInputRef}
+        value={findQuery}
+        onChange={(event) => {
+          setFindQuery(event.target.value);
+          setCurrentSearchIndex(0);
+        }}
+        onKeyDown={(event) => {
+          event.stopPropagation();
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            resetFindState();
+            return;
+          }
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            if (event.shiftKey) {
+              handleSelectPreviousMatch();
+            } else {
+              handleSelectNextMatch();
+            }
+          }
+        }}
+        placeholder="查找当前文件"
+        spellCheck={false}
+        style={{
+          width: 220,
+          border: 'none',
+          outline: 'none',
+          background: 'transparent',
+          color: 'var(--color-text-primary)',
+          fontSize: 13,
+        }}
+      />
+      <div
+        style={{
+          minWidth: 52,
+          textAlign: 'right',
+          color: 'var(--color-text-muted)',
+          fontSize: 12,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {searchMatchCount === 0 ? '0' : `${currentSearchIndex + 1}/${searchMatchCount}`}
+      </div>
+      <button
+        type="button"
+        onClick={handleSelectPreviousMatch}
+        disabled={searchMatchCount === 0}
+        style={{
+          ...treeToggleButtonBaseStyle,
+          width: 22,
+          height: 22,
+          background: 'transparent',
+          boxShadow: 'none',
+          opacity: searchMatchCount === 0 ? 0.4 : 1,
+        }}
+        title="上一个匹配"
+      >
+        <ChevronUp size={14} />
+      </button>
+      <button
+        type="button"
+        onClick={handleSelectNextMatch}
+        disabled={searchMatchCount === 0}
+        style={{
+          ...treeToggleButtonBaseStyle,
+          width: 22,
+          height: 22,
+          background: 'transparent',
+          boxShadow: 'none',
+          opacity: searchMatchCount === 0 ? 0.4 : 1,
+        }}
+        title="下一个匹配"
+      >
+        <ChevronDown size={14} />
+      </button>
+      <button
+        type="button"
+        onClick={resetFindState}
+        style={{
+          ...treeToggleButtonBaseStyle,
+          width: 22,
+          height: 22,
+          background: 'transparent',
+          boxShadow: 'none',
+        }}
+        title="关闭查找"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  ) : null;
 
   const fileTreePane = (
     <div
@@ -277,7 +460,26 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   );
 
   const previewPane = (
-    <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
+      {selectedFile && !loadingFile && findBar}
+      {!isFindOpen && selectedFile && !loadingFile && (
+        <button
+          type="button"
+          onClick={openFind}
+          title={findActionTitle}
+          style={{
+            ...treeToggleButtonBaseStyle,
+            position: 'absolute',
+            top: 10,
+            right: 14,
+            zIndex: 15,
+            background: 'var(--color-surface-content-elevated)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <Search size={14} />
+        </button>
+      )}
       {loadingFile ? (
         <div
           style={{
@@ -292,7 +494,13 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
           Loading...
         </div>
       ) : selectedFile && !isMarkdownFile(selectedFile) ? (
-        <CodePreview content={fileContent} filePath={selectedFile} />
+        <CodePreview
+          content={fileContent}
+          filePath={selectedFile}
+          searchQuery={findQuery}
+          currentSearchIndex={currentSearchIndex}
+          onSearchMatchCountChange={handleSearchMatchCountChange}
+        />
       ) : (
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
           {writeError && (
@@ -319,6 +527,9 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             filePath={selectedFile}
             onTaskCheckboxToggle={handleTaskCheckboxToggle}
             taskCheckboxDisabled={writingTask}
+            searchQuery={findQuery}
+            currentSearchIndex={currentSearchIndex}
+            onSearchMatchCountChange={handleSearchMatchCountChange}
           />
         </div>
       )}

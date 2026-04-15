@@ -430,7 +430,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   marginBottom: 18,
                 }}
               >
-                支持配置文件树展示/收起，以及 terminal 的创建、重命名、关闭和 tab 切换快捷键。
+                支持配置文件树展示/收起、文件预览内容查找，以及 terminal 的创建、重命名、关闭和 tab 切换快捷键。
                 设置入口固定为 <strong style={{ color: 'var(--color-text-primary)' }}>Command + ,</strong>。
               </div>
 

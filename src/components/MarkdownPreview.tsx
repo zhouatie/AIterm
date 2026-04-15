@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import {
+  applyPreviewFindHighlights,
+  clearPreviewFindHighlights,
+} from '../utils/preview-find';
 
 interface MarkdownPreviewProps {
   content: string | null;
   filePath: string | null;
   onTaskCheckboxToggle?: (taskIndex: number) => void;
   taskCheckboxDisabled?: boolean;
+  searchQuery?: string;
+  currentSearchIndex?: number;
+  onSearchMatchCountChange?: (count: number) => void;
 }
 
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
@@ -15,7 +22,34 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   filePath,
   onTaskCheckboxToggle,
   taskCheckboxDisabled = false,
+  searchQuery = '',
+  currentSearchIndex = 0,
+  onSearchMatchCountChange,
 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const matches = applyPreviewFindHighlights({
+      root: container,
+      query: searchQuery,
+      currentIndex: currentSearchIndex,
+    });
+    onSearchMatchCountChange?.(matches.length);
+
+    const activeMatch = matches[currentSearchIndex] ?? matches[0];
+    activeMatch?.scrollIntoView({
+      block: 'center',
+      inline: 'nearest',
+    });
+
+    return () => {
+      clearPreviewFindHighlights(container);
+    };
+  }, [content, currentSearchIndex, onSearchMatchCountChange, searchQuery]);
+
   if (!content || !filePath) {
     return (
       <div
@@ -38,6 +72,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
 
   return (
     <div
+      ref={containerRef}
       style={{
         height: '100%',
         overflowY: 'auto',

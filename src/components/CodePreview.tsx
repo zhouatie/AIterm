@@ -1,17 +1,53 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { getLanguageByExtension } from '../utils/file-types';
+import {
+  applyPreviewFindHighlights,
+  clearPreviewFindHighlights,
+} from '../utils/preview-find';
 
 interface CodePreviewProps {
   content: string | null;
   filePath: string | null;
+  searchQuery?: string;
+  currentSearchIndex?: number;
+  onSearchMatchCountChange?: (count: number) => void;
 }
 
-const CodePreview: React.FC<CodePreviewProps> = ({ content, filePath }) => {
+const CodePreview: React.FC<CodePreviewProps> = ({
+  content,
+  filePath,
+  searchQuery = '',
+  currentSearchIndex = 0,
+  onSearchMatchCountChange,
+}) => {
   const language = useMemo(
     () => (filePath ? getLanguageByExtension(filePath) : null),
     [filePath],
   );
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const matches = applyPreviewFindHighlights({
+      root: container,
+      query: searchQuery,
+      currentIndex: currentSearchIndex,
+    });
+    onSearchMatchCountChange?.(matches.length);
+
+    const activeMatch = matches[currentSearchIndex] ?? matches[0];
+    activeMatch?.scrollIntoView({
+      block: 'center',
+      inline: 'nearest',
+    });
+
+    return () => {
+      clearPreviewFindHighlights(container);
+    };
+  }, [content, currentSearchIndex, onSearchMatchCountChange, searchQuery]);
 
   if (!content || !filePath) {
     return (
@@ -33,6 +69,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({ content, filePath }) => {
 
   return (
     <div
+      ref={containerRef}
       style={{
         height: '100%',
         overflowY: 'auto',

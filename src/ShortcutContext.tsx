@@ -12,6 +12,7 @@ export type ShortcutActionId =
   | 'toggle-file-tree'
   | 'toggle-terminal-sidebar'
   | 'toggle-browser'
+  | 'find-in-file-preview'
   | 'create-workspace'
   | 'create-terminal-tab'
   | 'rename-current-workspace'
@@ -69,6 +70,11 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
     id: 'toggle-browser',
     title: '浏览器面板展示/收起',
     description: '切换内嵌浏览器面板的显示状态',
+  },
+  {
+    id: 'find-in-file-preview',
+    title: '文件预览内容查找',
+    description: '在右侧文件预览区域中查找当前文件内容',
   },
   {
     id: 'create-workspace',
@@ -161,6 +167,7 @@ export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindings = {
   'toggle-file-tree': 'Meta+S',
   'toggle-terminal-sidebar': 'Meta+B',
   'toggle-browser': 'Meta+L',
+  'find-in-file-preview': 'Meta+F',
   'create-workspace': 'Meta+N',
   'create-terminal-tab': 'Meta+T',
   'rename-current-workspace': 'Meta+Shift+R',
