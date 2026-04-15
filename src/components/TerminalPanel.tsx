@@ -51,6 +51,16 @@ interface SessionRenameState {
 
 type RenameState = WorkspaceRenameState | SessionRenameState;
 
+interface DragState {
+  sessionId: string;
+  sourceWorkspaceId: string;
+}
+
+interface DropTarget {
+  workspaceId: string;
+  insertIndex: number;
+}
+
 interface TerminalPanelProps {
   initialDirectory?: string;
   onActiveSessionChange?: (sessionId: string) => void;
@@ -216,6 +226,94 @@ function getSessionDisplayLabel(
   return sessionNameOverrides[session.id] || session.displayLabel;
 }
 
+function moveSessionBetweenWorkspaces(
+  workspaces: WorkspaceNode[],
+  dragState: DragState,
+  dropTarget: DropTarget,
+  activeSessionId: string,
+): WorkspaceNode[] {
+  if (dragState.sessionId === '' || dropTarget.workspaceId === '') {
+    return workspaces;
+  }
+
+  const sourceWorkspace = findWorkspaceBySessionId(workspaces, dragState.sessionId);
+  const targetWorkspace = workspaces.find((workspace) => workspace.id === dropTarget.workspaceId);
+  if (!sourceWorkspace || !targetWorkspace) return workspaces;
+
+  const sourceIndex = sourceWorkspace.sessions.findIndex((session) => session.id === dragState.sessionId);
+  if (sourceIndex === -1) return workspaces;
+
+  const movingSession = sourceWorkspace.sessions[sourceIndex];
+  if (!movingSession) return workspaces;
+
+  const sameWorkspace = sourceWorkspace.id === dropTarget.workspaceId;
+  const rawInsertIndex = Math.max(0, Math.min(dropTarget.insertIndex, targetWorkspace.sessions.length));
+  const normalizedInsertIndex = sameWorkspace && rawInsertIndex > sourceIndex
+    ? rawInsertIndex - 1
+    : rawInsertIndex;
+
+  if (sameWorkspace && normalizedInsertIndex === sourceIndex) {
+    return workspaces;
+  }
+
+  const nextWorkspaces: WorkspaceNode[] = [];
+
+  for (const workspace of workspaces) {
+    if (workspace.id === sourceWorkspace.id && workspace.id === dropTarget.workspaceId) {
+      const remainingSessions = workspace.sessions.filter((session) => session.id !== dragState.sessionId);
+      const boundedInsertIndex = Math.max(0, Math.min(normalizedInsertIndex, remainingSessions.length));
+      const nextSessions = [...remainingSessions];
+      nextSessions.splice(boundedInsertIndex, 0, movingSession);
+      nextWorkspaces.push({
+        ...workspace,
+        isExpanded: true,
+        sessions: nextSessions,
+      });
+      continue;
+    }
+
+    if (workspace.id === sourceWorkspace.id) {
+      const remainingSessions = workspace.sessions.filter((session) => session.id !== dragState.sessionId);
+      if (remainingSessions.length === 0) {
+        continue;
+      }
+      nextWorkspaces.push({
+        ...workspace,
+        lastActiveSessionId:
+          workspace.lastActiveSessionId === dragState.sessionId
+            ? resolveWorkspaceActiveSessionId({ ...workspace, sessions: remainingSessions })
+            : workspace.lastActiveSessionId,
+        currentPath:
+          workspace.lastActiveSessionId === dragState.sessionId
+            ? remainingSessions[0]?.cwd || workspace.currentPath
+            : workspace.currentPath,
+        sessions: remainingSessions,
+      });
+      continue;
+    }
+
+    if (workspace.id === dropTarget.workspaceId) {
+      const boundedInsertIndex = Math.max(0, Math.min(rawInsertIndex, workspace.sessions.length));
+      const nextSessions = [...workspace.sessions];
+      nextSessions.splice(boundedInsertIndex, 0, movingSession);
+      nextWorkspaces.push({
+        ...workspace,
+        lastActiveSessionId:
+          activeSessionId === movingSession.id ? movingSession.id : workspace.lastActiveSessionId,
+        currentPath:
+          activeSessionId === movingSession.id ? movingSession.cwd || workspace.currentPath : workspace.currentPath,
+        isExpanded: true,
+        sessions: nextSessions,
+      });
+      continue;
+    }
+
+    nextWorkspaces.push(workspace);
+  }
+
+  return nextWorkspaces;
+}
+
 const TerminalPanel: React.FC<TerminalPanelProps> = ({
   initialDirectory,
   onActiveSessionChange,
@@ -225,6 +323,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const initializedRef = useRef(false);
   const workspacesRef = useRef<WorkspaceNode[]>([]);
   const sessionNameOverridesRef = useRef<Record<string, string>>({});
+  const dragSnapshotRef = useRef<WorkspaceNode[] | null>(null);
+  const didDropRef = useRef(false);
   const workspaceRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const sessionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -238,6 +338,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const [renameState, setRenameState] = useState<RenameState | null>(null);
   const [hoveredWorkspaceId, setHoveredWorkspaceId] = useState<string | null>(null);
   const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [isCmdHeld, setIsCmdHeld] = useState(false);
   const sidebarWidth = sidebarCollapsed ? 0 : SIDEBAR_WIDTH;
   const renameTargetKey = renameState
@@ -832,6 +934,120 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     setRenameState(null);
   }, []);
 
+  const clearDragState = useCallback(() => {
+    setDragState(null);
+    setDropTarget(null);
+    dragSnapshotRef.current = null;
+    didDropRef.current = false;
+  }, []);
+
+  const updateDropTarget = useCallback((nextTarget: DropTarget | null) => {
+    setDropTarget((prev) => {
+      if (!prev && !nextTarget) return prev;
+      if (prev && nextTarget
+        && prev.workspaceId === nextTarget.workspaceId
+        && prev.insertIndex === nextTarget.insertIndex) {
+        return prev;
+      }
+      return nextTarget;
+    });
+  }, []);
+
+  const handleSessionDragStart = useCallback((
+    event: React.DragEvent<HTMLDivElement>,
+    workspaceId: string,
+    sessionId: string,
+  ) => {
+    if (renameState?.type === 'session' && renameState.sessionId === sessionId) {
+      event.preventDefault();
+      return;
+    }
+
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', sessionId);
+    dragSnapshotRef.current = workspacesRef.current;
+    didDropRef.current = false;
+    setDragState({
+      sessionId,
+      sourceWorkspaceId: workspaceId,
+    });
+    updateDropTarget(null);
+  }, [renameState, updateDropTarget]);
+
+  const handleSessionDragEnd = useCallback(() => {
+    if (!didDropRef.current && dragSnapshotRef.current) {
+      setWorkspaces(dragSnapshotRef.current);
+    }
+    clearDragState();
+  }, [clearDragState]);
+
+  const handleSessionDragOver = useCallback((
+    event: React.DragEvent<HTMLDivElement>,
+    workspaceId: string,
+    sessionIndex: number,
+  ) => {
+    if (!dragState) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'move';
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const isAfter = event.clientY >= bounds.top + bounds.height / 2;
+    const nextTarget = {
+      workspaceId,
+      insertIndex: sessionIndex + (isAfter ? 1 : 0),
+    };
+    updateDropTarget(nextTarget);
+    const nextWorkspaces = moveSessionBetweenWorkspaces(
+      workspacesRef.current,
+      dragState,
+      nextTarget,
+      activeSessionId,
+    );
+    if (nextWorkspaces !== workspacesRef.current) {
+      setWorkspaces(nextWorkspaces);
+    }
+  }, [activeSessionId, dragState, updateDropTarget]);
+
+  const handleWorkspaceDragOver = useCallback((
+    event: React.DragEvent<HTMLDivElement>,
+    workspaceId: string,
+    fallbackInsertIndex: number,
+  ) => {
+    if (!dragState) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    const nextTarget = {
+      workspaceId,
+      insertIndex: fallbackInsertIndex,
+    };
+    updateDropTarget(nextTarget);
+    const expandedWorkspaces = workspacesRef.current.map((workspace) =>
+      workspace.id === workspaceId && !workspace.isExpanded
+        ? { ...workspace, isExpanded: true }
+        : workspace,
+    );
+    const nextWorkspaces = moveSessionBetweenWorkspaces(
+      expandedWorkspaces,
+      dragState,
+      nextTarget,
+      activeSessionId,
+    );
+    if (nextWorkspaces !== workspacesRef.current) {
+      setWorkspaces(nextWorkspaces);
+    } else if (expandedWorkspaces !== workspacesRef.current) {
+      setWorkspaces(expandedWorkspaces);
+    }
+  }, [activeSessionId, dragState, updateDropTarget]);
+
+  const handleDrop = useCallback((event: React.DragEvent<HTMLElement>) => {
+    if (!dragState) return;
+    event.preventDefault();
+    event.stopPropagation();
+    didDropRef.current = true;
+    clearDragState();
+  }, [clearDragState, dragState]);
+
   const menuItems: ContextMenuItem[] = (() => {
     if (!menuState) return [];
 
@@ -1063,6 +1279,12 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                       workspaceId: workspace.id,
                     });
                   }}
+                  onDragOver={(event) => {
+                    if (!workspace.isExpanded) {
+                      handleWorkspaceDragOver(event, workspace.id, workspace.sessions.length);
+                    }
+                  }}
+                  onDrop={handleDrop}
                   style={{
                     height: ROW_HEIGHT,
                     display: 'flex',
@@ -1072,7 +1294,9 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                     borderRadius: 10,
                     cursor: 'pointer',
                     backgroundColor:
-                      hoveredWorkspaceId === workspace.id
+                      dragState && dropTarget?.workspaceId === workspace.id && !workspace.isExpanded
+                        ? 'var(--color-sidebar-workspace-hover)'
+                        : hoveredWorkspaceId === workspace.id
                         ? 'var(--color-sidebar-workspace-hover)'
                         : isWorkspaceActive
                         ? 'var(--color-surface-hover-soft)'
@@ -1205,8 +1429,16 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 </div>
 
                 {workspace.isExpanded && (
-                  <div style={{ marginTop: 4, paddingLeft: 10 }}>
-                    {workspace.sessions.map((session) => {
+                  <div
+                    style={{ marginTop: 4, paddingLeft: 10 }}
+                    onDragOver={(event) => {
+                      if (!dragState) return;
+                      if (workspace.sessions.length > 0) return;
+                      handleWorkspaceDragOver(event, workspace.id, 0);
+                    }}
+                    onDrop={handleDrop}
+                  >
+                    {workspace.sessions.map((session, sessionIndex) => {
                       const isActive = session.id === activeSessionId;
                       const attention = attentionBySessionId[session.id];
                       const hasAttention = !!attention;
@@ -1222,13 +1454,19 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                         bindings: isActive ? bindings : undefined,
                         actionId: isActive ? 'close-current-terminal-tab' : undefined,
                       });
+                      const isDraggingSelf = dragState?.sessionId === session.id;
                       return (
                         <div
                           key={session.id}
+                          draggable={!isRenamingSession}
                           ref={(element) => {
                             if (element) sessionRefs.current.set(session.id, element);
                             else sessionRefs.current.delete(session.id);
                           }}
+                          onDragStart={(event) => handleSessionDragStart(event, workspace.id, session.id)}
+                          onDragEnd={handleSessionDragEnd}
+                          onDragOver={(event) => handleSessionDragOver(event, workspace.id, sessionIndex)}
+                          onDrop={handleDrop}
                           onClick={() => {
                             if (isRenamingSession) return;
                             handleSelectSession(session.id);
@@ -1251,147 +1489,156 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                             marginTop: 2,
                             marginBottom: 2,
                             borderRadius: 10,
-                            cursor: 'pointer',
-                            backgroundColor: isActive
+                            cursor: isRenamingSession ? 'text' : 'grab',
+                            backgroundColor: isDraggingSelf
+                              ? 'var(--color-sidebar-item-hover)'
+                              : isActive
                               ? 'var(--color-tab-active-bg)'
                               : isHovered
                               ? 'var(--color-sidebar-item-hover)'
                               : 'transparent',
                             color: isActive ? 'var(--color-text-primary)' : 'var(--color-tab-inactive-text)',
                             userSelect: 'none',
-                            border: isActive ? '1px solid var(--color-tab-active-border)' : '1px solid transparent',
-                            boxShadow: isActive
+                            border: isActive
+                              ? '1px solid var(--color-tab-active-border)'
+                              : isDraggingSelf
+                              ? '1px solid var(--color-border-primary)'
+                              : '1px solid transparent',
+                            boxShadow: isDraggingSelf
+                              ? 'var(--shadow-tab-hover)'
+                              : isActive
                               ? 'var(--shadow-tab-active), var(--color-tab-active-inset)'
                               : isHovered
                               ? 'var(--shadow-tab-hover)'
                               : 'none',
+                            opacity: isDraggingSelf ? 0.72 : 1,
+                            transform: isDraggingSelf ? 'scale(0.985)' : 'scale(1)',
                             backdropFilter: isActive ? 'blur(12px) saturate(150%)' : undefined,
                             WebkitBackdropFilter: isActive ? 'blur(12px) saturate(150%)' : undefined,
-                            transition: 'background-color 0.2s ease-out, border-color 0.2s ease-out, box-shadow 0.2s ease-out, color 0.2s ease-out',
+                            transition: 'background-color 0.12s ease-out, border-color 0.12s ease-out, box-shadow 0.12s ease-out, color 0.12s ease-out, opacity 0.12s ease-out, transform 0.12s ease-out',
                           }}
-                          onMouseEnter={(event) => {
+                          onMouseEnter={() => {
                             setHoveredSessionId(session.id);
                           }}
-                          onMouseLeave={(event) => {
+                          onMouseLeave={() => {
                             setHoveredSessionId((prev) => (prev === session.id ? null : prev));
                           }}
                         >
-                           <span
-                             title={attention?.message}
-                             style={{
-                               width: 6,
-                               height: 6,
-                               borderRadius: '50%',
-                               backgroundColor: hasAttention
-                                 ? 'var(--color-attention)'
-                                 : isActive
-                                 ? 'var(--color-accent-primary)'
-                                 : 'var(--color-tab-inactive-dot)',
-                               boxShadow: hasAttention ? '0 0 0 4px var(--color-attention-soft)' : 'none',
-                               flexShrink: 0,
-                             }}
-                           />
-                           {/* 按住 Command 时显示跳转序号；固定宽度保持布局稳定 */}
-                           <span
-                             style={{
-                               width: '1.25rem',
-                               flexShrink: 0,
-                               fontSize: 10,
-                               fontVariantNumeric: 'tabular-nums',
-                               fontFamily: 'monospace',
-                               color: 'var(--color-text-muted)',
-                               opacity: isCmdHeld ? 0.75 : 0,
-                               textAlign: 'right',
-                               transition: 'opacity 0.1s ease',
-                               lineHeight: 1,
-                             }}
-                           >
-                             {getTabShortcutNumber(session.id)}
-                           </span>
-                          {isRenamingSession ? (
-                            <input
-                              ref={renameInputRef}
-                              value={sessionRenameState?.value || ''}
-                              onChange={(event) =>
-                                setRenameState((prev) =>
-                                  prev ? { ...prev, value: event.target.value } : prev,
-                                )
-                              }
-                              onBlur={handleCommitRename}
-                              onClick={(event) => event.stopPropagation()}
-                              onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                  event.preventDefault();
-                                  handleCommitRename();
+                             <span
+                               title={attention?.message}
+                               style={{
+                                 width: 6,
+                                 height: 6,
+                                 borderRadius: '50%',
+                                 backgroundColor: hasAttention
+                                   ? 'var(--color-attention)'
+                                   : isActive
+                                   ? 'var(--color-accent-primary)'
+                                   : 'var(--color-tab-inactive-dot)',
+                                 boxShadow: hasAttention ? '0 0 0 4px var(--color-attention-soft)' : 'none',
+                                 flexShrink: 0,
+                               }}
+                             />
+                             <span
+                               style={{
+                                 width: '1.25rem',
+                                 flexShrink: 0,
+                                 fontSize: 10,
+                                 fontVariantNumeric: 'tabular-nums',
+                                 fontFamily: 'monospace',
+                                 color: 'var(--color-text-muted)',
+                                 opacity: isCmdHeld ? 0.75 : 0,
+                                 textAlign: 'right',
+                                 transition: 'opacity 0.1s ease',
+                                 lineHeight: 1,
+                               }}
+                             >
+                               {getTabShortcutNumber(session.id)}
+                             </span>
+                            {isRenamingSession ? (
+                              <input
+                                ref={renameInputRef}
+                                value={sessionRenameState?.value || ''}
+                                onChange={(event) =>
+                                  setRenameState((prev) =>
+                                    prev ? { ...prev, value: event.target.value } : prev,
+                                  )
                                 }
-                                if (event.key === 'Escape') {
-                                  event.preventDefault();
-                                  handleCancelRename();
-                                }
-                              }}
-                              style={{
-                                flex: 1,
-                                minWidth: 0,
-                                border: '1px solid var(--color-border-primary)',
-                                borderRadius: 8,
-                                backgroundColor: 'var(--color-surface-content-elevated)',
-                                color: 'var(--color-text-primary)',
-                                fontSize: 12,
-                                padding: '4px 6px',
-                                outline: 'none',
-                              }}
-                            />
-                          ) : (
-                            <span
-                              style={{
-                                flex: 1,
-                                minWidth: 0,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                fontSize: 12.5,
-                                fontWeight: isActive ? 600 : 500,
-                              }}
-                            >
-                              {getSessionDisplayLabel(session, sessionNameOverrides)}
-                            </span>
-                          )}
-                          {!isRenamingSession && (
-                            <button
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleCloseSession(workspace.id, session.id);
-                              }}
-                              title={closeSessionTitle}
-                              style={{
-                                width: 18,
-                                height: 18,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: 'none',
-                                borderRadius: 999,
-                                backgroundColor: 'transparent',
-                                color: 'var(--color-text-muted)',
-                                cursor: isActive || isHovered ? 'pointer' : 'default',
-                                padding: 0,
-                                flexShrink: 0,
-                                opacity: isActive || isHovered ? 1 : 0,
-                                pointerEvents: isActive || isHovered ? 'auto' : 'none',
-                                transition: 'opacity 0.16s ease, background-color 0.16s ease, color 0.16s ease',
-                              }}
-                              onMouseEnter={(event) => {
-                                event.currentTarget.style.backgroundColor = 'var(--color-sidebar-item-hover)';
-                                event.currentTarget.style.color = hasAttention ? 'var(--color-attention)' : 'var(--color-text-primary)';
-                              }}
-                              onMouseLeave={(event) => {
-                                event.currentTarget.style.backgroundColor = 'transparent';
-                                event.currentTarget.style.color = 'var(--color-text-muted)';
-                              }}
-                            >
-                              <X size={12} />
-                            </button>
-                          )}
+                                onBlur={handleCommitRename}
+                                onClick={(event) => event.stopPropagation()}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    handleCommitRename();
+                                  }
+                                  if (event.key === 'Escape') {
+                                    event.preventDefault();
+                                    handleCancelRename();
+                                  }
+                                }}
+                                style={{
+                                  flex: 1,
+                                  minWidth: 0,
+                                  border: '1px solid var(--color-border-primary)',
+                                  borderRadius: 8,
+                                  backgroundColor: 'var(--color-surface-content-elevated)',
+                                  color: 'var(--color-text-primary)',
+                                  fontSize: 12,
+                                  padding: '4px 6px',
+                                  outline: 'none',
+                                }}
+                              />
+                            ) : (
+                              <span
+                                style={{
+                                  flex: 1,
+                                  minWidth: 0,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  fontSize: 12.5,
+                                  fontWeight: isActive ? 600 : 500,
+                                }}
+                              >
+                                {getSessionDisplayLabel(session, sessionNameOverrides)}
+                              </span>
+                            )}
+                            {!isRenamingSession && (
+                              <button
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void handleCloseSession(workspace.id, session.id);
+                                }}
+                                title={closeSessionTitle}
+                                style={{
+                                  width: 18,
+                                  height: 18,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  border: 'none',
+                                  borderRadius: 999,
+                                  backgroundColor: 'transparent',
+                                  color: 'var(--color-text-muted)',
+                                  cursor: isActive || isHovered ? 'pointer' : 'default',
+                                  padding: 0,
+                                  flexShrink: 0,
+                                  opacity: isActive || isHovered ? 1 : 0,
+                                  pointerEvents: isActive || isHovered ? 'auto' : 'none',
+                                  transition: 'opacity 0.16s ease, background-color 0.16s ease, color 0.16s ease',
+                                }}
+                                onMouseEnter={(event) => {
+                                  event.currentTarget.style.backgroundColor = 'var(--color-sidebar-item-hover)';
+                                  event.currentTarget.style.color = hasAttention ? 'var(--color-attention)' : 'var(--color-text-primary)';
+                                }}
+                                onMouseLeave={(event) => {
+                                  event.currentTarget.style.backgroundColor = 'transparent';
+                                  event.currentTarget.style.color = 'var(--color-text-muted)';
+                                }}
+                              >
+                                <X size={12} />
+                              </button>
+                            )}
                         </div>
                       );
                     })}
