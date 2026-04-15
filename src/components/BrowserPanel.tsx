@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
   RotateCw,
   Plus,
   X,
+  Clock,
+  Search,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -20,6 +22,12 @@ interface BrowserTab {
   canGoForward: boolean;
 }
 
+interface HistoryEntry {
+  url: string;
+  title: string;
+  visitedAt: number;
+}
+
 interface BrowserPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -32,6 +40,8 @@ interface BrowserPanelProps {
 const DEFAULT_URL = 'https://www.google.com';
 const TAB_BAR_HEIGHT = 38;
 const NAV_BAR_HEIGHT = 36;
+const HISTORY_KEY = 'browser-url-history';
+const HISTORY_MAX = 1000;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -61,6 +71,71 @@ function resolveInput(raw: string): string {
 
   // Treat as search query
   return `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`;
+}
+
+/** Load browsing history from localStorage. Returns [] on any error. */
+function loadHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? (JSON.parse(raw) as HistoryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Persist history to localStorage. Silently ignores errors. */
+function saveHistory(entries: HistoryEntry[]): void {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+  } catch {
+    // Silent fail — degrade gracefully
+  }
+}
+
+/**
+ * Add or update a URL in history.
+ * - If the URL already exists, updates visitedAt (and title if provided).
+ * - Sorts by visitedAt descending and trims to HISTORY_MAX.
+ */
+function addToHistory(
+  entries: HistoryEntry[],
+  url: string,
+  title: string,
+): HistoryEntry[] {
+  const now = Date.now();
+  const existingIdx = entries.findIndex((e) => e.url === url);
+  let updated: HistoryEntry[];
+  if (existingIdx >= 0) {
+    updated = entries.map((e, i) =>
+      i === existingIdx
+        ? { ...e, title: title || e.title, visitedAt: now }
+        : e,
+    );
+  } else {
+    updated = [{ url, title, visitedAt: now }, ...entries];
+  }
+  updated.sort((a, b) => b.visitedAt - a.visitedAt);
+  return updated.slice(0, HISTORY_MAX);
+}
+
+/**
+ * Fetch search suggestions from DuckDuckGo Autocomplete API.
+ * Returns [] on any error or abort.
+ */
+async function fetchSuggestions(
+  query: string,
+  signal: AbortSignal,
+): Promise<string[]> {
+  try {
+    const res = await fetch(
+      `https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`,
+      { signal },
+    );
+    const data = (await res.json()) as [string, string[]];
+    return Array.isArray(data[1]) ? data[1].slice(0, 4) : [];
+  } catch {
+    return [];
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -127,8 +202,14 @@ const navButtonDisabledStyle: React.CSSProperties = {
   cursor: 'default',
 };
 
-const addressBarStyle: React.CSSProperties = {
+/** Wrapper div around the address bar — gives position:relative context for the dropdown. */
+const addressWrapperStyle: React.CSSProperties = {
   flex: 1,
+  position: 'relative',
+};
+
+const addressBarStyle: React.CSSProperties = {
+  width: '100%',
   height: 26,
   border: '1px solid var(--color-border-primary)',
   borderRadius: 6,
@@ -139,6 +220,39 @@ const addressBarStyle: React.CSSProperties = {
   background: 'var(--color-surface-content)',
   outline: 'none',
   transition: 'border-color 0.15s',
+  boxSizing: 'border-box',
+};
+
+const dropdownStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: '100%',
+  left: 0,
+  right: 0,
+  marginTop: 2,
+  background: 'var(--color-bg-secondary)',
+  border: '1px solid var(--color-border-primary)',
+  borderRadius: 6,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+  zIndex: 100,
+  overflow: 'hidden',
+};
+
+const dropdownItemStyle = (active: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  padding: '6px 10px',
+  fontSize: 12,
+  cursor: 'pointer',
+  color: 'var(--color-text-primary)',
+  background: active ? 'var(--color-bg-hover)' : 'transparent',
+  transition: 'background 0.1s',
+});
+
+const dropdownDividerStyle: React.CSSProperties = {
+  height: 1,
+  background: 'var(--color-border-primary)',
+  margin: '2px 0',
 };
 
 const tabStyle = (isActive: boolean): React.CSSProperties => ({
@@ -192,6 +306,14 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
   // Address bar local state (editable, syncs with active tab URL)
   const [addressValue, setAddressValue] = useState(DEFAULT_URL);
 
+  // --- History & autocomplete state ---
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [originalInput, setOriginalInput] = useState('');
+  const [debouncedInput, setDebouncedInput] = useState('');
+
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
   // Sync address bar when active tab changes or its URL changes
@@ -201,7 +323,39 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
     } else {
       setAddressValue('');
     }
+    setShowDropdown(false);
+    setActiveIndex(-1);
   }, [activeTab?.id, activeTab?.url]);
+
+  // Debounce address input before triggering suggestion fetch
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedInput(addressValue), 300);
+    return () => clearTimeout(timer);
+  }, [addressValue]);
+
+  // Fetch search suggestions when debounced input changes
+  useEffect(() => {
+    if (!debouncedInput.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const controller = new AbortController();
+    fetchSuggestions(debouncedInput, controller.signal).then(setSuggestions);
+    return () => controller.abort();
+  }, [debouncedInput]);
+
+  // History entries that match the current address input (synchronous, max 4)
+  const filteredHistory = useMemo(() => {
+    if (!addressValue.trim()) return [];
+    const q = addressValue.toLowerCase();
+    return history
+      .filter(
+        (e) =>
+          e.url.toLowerCase().includes(q) ||
+          e.title.toLowerCase().includes(q),
+      )
+      .slice(0, 4);
+  }, [history, addressValue]);
 
   // -----------------------------------------------------------------------
   // Tab operations
@@ -267,18 +421,52 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
       }
       updateTab(activeTabId, { url, isLoading: true });
       setAddressValue(url);
+      setShowDropdown(false);
+      setActiveIndex(-1);
     },
     [activeTabId, updateTab],
   );
 
   const handleAddressKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
+      // Build the combined candidate list (history first, then suggestions)
+      const candidates = [
+        ...filteredHistory.map((entry) => entry.url),
+        ...suggestions,
+      ];
+
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
-        navigateTo(addressValue);
+        if (candidates.length === 0) return;
+        const next = activeIndex < candidates.length - 1 ? activeIndex + 1 : 0;
+        setActiveIndex(next);
+        setAddressValue(candidates[next]);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (candidates.length === 0) return;
+        if (activeIndex <= 0) {
+          setActiveIndex(-1);
+          setAddressValue(originalInput);
+        } else {
+          const prev = activeIndex - 1;
+          setActiveIndex(prev);
+          setAddressValue(candidates[prev]);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowDropdown(false);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIndex >= 0 && activeIndex < candidates.length) {
+          navigateTo(candidates[activeIndex]);
+        } else {
+          navigateTo(addressValue);
+        }
+        setShowDropdown(false);
+        setActiveIndex(-1);
       }
     },
-    [addressValue, navigateTo],
+    [addressValue, navigateTo, activeIndex, originalInput, filteredHistory, suggestions],
   );
 
   const goBack = useCallback(() => {
@@ -304,6 +492,19 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
     (webview: Electron.WebviewTag, tabId: string) => {
       const onTitleUpdated = (e: Electron.PageTitleUpdatedEvent) => {
         updateTab(tabId, { title: e.title });
+        // Keep history title in sync
+        const url = webview.getURL?.() ?? '';
+        if (url) {
+          setHistory((prev) => {
+            const idx = prev.findIndex((entry) => entry.url === url);
+            if (idx < 0) return prev;
+            const updated = prev.map((entry, i) =>
+              i === idx ? { ...entry, title: e.title } : entry,
+            );
+            saveHistory(updated);
+            return updated;
+          });
+        }
       };
 
       const onDidNavigate = (e: Electron.DidNavigateEvent) => {
@@ -312,6 +513,12 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
           isLoading: false,
           canGoBack: webview.canGoBack(),
           canGoForward: webview.canGoForward(),
+        });
+        // Persist URL to history (title will be updated later by onTitleUpdated)
+        setHistory((prev) => {
+          const updated = addToHistory(prev, e.url, '');
+          saveHistory(updated);
+          return updated;
         });
       };
 
@@ -579,21 +786,107 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
           <RotateCw size={13} />
         </button>
 
-        <input
-          style={addressBarStyle}
-          value={addressValue}
-          onChange={(e) => setAddressValue(e.target.value)}
-          onKeyDown={handleAddressKeyDown}
-          onFocus={(e) => {
-            e.currentTarget.select();
-            e.currentTarget.style.borderColor = 'var(--color-border-focus)';
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = 'var(--color-border-primary)';
-          }}
-          placeholder="输入网址或搜索内容"
-          spellCheck={false}
-        />
+        {/* Address bar with autocomplete dropdown */}
+        <div style={addressWrapperStyle}>
+          <input
+            style={addressBarStyle}
+            value={addressValue}
+            onChange={(e) => {
+              const val = e.target.value;
+              setAddressValue(val);
+              setOriginalInput(val);
+              setActiveIndex(-1);
+              setShowDropdown(val.trim().length > 0);
+            }}
+            onKeyDown={handleAddressKeyDown}
+            onFocus={(e) => {
+              e.currentTarget.select();
+              e.currentTarget.style.borderColor = 'var(--color-border-focus)';
+              if (addressValue.trim()) {
+                setOriginalInput(addressValue);
+                setShowDropdown(true);
+              }
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'var(--color-border-primary)';
+              // Delay so click events on dropdown items fire first
+              setTimeout(() => setShowDropdown(false), 150);
+            }}
+            placeholder="输入网址或搜索内容"
+            spellCheck={false}
+          />
+
+          {/* Autocomplete dropdown */}
+          {showDropdown && (filteredHistory.length > 0 || suggestions.length > 0) && (
+            <div style={dropdownStyle}>
+              {/* History candidates */}
+              {filteredHistory.map((entry, i) => (
+                <div
+                  key={entry.url}
+                  style={dropdownItemStyle(activeIndex === i)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    navigateTo(entry.url);
+                    setShowDropdown(false);
+                  }}
+                  onMouseEnter={() => setActiveIndex(i)}
+                  onMouseLeave={() => setActiveIndex(-1)}
+                >
+                  <Clock
+                    size={12}
+                    style={{ flexShrink: 0, color: 'var(--color-text-secondary)' }}
+                  />
+                  <span
+                    style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {entry.url}
+                  </span>
+                </div>
+              ))}
+
+              {/* Divider between history and suggestions */}
+              {filteredHistory.length > 0 && suggestions.length > 0 && (
+                <div style={dropdownDividerStyle} />
+              )}
+
+              {/* Search suggestions */}
+              {suggestions.map((s, i) => {
+                const idx = filteredHistory.length + i;
+                return (
+                  <div
+                    key={s}
+                    style={dropdownItemStyle(activeIndex === idx)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      navigateTo(s);
+                      setShowDropdown(false);
+                    }}
+                    onMouseEnter={() => setActiveIndex(idx)}
+                    onMouseLeave={() => setActiveIndex(-1)}
+                  >
+                    <Search
+                      size={12}
+                      style={{ flexShrink: 0, color: 'var(--color-text-secondary)' }}
+                    />
+                    <span
+                      style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {s}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         <button
           style={navButtonStyle}
