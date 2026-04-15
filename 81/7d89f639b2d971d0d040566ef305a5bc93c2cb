@@ -1,0 +1,52 @@
+openspec/specs/git-diff-panel/spec.md
+  9e85730d1357787f 1-89
+src/main.ts
+  5f9465f493023ab6 1069-1149
+openspec/specs/keyboard-shortcuts/spec.md
+  9e85730d1357787f 32
+package.json
+  5f9465f493023ab6 46-47
+src/preload.ts
+  5f9465f493023ab6 244-264
+src/components/GitDiffPanel.tsx
+  5f9465f493023ab6 1-521
+src/ShortcutContext.tsx
+  5f9465f493023ab6 15,76-79,176
+src/global.d.ts
+  5f9465f493023ab6 8,26
+src/App.tsx
+  5f9465f493023ab6 1-2,8,30,155-200,252,261-270,343-381,386,393,404,429-436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "817d89f639b2d971d0d040566ef305a5bc93c2cb",
+  "prompts": {
+    "5f9465f493023ab6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26ecfd9e8ffepNXeFjFWjoypGZ",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1134,
+      "total_deletions": 119,
+      "accepted_lines": 746,
+      "overriden_lines": 0
+    },
+    "9e85730d1357787f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26e54ad76ffe0PlGYBWOpyTApw",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 90,
+      "total_deletions": 0,
+      "accepted_lines": 90,
+      "overriden_lines": 0
+    }
+  }
+}
