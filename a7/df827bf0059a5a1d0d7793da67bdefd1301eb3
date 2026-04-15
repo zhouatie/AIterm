@@ -1,0 +1,37 @@
+openspec/changes/archive/2026-04-15-fix-file-tree-context-menu-overflow/design.md
+  ae7670b9bc8f0bad 1-49
+openspec/changes/archive/2026-04-15-fix-file-tree-context-menu-overflow/specs/file-preview/spec.md
+  ae7670b9bc8f0bad 1-29
+openspec/specs/file-preview/spec.md
+  ae7670b9bc8f0bad 331-338
+openspec/changes/archive/2026-04-15-fix-file-tree-context-menu-overflow/tasks.md
+  ae7670b9bc8f0bad 1-16
+src/components/FileTree.tsx
+  ae7670b9bc8f0bad 15,213,559,778-791,836,891
+src/components/ContextMenu.tsx
+  ae7670b9bc8f0bad 16-22,29,121,140-144,147-154,156-157
+openspec/changes/archive/2026-04-15-fix-file-tree-context-menu-overflow/proposal.md
+  ae7670b9bc8f0bad 1-27
+openspec/changes/archive/2026-04-15-fix-file-tree-context-menu-overflow/.openspec.yaml
+  ae7670b9bc8f0bad 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a7df827bf0059a5a1d0d7793da67bdefd1301eb3",
+  "prompts": {
+    "ae7670b9bc8f0bad": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d905a-e4e5-7080-b97d-786ccf460dbc",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 174,
+      "total_deletions": 11,
+      "accepted_lines": 174,
+      "overriden_lines": 0
+    }
+  }
+}
