@@ -1,0 +1,70 @@
+src/components/GitDiffPanel.tsx
+  05c35b5c62ce02e3 2,17,189,307-313
+src/preload.ts
+  05c35b5c62ce02e3 27
+src/App.tsx
+  05c35b5c62ce02e3 437
+src/pty-manager.ts
+  05c35b5c62ce02e3 13,166
+src/components/TerminalPanel.tsx
+  05c35b5c62ce02e3 91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "cf9e9c4b579e5330c86eb2d383da0c2349726cad",
+  "prompts": {
+    "05c35b5c62ce02e3": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26c159e40ffeA5FkAz9YiDphpB",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 506,
+      "total_deletions": 146,
+      "accepted_lines": 506,
+      "overriden_lines": 0
+    },
+    "0c84074172a7d68b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2735e1479ffeLwOAExNfvtZd1g",
+        "model": "unknown"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 143,
+      "overriden_lines": 0
+    },
+    "20ae78f0abbc7231": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_273539525ffeMM3xPU3aUDtw7K",
+        "model": "unknown"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 1
+    },
+    "2d2e5f2b2a5b5eb3": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2735abe74ffe8EaprAadBWwaPr",
+        "model": "unknown"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 11
+    }
+  }
+}
