@@ -24,6 +24,7 @@ export interface TerminalSessionInfo {
   cwd: string;
   isGitRepo: boolean;
   branchName: string | null;
+  gitRoot: string | null;
   displayLabel: string;
 }
 

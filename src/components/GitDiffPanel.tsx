@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Loader2, GitBranch, FileText, FilePlus, FileX, FileEdit, File } from 'lucide-react';
+import { X, Loader2, GitBranch, FileText, FilePlus, FileX, FileEdit, File, FolderGit } from 'lucide-react';
 import { DiffView, DiffModeEnum } from '@git-diff-view/react';
 import '@git-diff-view/react/styles/diff-view-pure.css';
 import { useTheme } from '../ThemeContext';
@@ -14,6 +14,7 @@ interface GitDiffPanelProps {
   onClose: () => void;
   cwd: string | null;
   branchName: string | null;
+  gitRoot: string | null;
 }
 
 interface FileDiff {
@@ -185,6 +186,7 @@ const GitDiffPanel: React.FC<GitDiffPanelProps> = ({
   onClose,
   cwd,
   branchName,
+  gitRoot,
 }) => {
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -302,6 +304,13 @@ const GitDiffPanel: React.FC<GitDiffPanelProps> = ({
     <div style={panelContainerStyle(isOpen)}>
       {/* Header */}
       <div style={headerStyle}>
+        {gitRoot && (
+          <span style={{ ...badgeStyle, fontFamily: 'var(--font-mono, monospace)', opacity: 0.85 }}>
+            <FolderGit size={12} />
+            {gitRoot}
+          </span>
+        )}
+
         {branchName && (
           <span style={badgeStyle}>
             <GitBranch size={12} />

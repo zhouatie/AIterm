@@ -10,6 +10,7 @@ export interface TerminalSessionInfo {
   cwd: string;
   isGitRepo: boolean;
   branchName: string | null;
+  gitRoot: string | null;
   displayLabel: string;
 }
 
@@ -71,6 +72,7 @@ async function getPathInfo(cwd: string): Promise<Omit<TerminalSessionInfo, 'id'>
 
   let isGitRepo = false;
   let branchName: string | null = null;
+  let gitRoot: string | null = null;
 
   try {
     const { stdout } = await execFileAsync(
@@ -94,12 +96,24 @@ async function getPathInfo(cwd: string): Promise<Omit<TerminalSessionInfo, 'id'>
     } catch {
       branchName = null;
     }
+
+    try {
+      const { stdout } = await execFileAsync(
+        'git',
+        ['-C', cwd, 'rev-parse', '--show-toplevel'],
+        { timeout: 2000 },
+      );
+      gitRoot = stdout.trim() || null;
+    } catch {
+      gitRoot = null;
+    }
   }
 
   const info = {
     cwd,
     isGitRepo,
     branchName,
+    gitRoot,
     displayLabel: branchName || getLastPathSegment(cwd),
   };
   if (!isGitRepo) {
@@ -149,6 +163,7 @@ export function createSession(
       cwd: initialCwd,
       isGitRepo: false,
       branchName: null,
+      gitRoot: null,
       displayLabel: getLastPathSegment(initialCwd),
     },
   };

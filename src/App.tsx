@@ -434,6 +434,7 @@ const AppContent: React.FC = () => {
             onClose={() => setActiveOverlay('none')}
             cwd={activeSessionInfo?.cwd ?? null}
             branchName={activeSessionInfo?.branchName ?? null}
+            gitRoot={activeSessionInfo?.gitRoot ?? null}
           />
         </div>
       </div>

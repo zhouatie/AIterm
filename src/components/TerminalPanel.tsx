@@ -88,6 +88,7 @@ function createPlaceholderSessionInfo(id: string, cwd?: string): TerminalSession
     cwd: resolvedCwd,
     isGitRepo: false,
     branchName: null,
+    gitRoot: null,
     displayLabel: resolvedCwd ? getLastPathSegment(resolvedCwd) : 'terminal',
   };
 }
