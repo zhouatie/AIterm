@@ -24,6 +24,9 @@ import {
   readTerminalStartDirectory,
   saveTerminalStartDirectory,
   TERMINAL_START_DIRECTORY_CHANGED_EVENT,
+  TERMINAL_RENDERER_CHANGED_EVENT,
+  readTerminalRendererPreferWebgl,
+  saveTerminalRendererPreferWebgl,
 } from './utils/terminal-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 import { startRecording, stopLiveRecording, forceCheckout } from './live-view-recorder';
@@ -47,23 +50,28 @@ export const useActiveSession = () => useContext(ActiveSessionContext);
 const ConnectedTerminalPanel: React.FC = () => {
   const { setActiveSessionId } = useActiveSession();
   const [initialDirectory, setInitialDirectory] = useState(readTerminalStartDirectory);
+  const [preferWebglRenderer, setPreferWebglRenderer] = useState(readTerminalRendererPreferWebgl);
 
   useEffect(() => {
-    const handleDirectoryChange = () => {
+    const handleSettingsChange = () => {
       setInitialDirectory(readTerminalStartDirectory());
+      setPreferWebglRenderer(readTerminalRendererPreferWebgl());
     };
 
-    window.addEventListener('storage', handleDirectoryChange);
-    window.addEventListener(TERMINAL_START_DIRECTORY_CHANGED_EVENT, handleDirectoryChange);
+    window.addEventListener('storage', handleSettingsChange);
+    window.addEventListener(TERMINAL_START_DIRECTORY_CHANGED_EVENT, handleSettingsChange);
+    window.addEventListener(TERMINAL_RENDERER_CHANGED_EVENT, handleSettingsChange);
     return () => {
-      window.removeEventListener('storage', handleDirectoryChange);
-      window.removeEventListener(TERMINAL_START_DIRECTORY_CHANGED_EVENT, handleDirectoryChange);
+      window.removeEventListener('storage', handleSettingsChange);
+      window.removeEventListener(TERMINAL_START_DIRECTORY_CHANGED_EVENT, handleSettingsChange);
+      window.removeEventListener(TERMINAL_RENDERER_CHANGED_EVENT, handleSettingsChange);
     };
   }, []);
 
   return (
     <TerminalPanel
       initialDirectory={initialDirectory || undefined}
+      preferWebglRenderer={preferWebglRenderer}
       onActiveSessionChange={setActiveSessionId}
     />
   );
@@ -141,6 +149,9 @@ const AppContent: React.FC = () => {
   });
   const [specDirectoryNames, setSpecDirectoryNames] = useState(readSpecDirectoryNames);
   const [terminalStartDirectory, setTerminalStartDirectory] = useState(readTerminalStartDirectory);
+  const [terminalRendererPreferWebgl, setTerminalRendererPreferWebgl] = useState(
+    readTerminalRendererPreferWebgl,
+  );
   const [hiddenFolderNames, setHiddenFolderNamesState] = useState(getHiddenFolderNames);
   const fileTreeToggleTitle = getIconButtonTooltip({
     label: panelVisible ? '收起文件树' : '展开文件树',
@@ -235,6 +246,11 @@ const AppContent: React.FC = () => {
   const handleSaveTerminalStartDirectory = useCallback((value: string) => {
     saveTerminalStartDirectory(value);
     setTerminalStartDirectory(readTerminalStartDirectory());
+  }, []);
+
+  const handleSaveTerminalRendererPreferWebgl = useCallback((value: boolean) => {
+    saveTerminalRendererPreferWebgl(value);
+    setTerminalRendererPreferWebgl(readTerminalRendererPreferWebgl());
   }, []);
 
   const handleSaveHiddenFolderNames = useCallback((names: string[]) => {
@@ -444,10 +460,12 @@ const AppContent: React.FC = () => {
         bindings={bindings}
         specDirectoryNames={specDirectoryNames}
         terminalStartDirectory={terminalStartDirectory}
+        terminalRendererPreferWebgl={terminalRendererPreferWebgl}
         hiddenFolderNames={hiddenFolderNames}
         onSave={saveBindings}
         onSaveSpecDirectoryNames={handleSaveSpecDirectoryNames}
         onSaveTerminalStartDirectory={handleSaveTerminalStartDirectory}
+        onSaveTerminalRendererPreferWebgl={handleSaveTerminalRendererPreferWebgl}
         onSaveHiddenFolderNames={handleSaveHiddenFolderNames}
         onClose={closeSettings}
       />

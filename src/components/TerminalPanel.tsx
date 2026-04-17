@@ -63,6 +63,7 @@ interface DropTarget {
 
 interface TerminalPanelProps {
   initialDirectory?: string;
+  preferWebglRenderer?: boolean;
   onActiveSessionChange?: (sessionId: string) => void;
 }
 
@@ -317,6 +318,7 @@ function moveSessionBetweenWorkspaces(
 
 const TerminalPanel: React.FC<TerminalPanelProps> = ({
   initialDirectory,
+  preferWebglRenderer = true,
   onActiveSessionChange,
 }) => {
   const { bindings, registerAction } = useKeyboardShortcuts();
@@ -1713,6 +1715,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
               key={session.id}
               sessionId={session.id}
               isActive={session.id === activeSessionId}
+              preferWebglRenderer={preferWebglRenderer}
             />
           )),
         )}

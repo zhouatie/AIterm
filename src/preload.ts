@@ -7,9 +7,12 @@ export interface TerminalApi {
   resize(id: string, cols: number, rows: number): void;
   dispose(id: string): Promise<void>;
   getSessionInfo(id: string): Promise<TerminalSessionInfo | null>;
-  onOutput(callback: (data: { id: string; data: string }) => void): () => void;
+  attachOutput(id: string): Promise<{ bufferedData: string }>;
+  detachOutput(id: string): void;
+  onOutput(id: string, callback: (data: string) => void): () => void;
   onExit(
-    callback: (data: { id: string; exitCode: number; signal?: number }) => void,
+    id: string,
+    callback: (data: { exitCode: number; signal?: number }) => void,
   ): () => void;
   onSessionInfoChanged(callback: (data: TerminalSessionInfo) => void): () => void;
   onAttention(callback: (data: TerminalAttention) => void): () => void;
@@ -81,31 +84,37 @@ contextBridge.exposeInMainWorld('terminalApi', {
   getSessionInfo: (id: string) =>
     ipcRenderer.invoke('terminal:getSessionInfo', { id }),
 
-  onOutput: (callback: (data: { id: string; data: string }) => void) => {
+  attachOutput: (id: string) =>
+    ipcRenderer.invoke('terminal:output:attach', { id }),
+
+  detachOutput: (id: string) =>
+    ipcRenderer.send('terminal:output:detach', { id }),
+
+  onOutput: (id: string, callback: (data: string) => void) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
-      data: { id: string; data: string },
+      data: string,
     ) => callback(data);
-    ipcRenderer.on('terminal:output', listener);
+    ipcRenderer.on(`terminal:output:${id}`, listener);
     return () => {
-      ipcRenderer.removeListener('terminal:output', listener);
+      ipcRenderer.removeListener(`terminal:output:${id}`, listener);
     };
   },
 
   onExit: (
+    id: string,
     callback: (data: {
-      id: string;
       exitCode: number;
       signal?: number;
     }) => void,
   ) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
-      data: { id: string; exitCode: number; signal?: number },
+      data: { exitCode: number; signal?: number },
     ) => callback(data);
-    ipcRenderer.on('terminal:exit', listener);
+    ipcRenderer.on(`terminal:exit:${id}`, listener);
     return () => {
-      ipcRenderer.removeListener('terminal:exit', listener);
+      ipcRenderer.removeListener(`terminal:exit:${id}`, listener);
     };
   },
 

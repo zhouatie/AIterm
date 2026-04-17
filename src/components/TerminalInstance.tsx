@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { WebLinksAddon } from '@xterm/addon-web-links';
+import { WebglAddon } from '@xterm/addon-webgl';
 import { useTheme } from '../ThemeContext';
 import type { ITheme } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
@@ -108,12 +109,19 @@ function fitTerminal(terminal: Terminal): void {
 interface TerminalInstanceProps {
   sessionId: string;
   isActive: boolean;
+  preferWebglRenderer: boolean;
 }
 
-const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive }) => {
+const TerminalInstance: React.FC<TerminalInstanceProps> = ({
+  sessionId,
+  isActive,
+  preferWebglRenderer,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const initializedRef = useRef(false);
+  const activeCleanupRef = useRef<(() => void) | null>(null);
+  const initialPreferWebglRendererRef = useRef(preferWebglRenderer);
   const { theme } = useTheme();
 
   // Initialize xterm.js + PTY binding (once per mount)
@@ -132,6 +140,13 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
     terminalRef.current = terminal;
 
     terminal.loadAddon(new WebLinksAddon());
+    if (initialPreferWebglRendererRef.current) {
+      try {
+        terminal.loadAddon(new WebglAddon());
+      } catch (error) {
+        console.warn('[TerminalInstance] Failed to enable WebGL renderer:', error);
+      }
+    }
 
     terminal.open(containerRef.current);
 
@@ -164,26 +179,36 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
       window.terminalApi.resize(sessionId, cols, rows);
     });
 
-    // PTY stdout → xterm.write
-    const removeOutputListener = window.terminalApi.onOutput(
-      ({ id, data }: { id: string; data: string }) => {
-        if (id === sessionId) {
-          terminal.write(data);
-        }
-      },
-    );
-
     // PTY exit → show message
     const removeExitListener = window.terminalApi.onExit(
-      ({ id, exitCode }: { id: string; exitCode: number }) => {
-        if (id === sessionId) {
-          terminal.writeln(`\r\n[Process exited with code ${exitCode}]`);
-        }
+      sessionId,
+      ({ exitCode }: { exitCode: number }) => {
+        terminal.writeln(`\r\n[Process exited with code ${exitCode}]`);
       },
     );
 
-    // Resize handling — use rAF so the browser has finished layout before
-    // we measure container dimensions.
+    return () => {
+      activeCleanupRef.current?.();
+      activeCleanupRef.current = null;
+      removeExitListener();
+      terminal.dispose();
+    };
+  }, [sessionId]);
+
+  useEffect(() => {
+    const terminal = terminalRef.current;
+    const container = containerRef.current;
+    if (!terminal || !container) return;
+
+    activeCleanupRef.current?.();
+    activeCleanupRef.current = null;
+
+    if (!isActive) {
+      window.terminalApi.detachOutput(sessionId);
+      return;
+    }
+
+    let cancelled = false;
     const handleResize = () => {
       requestAnimationFrame(() => {
         if (terminalRef.current) fitTerminal(terminalRef.current);
@@ -191,30 +216,39 @@ const TerminalInstance: React.FC<TerminalInstanceProps> = ({ sessionId, isActive
     };
 
     const resizeObserver = new ResizeObserver(handleResize);
-    resizeObserver.observe(containerRef.current);
+    const removeOutputListener = window.terminalApi.onOutput(sessionId, (data: string) => {
+      terminal.write(data);
+    });
+
+    resizeObserver.observe(container);
     window.addEventListener('resize', handleResize);
 
-    return () => {
+    activeCleanupRef.current = () => {
+      window.terminalApi.detachOutput(sessionId);
       resizeObserver.disconnect();
       window.removeEventListener('resize', handleResize);
       removeOutputListener();
-      removeExitListener();
-      terminal.dispose();
     };
-  }, [sessionId]);
 
-  // Re-fit and focus when becoming active.
-  useEffect(() => {
-    if (isActive && terminalRef.current) {
-      // Small delay to ensure the container is visible before fitting
+    void window.terminalApi.attachOutput(sessionId).then(({ bufferedData }) => {
+      if (cancelled) return;
+      if (bufferedData) {
+        terminal.write(bufferedData);
+      }
       requestAnimationFrame(() => {
-        if (terminalRef.current) {
+        if (terminalRef.current && !cancelled) {
           fitTerminal(terminalRef.current);
           terminalRef.current.focus();
         }
       });
-    }
-  }, [isActive]);
+    });
+
+    return () => {
+      cancelled = true;
+      activeCleanupRef.current?.();
+      activeCleanupRef.current = null;
+    };
+  }, [isActive, sessionId]);
 
   // Dynamically update terminal colorscheme when theme changes (task 4.3)
   useEffect(() => {

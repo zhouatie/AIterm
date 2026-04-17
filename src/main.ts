@@ -48,6 +48,94 @@ let attentionServer: http.Server | null = null;
 let attentionNotifyUrl = '';
 let attentionNotifyToken = '';
 const attentionSessionIds = new Set<string>();
+const TERMINAL_OUTPUT_FLUSH_MS = 16;
+
+interface TerminalStreamState {
+  attached: boolean;
+  pendingOutput: string;
+  liveBatch: string;
+  flushTimer: ReturnType<typeof setTimeout> | null;
+}
+
+const terminalStreamStates = new Map<string, TerminalStreamState>();
+
+function getTerminalOutputChannel(id: string): string {
+  return `terminal:output:${id}`;
+}
+
+function getTerminalExitChannel(id: string): string {
+  return `terminal:exit:${id}`;
+}
+
+function ensureTerminalStreamState(id: string): TerminalStreamState {
+  const existing = terminalStreamStates.get(id);
+  if (existing) return existing;
+
+  const created: TerminalStreamState = {
+    attached: false,
+    pendingOutput: '',
+    liveBatch: '',
+    flushTimer: null,
+  };
+  terminalStreamStates.set(id, created);
+  return created;
+}
+
+function flushTerminalOutput(id: string): void {
+  const state = terminalStreamStates.get(id);
+  if (!state) return;
+
+  const data = state.liveBatch;
+  state.liveBatch = '';
+  if (state.flushTimer) {
+    clearTimeout(state.flushTimer);
+    state.flushTimer = null;
+  }
+
+  if (!data) return;
+
+  if (state.attached && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(getTerminalOutputChannel(id), data);
+    return;
+  }
+
+  state.pendingOutput += data;
+}
+
+function queueTerminalOutput(id: string, data: string): void {
+  if (!data) return;
+
+  const state = ensureTerminalStreamState(id);
+  state.liveBatch += data;
+  if (state.flushTimer) return;
+
+  state.flushTimer = setTimeout(() => {
+    flushTerminalOutput(id);
+  }, TERMINAL_OUTPUT_FLUSH_MS);
+}
+
+function attachTerminalOutput(id: string): string {
+  const state = ensureTerminalStreamState(id);
+  flushTerminalOutput(id);
+  state.attached = true;
+  const bufferedData = state.pendingOutput;
+  state.pendingOutput = '';
+  return bufferedData;
+}
+
+function detachTerminalOutput(id: string): void {
+  const state = terminalStreamStates.get(id);
+  if (!state) return;
+  state.attached = false;
+}
+
+function clearTerminalStreamState(id: string): void {
+  const state = terminalStreamStates.get(id);
+  if (state?.flushTimer) {
+    clearTimeout(state.flushTimer);
+  }
+  terminalStreamStates.delete(id);
+}
 
 function getAttentionNotificationEnv(): PtyNotificationEnv | undefined {
   if (!attentionNotifyUrl || !attentionNotifyToken) return undefined;
@@ -277,15 +365,11 @@ ipcMain.handle(
   'terminal:create',
   (_event, { cols, rows, cwd }: { cols: number; rows: number; cwd?: string }) => {
     const session = createSession(cols, rows, cwd, getAttentionNotificationEnv());
+    ensureTerminalStreamState(session.id);
 
     // Push PTY stdout to renderer
     session.ptyProcess.onData((data: string) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('terminal:output', {
-          id: session.id,
-          data,
-        });
-      }
+      queueTerminalOutput(session.id, data);
     });
 
     // Throttled CWD change detection on PTY output
@@ -313,12 +397,17 @@ ipcMain.handle(
     session.ptyProcess.onExit(
       ({ exitCode, signal }: { exitCode: number; signal?: number }) => {
         clearTerminalAttention(session.id);
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('terminal:exit', {
-            id: session.id,
-            exitCode,
-            signal,
-          });
+        const streamState = terminalStreamStates.get(session.id);
+        if (streamState) {
+          flushTerminalOutput(session.id);
+          if (streamState.attached && mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send(getTerminalExitChannel(session.id), {
+              exitCode,
+              signal,
+            });
+          } else {
+            streamState.pendingOutput += `\r\n[Process exited with code ${exitCode}]`;
+          }
         }
       },
     );
@@ -326,6 +415,14 @@ ipcMain.handle(
     return { id: session.id };
   },
 );
+
+ipcMain.handle('terminal:output:attach', (_event, { id }: { id: string }) => {
+  return { bufferedData: attachTerminalOutput(id) };
+});
+
+ipcMain.on('terminal:output:detach', (_event, { id }: { id: string }) => {
+  detachTerminalOutput(id);
+});
 
 // terminal:input — write user input to PTY stdin
 ipcMain.on(
@@ -347,6 +444,7 @@ ipcMain.on(
 // terminal:dispose — kill PTY and release resources
 ipcMain.handle('terminal:dispose', (_event, { id }: { id: string }) => {
   clearTerminalAttention(id);
+  clearTerminalStreamState(id);
   disposeSession(id);
 });
 

@@ -1,29 +1,4 @@
-# Capability: embedded-terminal
-
-## Purpose
-嵌入式终端能力，负责 PTY 会话的创建/销毁、输入输出传输、尺寸同步以及基于 xterm.js 的终端 UI 渲染。
-## Requirements
-### Requirement: 创建终端会话
-系统 SHALL 支持通过 IPC 创建一个终端会话，在主进程中 spawn 一个 PTY 进程并连接到用户默认 shell。
-
-#### Scenario: 创建终端
-- **WHEN** 渲染进程发送 `terminal:create` 请求
-- **THEN** 主进程 SHALL 使用 node-pty 创建一个新的 PTY 实例，spawn 用户默认 shell（如 `/bin/zsh`），并返回会话标识符
-
-#### Scenario: 继承环境变量
-- **WHEN** PTY 进程被创建
-- **THEN** SHALL 继承当前系统环境变量，确保 PATH 等关键变量可用
-
-### Requirement: 终端输入传输
-用户在 xterm.js 中的按键输入 SHALL 通过 IPC 传输到主进程的 PTY stdin。
-
-#### Scenario: 普通字符输入
-- **WHEN** 用户在终端面板中输入字符
-- **THEN** 字符 SHALL 通过 `terminal:input` IPC 通道发送到对应 PTY 的 stdin
-
-#### Scenario: 特殊按键
-- **WHEN** 用户按下 Ctrl+C、Ctrl+D 等控制键
-- **THEN** 对应的控制序列 SHALL 正确传输到 PTY
+## MODIFIED Requirements
 
 ### Requirement: 终端输出渲染
 PTY 进程的 stdout 输出 SHALL 通过按 session 路由的终端输出链路传输到渲染进程，并由对应 session 的 xterm.js 实例渲染。系统 SHALL 对高频输出进行微批次聚合，以降低无效 IPC 与写入频率，同时保持交互可用性。
@@ -63,17 +38,6 @@ PTY 进程的 stdout 输出 SHALL 通过按 session 路由的终端输出链路�
 - **WHEN** 某个非活跃终端会话重新变为活跃
 - **THEN** 系统 SHALL 在该会话恢复前台交互前同步其最新 cols/rows
 - **AND** 该会话后续显示 SHALL 使用最新终端网格尺寸
-
-### Requirement: 终端会话销毁
-系统 SHALL 支持销毁终端会话，清理 PTY 进程和相关资源。
-
-#### Scenario: 主动销毁
-- **WHEN** 渲染进程发送 `terminal:dispose` 请求
-- **THEN** 主进程 SHALL 终止对应的 PTY 进程并释放资源
-
-#### Scenario: shell 退出
-- **WHEN** PTY 中的 shell 进程正常退出（如用户输入 `exit`）
-- **THEN** 系统 SHALL 通知渲染进程会话已结束
 
 ### Requirement: xterm.js 终端 UI
 渲染进程 SHALL 使用 xterm.js 提供终端 UI，支持基本的终端交互体验。每个终端实例 SHALL 作为独立的可实例化组件存在，支持在同一面板内并行存在多个实例。系统 SHALL 根据终端活跃状态和 renderer 策略减少后台 UI 开销，并在可用时尝试启用 WebGL renderer。
@@ -139,18 +103,3 @@ PTY 进程的 stdout 输出 SHALL 通过按 session 路由的终端输出链路�
 - **WHEN** 终端 renderer 偏好被显式关闭
 - **THEN** 系统 SHALL 使用默认 renderer
 - **AND** 系统 SHALL 不再尝试为该终端实例初始化 WebGL renderer
-
-### Requirement: 终端 CWD 变化通知
-当 PTY 会话的工作目录发生变化时，系统 SHALL 向渲染进程推送通知事件。
-
-#### Scenario: CWD 变化检测
-- **WHEN** PTY 进程产生输出数据
-- **THEN** 主进程 SHALL 以节流方式检查该 PTY 会话的实际工作目录（通过 OS 级查询），若 CWD 与上次已知值不同，SHALL 向渲染进程发送 `terminal:cwdChanged` 事件，包含 `{ id: string, cwd: string }`
-
-#### Scenario: 节流检测频率
-- **WHEN** PTY 进程在短时间内产生大量输出
-- **THEN** CWD 检测 SHALL 被节流为不超过每秒一次，避免过度调用 `lsof` 或类似系统命令
-
-#### Scenario: 渲染进程监听接口
-- **WHEN** 渲染进程需要监听终端 CWD 变化
-- **THEN** `terminalApi` SHALL 暴露 `onCwdChanged(callback)` 方法，返回取消监听函数

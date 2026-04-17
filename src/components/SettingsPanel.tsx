@@ -17,10 +17,12 @@ interface SettingsPanelProps {
   bindings: ShortcutBindings;
   specDirectoryNames: string[];
   terminalStartDirectory: string;
+  terminalRendererPreferWebgl: boolean;
   hiddenFolderNames: string[];
   onSave: (bindings: ShortcutBindings) => void;
   onSaveSpecDirectoryNames: (names: string[]) => void;
   onSaveTerminalStartDirectory: (value: string) => void;
+  onSaveTerminalRendererPreferWebgl: (value: boolean) => void;
   onSaveHiddenFolderNames: (names: string[]) => void;
   onClose: () => void;
 }
@@ -130,16 +132,21 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   bindings,
   specDirectoryNames,
   terminalStartDirectory,
+  terminalRendererPreferWebgl,
   hiddenFolderNames,
   onSave,
   onSaveSpecDirectoryNames,
   onSaveTerminalStartDirectory,
+  onSaveTerminalRendererPreferWebgl,
   onSaveHiddenFolderNames,
   onClose,
 }) => {
   const [draftBindings, setDraftBindings] = useState<ShortcutBindings>(bindings);
   const [draftSpecDirectories, setDraftSpecDirectories] = useState(specDirectoryNames.join('\n'));
   const [draftTerminalStartDirectory, setDraftTerminalStartDirectory] = useState(terminalStartDirectory);
+  const [draftTerminalRendererPreferWebgl, setDraftTerminalRendererPreferWebgl] = useState(
+    terminalRendererPreferWebgl,
+  );
   const [draftHiddenFolderNames, setDraftHiddenFolderNames] = useState<string[]>(hiddenFolderNames);
   const [newHiddenFolderInput, setNewHiddenFolderInput] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ShortcutActionId, string>>>({});
@@ -152,13 +159,21 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setDraftBindings(bindings);
     setDraftSpecDirectories(specDirectoryNames.join('\n'));
     setDraftTerminalStartDirectory(terminalStartDirectory);
+    setDraftTerminalRendererPreferWebgl(terminalRendererPreferWebgl);
     setDraftHiddenFolderNames(hiddenFolderNames);
     setNewHiddenFolderInput('');
     setFieldErrors({});
     setSpecDirectoryError('');
     setTerminalDirectoryError('');
     setSaveFeedback('');
-  }, [isOpen, bindings, specDirectoryNames, terminalStartDirectory, hiddenFolderNames]);
+  }, [
+    isOpen,
+    bindings,
+    specDirectoryNames,
+    terminalStartDirectory,
+    terminalRendererPreferWebgl,
+    hiddenFolderNames,
+  ]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -192,6 +207,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     () => SHORTCUT_ACTIONS.some((action) => draftBindings[action.id] !== bindings[action.id])
       || draftSpecDirectoryKey !== normalizedSpecDirectoryKey
       || normalizedTerminalStartDirectory !== terminalStartDirectory
+      || draftTerminalRendererPreferWebgl !== terminalRendererPreferWebgl
       || [...draftHiddenFolderNames].sort().join('\n') !== [...hiddenFolderNames].sort().join('\n'),
     [
       draftBindings,
@@ -200,6 +216,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       normalizedSpecDirectoryKey,
       normalizedTerminalStartDirectory,
       terminalStartDirectory,
+      draftTerminalRendererPreferWebgl,
+      terminalRendererPreferWebgl,
       draftHiddenFolderNames,
       hiddenFolderNames,
     ],
@@ -240,6 +258,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     onSave(draftBindings);
     onSaveSpecDirectoryNames(normalizedDraftSpecDirectories);
     onSaveTerminalStartDirectory(normalizedTerminalStartDirectory);
+    onSaveTerminalRendererPreferWebgl(draftTerminalRendererPreferWebgl);
     onSaveHiddenFolderNames(draftHiddenFolderNames);
     setSaveFeedback('所有更改已保存');
   };
@@ -494,6 +513,83 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     fontFamily: 'inherit',
                   }}
                 />
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) 260px',
+                  gap: 16,
+                  alignItems: 'start',
+                  padding: '16px 0',
+                  borderTop: '1px solid var(--color-border-light)',
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--color-text-primary)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    Terminal Renderer
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                    默认优先尝试 WebGL renderer；如果关闭，将始终使用默认 renderer。
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={draftTerminalRendererPreferWebgl}
+                  onClick={() => {
+                    setDraftTerminalRendererPreferWebgl((prev) => !prev);
+                    setSaveFeedback('');
+                  }}
+                  style={{
+                    width: '100%',
+                    minHeight: 44,
+                    borderRadius: 12,
+                    border: '1px solid var(--color-border-primary)',
+                    backgroundColor: 'var(--color-bg-secondary)',
+                    color: 'var(--color-text-primary)',
+                    padding: '0 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>{draftTerminalRendererPreferWebgl ? '优先尝试 WebGL renderer' : '始终使用默认 renderer'}</span>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: draftTerminalRendererPreferWebgl ? 'flex-end' : 'flex-start',
+                      width: 34,
+                      height: 20,
+                      borderRadius: 999,
+                      padding: 2,
+                      backgroundColor: draftTerminalRendererPreferWebgl
+                        ? 'var(--color-accent-primary)'
+                        : 'var(--color-border-primary)',
+                      transition: 'background-color 0.16s ease',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        backgroundColor: '#ffffff',
+                      }}
+                    />
+                  </span>
+                </button>
               </div>
 
               <div
