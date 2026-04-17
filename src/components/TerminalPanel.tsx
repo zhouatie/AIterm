@@ -19,6 +19,8 @@ import {
 } from '../utils/tab-persistence';
 import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './ContextMenu';
 import TerminalInstance from './TerminalInstance';
+import type { TerminalInstanceHandle } from './TerminalInstance';
+import TerminalSearchBar from './TerminalSearchBar';
 
 interface WorkspaceNode {
   id: string;
@@ -344,6 +346,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [isCmdHeld, setIsCmdHeld] = useState(false);
+  const [searchBarVisible, setSearchBarVisible] = useState(false);
+  const terminalInstanceRefs = useRef<Map<string, TerminalInstanceHandle>>(new Map());
   const sidebarWidth = sidebarCollapsed ? 0 : SIDEBAR_WIDTH;
   const renameTargetKey = renameState
     ? renameState.type === 'workspace'
@@ -567,10 +571,16 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     });
   }, [registerAction]);
 
-  // 按住 Command 时在 tab 旁边临时显示跳转序号
+  // 按住 Command 时在 tab 旁边临时显示跳转序号 + Cmd+F 搜索
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Meta') setIsCmdHeld(true);
+      // Cmd+F to toggle terminal search bar
+      if ((event.metaKey || event.ctrlKey) && event.key === 'f') {
+        event.preventDefault();
+        event.stopPropagation();
+        setSearchBarVisible((v) => !v);
+      }
     };
     const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === 'Meta') setIsCmdHeld(false);
@@ -1713,11 +1723,26 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           workspace.sessions.map((session) => (
             <TerminalInstance
               key={session.id}
+              ref={(handle) => {
+                if (handle) {
+                  terminalInstanceRefs.current.set(session.id, handle);
+                } else {
+                  terminalInstanceRefs.current.delete(session.id);
+                }
+              }}
               sessionId={session.id}
               isActive={session.id === activeSessionId}
               preferWebglRenderer={preferWebglRenderer}
             />
           )),
+        )}
+
+        {searchBarVisible && activeSessionId && (
+          <TerminalSearchBar
+            searchAddon={terminalInstanceRefs.current.get(activeSessionId)?.getSearchAddon() ?? null}
+            initialQuery={terminalInstanceRefs.current.get(activeSessionId)?.getSelection() ?? ''}
+            onClose={() => setSearchBarVisible(false)}
+          />
         )}
       </div>
 

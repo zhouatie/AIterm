@@ -130,15 +130,22 @@ PTY 进程的 stdout 输出 SHALL 通过按 session 路由的终端输出链路�
 - **WHEN** 终端 renderer 偏好允许优先使用 WebGL 且当前环境支持 WebGL renderer 初始化
 - **THEN** 系统 SHALL 为终端实例尝试启用 WebGL renderer
 
-#### Scenario: WebGL renderer 自动回退
+#### Scenario: WebGL renderer 回退到 Canvas renderer
 - **WHEN** WebGL renderer 不受支持或初始化失败
-- **THEN** 系统 SHALL 自动回退到默认 renderer
+- **THEN** 系统 SHALL 尝试加载 Canvas renderer 作为回退
+- **AND** Canvas renderer 加载失败时 SHALL 进一步回退到默认 DOM renderer
 - **AND** 终端会话 SHALL 保持可用，不得因 renderer 初始化失败而中断
 
 #### Scenario: 显式关闭 WebGL renderer
 - **WHEN** 终端 renderer 偏好被显式关闭
-- **THEN** 系统 SHALL 使用默认 renderer
-- **AND** 系统 SHALL 不再尝试为该终端实例初始化 WebGL renderer
+- **THEN** 系统 SHALL 尝试使用 Canvas renderer
+- **AND** Canvas renderer 不可用时 SHALL 使用默认 DOM renderer
+
+#### Scenario: Addon 统一加载
+- **WHEN** 终端实例初始化时
+- **THEN** 系统 SHALL 加载以下 addon：WebLinksAddon、Unicode11Addon、SearchAddon
+- **AND** 系统 SHALL 根据渲染器类型条件加载 ImageAddon（仅 Canvas 渲染器）
+- **AND** 所有 addon 的加载失败 SHALL 不阻止终端正常使用
 
 ### Requirement: 终端 CWD 变化通知
 当 PTY 会话的工作目录发生变化时，系统 SHALL 向渲染进程推送通知事件。

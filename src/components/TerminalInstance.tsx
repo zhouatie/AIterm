@@ -1,7 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { WebglAddon } from '@xterm/addon-webgl';
+import { CanvasAddon } from '@xterm/addon-canvas';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
+import { SearchAddon } from '@xterm/addon-search';
+import { SerializeAddon } from '@xterm/addon-serialize';
+import { ImageAddon } from '@xterm/addon-image';
 import { useTheme } from '../ThemeContext';
 import type { ITheme } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
@@ -59,6 +64,10 @@ function getXtermTheme(theme: 'light' | 'dark'): ITheme {
   return theme === 'dark' ? DARK_THEME : LIGHT_THEME;
 }
 
+// --- Renderer type tracking ---
+
+type RendererType = 'webgl' | 'canvas' | 'dom';
+
 /**
  * Custom fit that measures the **actual** scrollbar width instead of using
  * FitAddon's hardcoded `DEFAULT_SCROLL_BAR_WIDTH` (~14 px).
@@ -106,173 +115,319 @@ function fitTerminal(terminal: Terminal): void {
   }
 }
 
+// --- Buffer API helpers ---
+
+/**
+ * Read the last `count` lines from the terminal's active buffer as plain text.
+ */
+function getBufferLinesFromTerminal(terminal: Terminal, count: number): string[] {
+  const buffer = terminal.buffer.active;
+  const totalRows = buffer.length;
+  const start = Math.max(0, totalRows - count);
+  const lines: string[] = [];
+  for (let i = start; i < totalRows; i++) {
+    const line = buffer.getLine(i);
+    lines.push(line ? line.translateToString(true) : '');
+  }
+  return lines;
+}
+
+/**
+ * Read the currently visible viewport content from the terminal.
+ */
+function getVisibleContentFromTerminal(terminal: Terminal): string {
+  const buffer = terminal.buffer.active;
+  const viewportY = buffer.viewportY;
+  const rows = terminal.rows;
+  const lines: string[] = [];
+  for (let i = viewportY; i < viewportY + rows; i++) {
+    const line = buffer.getLine(i);
+    lines.push(line ? line.translateToString(true) : '');
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Read the entire buffer content from the terminal.
+ */
+function getAllContentFromTerminal(terminal: Terminal): string {
+  const buffer = terminal.buffer.active;
+  const totalRows = buffer.length;
+  const lines: string[] = [];
+  for (let i = 0; i < totalRows; i++) {
+    const line = buffer.getLine(i);
+    lines.push(line ? line.translateToString(true) : '');
+  }
+  return lines.join('\n');
+}
+
+// --- Public handle interface ---
+
+export interface TerminalInstanceHandle {
+  /** Get the SearchAddon instance for search bar integration */
+  getSearchAddon(): SearchAddon | null;
+  /** Get the SerializeAddon instance for content persistence */
+  getSerializeAddon(): SerializeAddon | null;
+  /** Get the Terminal instance (e.g. for link provider registration) */
+  getTerminal(): Terminal | null;
+  /** Get the current renderer type */
+  getRendererType(): RendererType;
+  /** Read the last N lines from the buffer as plain text */
+  getBufferLines(count: number): string[];
+  /** Read the current viewport content */
+  getVisibleContent(): string;
+  /** Read the entire buffer content */
+  getAllContent(): string;
+  /** Get the selected text in the terminal */
+  getSelection(): string;
+}
+
 interface TerminalInstanceProps {
   sessionId: string;
   isActive: boolean;
   preferWebglRenderer: boolean;
 }
 
-const TerminalInstance: React.FC<TerminalInstanceProps> = ({
-  sessionId,
-  isActive,
-  preferWebglRenderer,
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const terminalRef = useRef<Terminal | null>(null);
-  const initializedRef = useRef(false);
-  const activeCleanupRef = useRef<(() => void) | null>(null);
-  const initialPreferWebglRendererRef = useRef(preferWebglRenderer);
-  const { theme } = useTheme();
+const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProps>(
+  ({ sessionId, isActive, preferWebglRenderer }, ref) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const terminalRef = useRef<Terminal | null>(null);
+    const initializedRef = useRef(false);
+    const activeCleanupRef = useRef<(() => void) | null>(null);
+    const initialPreferWebglRendererRef = useRef(preferWebglRenderer);
+    const searchAddonRef = useRef<SearchAddon | null>(null);
+    const serializeAddonRef = useRef<SerializeAddon | null>(null);
+    const rendererTypeRef = useRef<RendererType>('dom');
+    const { theme } = useTheme();
 
-  // Initialize xterm.js + PTY binding (once per mount)
-  useEffect(() => {
-    if (!containerRef.current || initializedRef.current) return;
-    initializedRef.current = true;
-
-    const terminal = new Terminal({
-      cursorBlink: true,
-      fontSize: 14,
-      fontFamily: '"JetBrainsMono Nerd Font", Menlo, Monaco, "Courier New", monospace',
-      theme: getXtermTheme(theme),
-      scrollback: 10000,
-      allowProposedApi: true,
-    });
-    terminalRef.current = terminal;
-
-    terminal.loadAddon(new WebLinksAddon());
-    if (initialPreferWebglRendererRef.current) {
-      try {
-        terminal.loadAddon(new WebglAddon());
-      } catch (error) {
-        console.warn('[TerminalInstance] Failed to enable WebGL renderer:', error);
-      }
-    }
-
-    terminal.open(containerRef.current);
-
-    // xterm's renderer may not have finished measuring cell dimensions
-    // right after open() (font loading, first paint, etc.).  Poll via
-    // requestAnimationFrame until dimensions are available, then fit.
-    let fitRetries = 0;
-    const MAX_FIT_RETRIES = 30; // ~500 ms at 60 fps
-    const scheduleInitialFit = () => {
-      requestAnimationFrame(() => {
-        if (!terminalRef.current) return;
-        const core = (terminalRef.current as any)._core;
-        const d = core._renderService?.dimensions;
-        if (d && d.css.cell.width > 0 && d.css.cell.height > 0) {
-          fitTerminal(terminalRef.current);
-        } else if (++fitRetries < MAX_FIT_RETRIES) {
-          scheduleInitialFit();
-        }
-      });
-    };
-    scheduleInitialFit();
-
-    // User input → PTY stdin
-    terminal.onData((data: string) => {
-      window.terminalApi.input(sessionId, data);
-    });
-
-    // Sync terminal size to PTY when xterm resizes
-    terminal.onResize(({ cols, rows }: { cols: number; rows: number }) => {
-      window.terminalApi.resize(sessionId, cols, rows);
-    });
-
-    // PTY exit → show message
-    const removeExitListener = window.terminalApi.onExit(
-      sessionId,
-      ({ exitCode }: { exitCode: number }) => {
-        terminal.writeln(`\r\n[Process exited with code ${exitCode}]`);
+    // Expose methods via ref for parent components
+    useImperativeHandle(ref, () => ({
+      getSearchAddon: () => searchAddonRef.current,
+      getSerializeAddon: () => serializeAddonRef.current,
+      getTerminal: () => terminalRef.current,
+      getRendererType: () => rendererTypeRef.current,
+      getBufferLines: (count: number) => {
+        if (!terminalRef.current) return [];
+        return getBufferLinesFromTerminal(terminalRef.current, count);
       },
-    );
+      getVisibleContent: () => {
+        if (!terminalRef.current) return '';
+        return getVisibleContentFromTerminal(terminalRef.current);
+      },
+      getAllContent: () => {
+        if (!terminalRef.current) return '';
+        return getAllContentFromTerminal(terminalRef.current);
+      },
+      getSelection: () => {
+        if (!terminalRef.current) return '';
+        return terminalRef.current.getSelection();
+      },
+    }));
 
-    return () => {
-      activeCleanupRef.current?.();
-      activeCleanupRef.current = null;
-      removeExitListener();
-      terminal.dispose();
-    };
-  }, [sessionId]);
+    // Initialize xterm.js + PTY binding (once per mount)
+    useEffect(() => {
+      if (!containerRef.current || initializedRef.current) return;
+      initializedRef.current = true;
 
-  useEffect(() => {
-    const terminal = terminalRef.current;
-    const container = containerRef.current;
-    if (!terminal || !container) return;
-
-    activeCleanupRef.current?.();
-    activeCleanupRef.current = null;
-
-    if (!isActive) {
-      window.terminalApi.detachOutput(sessionId);
-      return;
-    }
-
-    let cancelled = false;
-    const handleResize = () => {
-      requestAnimationFrame(() => {
-        if (terminalRef.current) fitTerminal(terminalRef.current);
+      const terminal = new Terminal({
+        cursorBlink: true,
+        fontSize: 14,
+        fontFamily: '"JetBrainsMono Nerd Font", Menlo, Monaco, "Courier New", monospace',
+        theme: getXtermTheme(theme),
+        scrollback: 10000,
+        allowProposedApi: true,
       });
-    };
+      terminalRef.current = terminal;
 
-    const resizeObserver = new ResizeObserver(handleResize);
-    const removeOutputListener = window.terminalApi.onOutput(sessionId, (data: string) => {
-      terminal.write(data);
-    });
+      // --- Addon loading ---
 
-    resizeObserver.observe(container);
-    window.addEventListener('resize', handleResize);
+      // Web links (clickable URLs)
+      terminal.loadAddon(new WebLinksAddon());
 
-    activeCleanupRef.current = () => {
-      window.terminalApi.detachOutput(sessionId);
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', handleResize);
-      removeOutputListener();
-    };
+      // Unicode 11 (correct CJK / Emoji width calculation)
+      const unicode11 = new Unicode11Addon();
+      terminal.loadAddon(unicode11);
+      terminal.unicode.activeVersion = '11';
 
-    void window.terminalApi.attachOutput(sessionId).then(({ bufferedData }) => {
-      if (cancelled) return;
-      if (bufferedData) {
-        terminal.write(bufferedData);
-      }
-      requestAnimationFrame(() => {
-        if (terminalRef.current && !cancelled) {
-          fitTerminal(terminalRef.current);
-          terminalRef.current.focus();
+      // Search addon
+      const searchAddon = new SearchAddon();
+      terminal.loadAddon(searchAddon);
+      searchAddonRef.current = searchAddon;
+
+      // Serialize addon (for content persistence)
+      const serializeAddon = new SerializeAddon();
+      terminal.loadAddon(serializeAddon);
+      serializeAddonRef.current = serializeAddon;
+
+      // --- Renderer: WebGL → Canvas → DOM fallback chain ---
+      let activeRendererType: RendererType = 'dom';
+
+      if (initialPreferWebglRendererRef.current) {
+        try {
+          terminal.loadAddon(new WebglAddon());
+          activeRendererType = 'webgl';
+        } catch (error) {
+          console.warn('[TerminalInstance] WebGL renderer failed, trying Canvas:', error);
+          try {
+            terminal.loadAddon(new CanvasAddon());
+            activeRendererType = 'canvas';
+          } catch (canvasError) {
+            console.warn('[TerminalInstance] Canvas renderer failed, using DOM:', canvasError);
+            activeRendererType = 'dom';
+          }
         }
-      });
-    });
+      } else {
+        // When WebGL is not preferred, try Canvas first, then fall back to DOM
+        try {
+          terminal.loadAddon(new CanvasAddon());
+          activeRendererType = 'canvas';
+        } catch (canvasError) {
+          console.warn('[TerminalInstance] Canvas renderer failed, using DOM:', canvasError);
+          activeRendererType = 'dom';
+        }
+      }
 
-    return () => {
-      cancelled = true;
+      rendererTypeRef.current = activeRendererType;
+
+      // Image addon (only works with Canvas renderer)
+      if (activeRendererType === 'canvas') {
+        try {
+          terminal.loadAddon(new ImageAddon());
+        } catch (error) {
+          console.warn('[TerminalInstance] Failed to load Image addon:', error);
+        }
+      }
+
+      terminal.open(containerRef.current);
+
+      // xterm's renderer may not have finished measuring cell dimensions
+      // right after open() (font loading, first paint, etc.).  Poll via
+      // requestAnimationFrame until dimensions are available, then fit.
+      let fitRetries = 0;
+      const MAX_FIT_RETRIES = 30; // ~500 ms at 60 fps
+      const scheduleInitialFit = () => {
+        requestAnimationFrame(() => {
+          if (!terminalRef.current) return;
+          const core = (terminalRef.current as any)._core;
+          const d = core._renderService?.dimensions;
+          if (d && d.css.cell.width > 0 && d.css.cell.height > 0) {
+            fitTerminal(terminalRef.current);
+          } else if (++fitRetries < MAX_FIT_RETRIES) {
+            scheduleInitialFit();
+          }
+        });
+      };
+      scheduleInitialFit();
+
+      // User input → PTY stdin
+      terminal.onData((data: string) => {
+        window.terminalApi.input(sessionId, data);
+      });
+
+      // Sync terminal size to PTY when xterm resizes
+      terminal.onResize(({ cols, rows }: { cols: number; rows: number }) => {
+        window.terminalApi.resize(sessionId, cols, rows);
+      });
+
+      // PTY exit → show message
+      const removeExitListener = window.terminalApi.onExit(
+        sessionId,
+        ({ exitCode }: { exitCode: number }) => {
+          terminal.writeln(`\r\n[Process exited with code ${exitCode}]`);
+        },
+      );
+
+      return () => {
+        activeCleanupRef.current?.();
+        activeCleanupRef.current = null;
+        removeExitListener();
+        searchAddonRef.current = null;
+        serializeAddonRef.current = null;
+        terminal.dispose();
+      };
+    }, [sessionId]);
+
+    useEffect(() => {
+      const terminal = terminalRef.current;
+      const container = containerRef.current;
+      if (!terminal || !container) return;
+
       activeCleanupRef.current?.();
       activeCleanupRef.current = null;
-    };
-  }, [isActive, sessionId]);
 
-  // Dynamically update terminal colorscheme when theme changes (task 4.3)
-  useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.options.theme = getXtermTheme(theme);
-    }
-  }, [theme]);
+      if (!isActive) {
+        window.terminalApi.detachOutput(sessionId);
+        return;
+      }
 
-  return (
-    <div
-      ref={containerRef}
-      className="terminal-instance"
-      style={{
-        overflow: 'hidden',
-        visibility: isActive ? 'visible' : 'hidden',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        pointerEvents: isActive ? 'auto' : 'none',
-      }}
-    />
-  );
-};
+      let cancelled = false;
+      const handleResize = () => {
+        requestAnimationFrame(() => {
+          if (terminalRef.current) fitTerminal(terminalRef.current);
+        });
+      };
+
+      const resizeObserver = new ResizeObserver(handleResize);
+      const removeOutputListener = window.terminalApi.onOutput(sessionId, (data: string) => {
+        terminal.write(data);
+      });
+
+      resizeObserver.observe(container);
+      window.addEventListener('resize', handleResize);
+
+      activeCleanupRef.current = () => {
+        window.terminalApi.detachOutput(sessionId);
+        resizeObserver.disconnect();
+        window.removeEventListener('resize', handleResize);
+        removeOutputListener();
+      };
+
+      void window.terminalApi.attachOutput(sessionId).then(({ bufferedData }) => {
+        if (cancelled) return;
+        if (bufferedData) {
+          terminal.write(bufferedData);
+        }
+        requestAnimationFrame(() => {
+          if (terminalRef.current && !cancelled) {
+            fitTerminal(terminalRef.current);
+            terminalRef.current.focus();
+          }
+        });
+      });
+
+      return () => {
+        cancelled = true;
+        activeCleanupRef.current?.();
+        activeCleanupRef.current = null;
+      };
+    }, [isActive, sessionId]);
+
+    // Dynamically update terminal colorscheme when theme changes
+    useEffect(() => {
+      if (terminalRef.current) {
+        terminalRef.current.options.theme = getXtermTheme(theme);
+      }
+    }, [theme]);
+
+    return (
+      <div
+        ref={containerRef}
+        className="terminal-instance"
+        style={{
+          overflow: 'hidden',
+          visibility: isActive ? 'visible' : 'hidden',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: isActive ? 'auto' : 'none',
+        }}
+      />
+    );
+  },
+);
+
+TerminalInstance.displayName = 'TerminalInstance';
 
 export default TerminalInstance;

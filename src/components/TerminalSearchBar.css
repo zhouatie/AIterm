@@ -1,0 +1,173 @@
+/* Terminal search bar - floating overlay in top-right corner */
+.terminal-search-bar {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.terminal-search-bar.theme-dark {
+  background: rgba(40, 40, 40, 0.92);
+  color: #ccc;
+}
+
+.terminal-search-bar.theme-light {
+  background: rgba(250, 250, 250, 0.92);
+  color: #333;
+}
+
+/* Search input */
+.terminal-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.terminal-search-input {
+  width: 180px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'JetBrainsMono Nerd Font', Menlo, Monaco, monospace;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.theme-dark .terminal-search-input {
+  background: rgba(60, 60, 60, 0.8);
+  color: #ddd;
+  border-color: rgba(80, 80, 80, 0.6);
+}
+
+.theme-light .terminal-search-input {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.terminal-search-input:focus {
+  border-color: #007acc;
+}
+
+.terminal-search-input.no-results {
+  border-color: #cd3131;
+}
+
+.terminal-search-status {
+  position: absolute;
+  right: 6px;
+  font-size: 10px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Toggle buttons (regex, case) */
+.terminal-search-toggle {
+  padding: 2px 5px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'JetBrainsMono Nerd Font', Menlo, Monaco, monospace;
+  opacity: 0.5;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.theme-dark .terminal-search-toggle {
+  color: #ccc;
+}
+
+.theme-light .terminal-search-toggle {
+  color: #555;
+}
+
+.terminal-search-toggle:hover {
+  opacity: 0.8;
+}
+
+.terminal-search-toggle.active {
+  opacity: 1;
+  border-color: #007acc;
+}
+
+.theme-dark .terminal-search-toggle.active {
+  background: rgba(0, 122, 204, 0.2);
+}
+
+.theme-light .terminal-search-toggle.active {
+  background: rgba(0, 122, 204, 0.1);
+}
+
+/* Navigation buttons */
+.terminal-search-nav {
+  display: flex;
+  gap: 1px;
+}
+
+.terminal-search-nav-btn {
+  padding: 2px 5px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 9px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.theme-dark .terminal-search-nav-btn {
+  color: #ccc;
+}
+
+.theme-light .terminal-search-nav-btn {
+  color: #555;
+}
+
+.terminal-search-nav-btn:hover {
+  opacity: 1;
+}
+
+.theme-dark .terminal-search-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-light .terminal-search-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Close button */
+.terminal-search-close {
+  padding: 2px 5px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.theme-dark .terminal-search-close {
+  color: #ccc;
+}
+
+.theme-light .terminal-search-close {
+  color: #555;
+}
+
+.terminal-search-close:hover {
+  opacity: 1;
+}

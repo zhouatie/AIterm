@@ -18,6 +18,9 @@ export interface TerminalApi {
   onAttention(callback: (data: TerminalAttention) => void): () => void;
   onAttentionCleared(callback: (data: TerminalAttentionCleared) => void): () => void;
   onActivateSession(callback: (data: { id: string }) => void): () => void;
+  saveBuffer(sessionId: string, content: string): void;
+  loadBuffer(sessionId: string): Promise<string | null>;
+  cleanupBuffers(activeSessionIds: string[]): void;
 }
 
 export type { TerminalAttention, TerminalAttentionCleared } from './terminal-attention';
@@ -66,6 +69,8 @@ export interface FileApi {
     options?: SpecTreeOptions,
   ): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
   showInFolder(filePath: string): void;
+  fileExists(filePath: string): Promise<boolean>;
+  openFilePreview(filePath: string, line?: number, col?: number): void;
 }
 
 contextBridge.exposeInMainWorld('terminalApi', {
@@ -161,6 +166,15 @@ contextBridge.exposeInMainWorld('terminalApi', {
       ipcRenderer.removeListener('terminal:activateSession', listener);
     };
   },
+
+  saveBuffer: (sessionId: string, content: string) =>
+    ipcRenderer.send('terminal:saveBuffer', { sessionId, content }),
+
+  loadBuffer: (sessionId: string) =>
+    ipcRenderer.invoke('terminal:loadBuffer', { sessionId }),
+
+  cleanupBuffers: (activeSessionIds: string[]) =>
+    ipcRenderer.send('terminal:cleanupBuffers', { activeSessionIds }),
 } satisfies TerminalApi);
 
 contextBridge.exposeInMainWorld('fileApi', {
@@ -187,6 +201,12 @@ contextBridge.exposeInMainWorld('fileApi', {
 
   showInFolder: (filePath: string) =>
     ipcRenderer.send('fs:show-in-folder', { filePath }),
+
+  fileExists: (filePath: string) =>
+    ipcRenderer.invoke('fs:file-exists', { filePath }),
+
+  openFilePreview: (filePath: string, line?: number, col?: number) =>
+    ipcRenderer.send('fs:open-file-preview', { filePath, line, col }),
 } satisfies FileApi);
 
 export interface ThemeApi {

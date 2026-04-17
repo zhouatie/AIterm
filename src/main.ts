@@ -509,6 +509,72 @@ ipcMain.handle('terminal:getSessionInfo', async (_event, { id }: { id: string })
   return await getSessionInfo(id);
 });
 
+// --- Terminal Buffer Persistence ---
+
+const terminalBuffersDir = path.join(app.getPath('userData'), 'terminal-buffers');
+
+function ensureBuffersDir(): void {
+  try {
+    fs.mkdirSync(terminalBuffersDir, { recursive: true });
+  } catch {
+    // Directory may already exist
+  }
+}
+
+// terminal:saveBuffer — save serialized terminal buffer to file
+ipcMain.on(
+  'terminal:saveBuffer',
+  (_event, { sessionId, content }: { sessionId: string; content: string }) => {
+    try {
+      ensureBuffersDir();
+      const filePath = path.join(terminalBuffersDir, `${sessionId}.txt`);
+      fs.writeFileSync(filePath, content, 'utf-8');
+    } catch (error) {
+      console.warn('[main] Failed to save terminal buffer:', error);
+    }
+  },
+);
+
+// terminal:loadBuffer — load serialized terminal buffer from file
+ipcMain.handle(
+  'terminal:loadBuffer',
+  (_event, { sessionId }: { sessionId: string }) => {
+    try {
+      const filePath = path.join(terminalBuffersDir, `${sessionId}.txt`);
+      if (fs.existsSync(filePath)) {
+        return fs.readFileSync(filePath, 'utf-8');
+      }
+    } catch {
+      // File doesn't exist or is corrupted — silently skip
+    }
+    return null;
+  },
+);
+
+// terminal:cleanupBuffers — delete orphaned buffer files
+ipcMain.on(
+  'terminal:cleanupBuffers',
+  (_event, { activeSessionIds }: { activeSessionIds: string[] }) => {
+    try {
+      ensureBuffersDir();
+      const activeSet = new Set(activeSessionIds);
+      const files = fs.readdirSync(terminalBuffersDir);
+      for (const file of files) {
+        const sessionId = path.basename(file, '.txt');
+        if (!activeSet.has(sessionId)) {
+          try {
+            fs.unlinkSync(path.join(terminalBuffersDir, file));
+          } catch {
+            // Ignore individual file deletion errors
+          }
+        }
+      }
+    } catch {
+      // Directory may not exist yet
+    }
+  },
+);
+
 // --- File System IPC Handlers ---
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
@@ -1189,6 +1255,31 @@ ipcMain.on('fs:show-in-folder', (_event, { filePath: targetPath }: { filePath: s
   const resolved = path.resolve(targetPath);
   shell.showItemInFolder(resolved);
 });
+
+// fs:file-exists — check if a file exists on disk
+ipcMain.handle('fs:file-exists', async (_event, { filePath }: { filePath: string }) => {
+  try {
+    const resolved = path.resolve(filePath);
+    const stat = await fs.promises.stat(resolved);
+    return stat.isFile();
+  } catch {
+    return false;
+  }
+});
+
+// fs:open-file-preview — notify renderer to open a file in the preview panel
+ipcMain.on(
+  'fs:open-file-preview',
+  (_event, { filePath, line, col }: { filePath: string; line?: number; col?: number }) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('fs:open-file-preview', {
+        filePath: path.resolve(filePath),
+        line,
+        col,
+      });
+    }
+  },
+);
 
 // fs:scan-all-files — scan all files under a directory (excluding common large dirs), return tree structure
 ipcMain.handle(
