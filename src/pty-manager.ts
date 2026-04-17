@@ -179,6 +179,10 @@ export function hasSession(id: string): boolean {
   return sessions.has(id);
 }
 
+export function hasActiveSessions(): boolean {
+  return sessions.size > 0;
+}
+
 export function getSessionCwd(id: string): string | undefined {
   const session = sessions.get(id);
   return session?.lastInfo.cwd;
@@ -283,14 +287,22 @@ export function resizeSession(id: string, cols: number, rows: number): void {
 export function disposeSession(id: string): void {
   const session = sessions.get(id);
   if (session) {
-    session.ptyProcess.kill();
+    try {
+      session.ptyProcess.kill();
+    } catch {
+      // PTY process may already be gone; registry cleanup is still required.
+    }
     sessions.delete(id);
   }
 }
 
 export function disposeAllSessions(): void {
   for (const [id, session] of sessions) {
-    session.ptyProcess.kill();
+    try {
+      session.ptyProcess.kill();
+    } catch {
+      // Keep shutdown idempotent even if a PTY has already exited.
+    }
     sessions.delete(id);
   }
 }

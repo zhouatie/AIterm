@@ -15,9 +15,11 @@
 - **WHEN** 终端面板首次渲染且存在有效的持久化 tab 数据
 - **THEN** 系统 SHALL 恢复之前保存的 workspace 列表及其下属 session 结构
 - **THEN** 每个 workspace 的展开/收起状态 SHALL 与保存时一致
-- **THEN** 之前的活跃 session SHALL 被重新选为当前活跃终端
-- **THEN** 用户手动重命名的 session 名称 SHALL 被恢复
+- **THEN** 系统 SHALL 为持久化数据中的每个 session 创建新的 PTY 会话，并以保存的 cwd 作为该新 PTY 的初始目录
+- **THEN** 之前的活跃 session 对应的新 PTY 会话 SHALL 被选为当前活跃终端
+- **THEN** 用户手动重命名的 session 名称 SHALL 被映射到对应的新 PTY 会话并恢复
 - **THEN** 侧边栏的收起/展开状态 SHALL 被恢复
+- **THEN** 系统 SHALL NOT 期望或尝试恢复窗口关闭前已经终止的 PTY 进程、终端 scrollback 或正在运行的交互状态
 
 #### Scenario: 持久化数据损坏时回退到默认行为
 - **WHEN** 终端面板首次渲染且持久化 tab 数据存在但无法解析或校验失败
@@ -506,4 +508,3 @@ terminal 面板 SHALL 支持将二级 terminal tab 拖动到其他已有 workspa
 - **WHEN** 用户将某个 workspace 中最后一个剩余的二级 terminal tab 拖动到其他 workspace
 - **THEN** 系统 SHALL 自动移除已无任何二级 terminal tab 的源 workspace
 - **THEN** 若应用内仍存在其他 workspace，系统 SHALL 不额外创建新的默认 workspace
-

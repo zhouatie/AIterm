@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, nativeTheme, Notification } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, nativeTheme, Notification, dialog } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -15,6 +15,7 @@ import {
   getSessionInfo,
   checkAndUpdateSessionInfo,
   hasSession,
+  hasActiveSessions,
   type PtyNotificationEnv,
 } from './pty-manager';
 import {
@@ -49,6 +50,7 @@ let attentionNotifyUrl = '';
 let attentionNotifyToken = '';
 const attentionSessionIds = new Set<string>();
 const TERMINAL_OUTPUT_FLUSH_MS = 16;
+const TERMINAL_CLOSE_CONFIRM_BUTTON_INDEX = 1;
 
 interface TerminalStreamState {
   attached: boolean;
@@ -135,6 +137,32 @@ function clearTerminalStreamState(id: string): void {
     clearTimeout(state.flushTimer);
   }
   terminalStreamStates.delete(id);
+}
+
+function clearAllTerminalStreamStates(): void {
+  for (const id of terminalStreamStates.keys()) {
+    clearTerminalStreamState(id);
+  }
+}
+
+function disposeAllTerminalSessions(): void {
+  attentionSessionIds.clear();
+  clearAllTerminalStreamStates();
+  disposeAllSessions();
+}
+
+async function confirmCloseWindow(window: BrowserWindow): Promise<boolean> {
+  const result = await dialog.showMessageBox(window, {
+    type: 'warning',
+    buttons: ['取消', '关闭 GUI'],
+    defaultId: 0,
+    cancelId: 0,
+    title: '关闭 AIterm？',
+    message: '关闭 GUI 会终止正在运行的终端进程。',
+    detail: '所有终端中的命令以及 Codex、Claude Code、OpenCode 等会话都会被终止。重新打开后只恢复 tab 布局和工作目录。',
+    noLink: true,
+  });
+  return result.response === TERMINAL_CLOSE_CONFIRM_BUTTON_INDEX;
 }
 
 function getAttentionNotificationEnv(): PtyNotificationEnv | undefined {
@@ -314,6 +342,8 @@ const createWindow = () => {
       webviewTag: true,
     },
   });
+  let allowNextClose = false;
+  let closeConfirmationPending = false;
 
   // Retry loading if the Vite dev server isn't ready yet
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -353,7 +383,33 @@ const createWindow = () => {
   //   mainWindow.webContents.openDevTools();
   // }
 
+  mainWindow.on('close', (event) => {
+    if (allowNextClose || !hasActiveSessions()) {
+      allowNextClose = false;
+      return;
+    }
+
+    event.preventDefault();
+    if (closeConfirmationPending) return;
+
+    closeConfirmationPending = true;
+    const window = mainWindow;
+    if (!window || window.isDestroyed()) {
+      closeConfirmationPending = false;
+      return;
+    }
+
+    void confirmCloseWindow(window).then((confirmed) => {
+      closeConfirmationPending = false;
+      if (!confirmed || window.isDestroyed()) return;
+      allowNextClose = true;
+      window.close();
+    });
+  });
+
   mainWindow.on('closed', () => {
+    allowNextClose = false;
+    closeConfirmationPending = false;
     mainWindow = null;
   });
 };
@@ -1327,8 +1383,8 @@ app.on('ready', async () => {
 
 // macOS: keep app alive when all windows are closed
 app.on('window-all-closed', () => {
+  disposeAllTerminalSessions();
   if (process.platform !== 'darwin') {
-    disposeAllSessions();
     app.quit();
   }
 });
@@ -1340,9 +1396,9 @@ app.on('activate', () => {
   }
 });
 
-// Clean up all PTY sessions before quitting
-app.on('before-quit', () => {
+// Final process-exit cleanup. Window close confirmation must run before this.
+app.on('will-quit', () => {
   stopAttentionServer();
   stopLiveViewServer();
-  disposeAllSessions();
+  disposeAllTerminalSessions();
 });
