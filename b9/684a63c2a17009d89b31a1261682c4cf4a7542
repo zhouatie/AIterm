@@ -1,0 +1,74 @@
+src/components/TerminalInstance.tsx
+  86838cad221a30b2 1,5-9,67-70,118-184,191-287,289-297,299-329,332-354,357-360,362-388,390-395,398-431
+src/hooks/useTerminalDecorations.ts
+  86838cad221a30b2 1-221
+openspec/specs/terminal-decorations/spec.md
+  856868c55c79f2d7 1-60
+openspec/specs/terminal-inline-images/spec.md
+  86838cad221a30b2 1-48
+openspec/specs/terminal-buffer-access/spec.md
+  856868c55c79f2d7 1-48
+src/components/TerminalPanel.tsx
+  86838cad221a30b2 22-23,349-350,574,578-583,1726-1732,1739-1745
+package.json
+  86838cad221a30b2 48-52
+src/components/TerminalSearchBar.css
+  86838cad221a30b2 1-173
+src/preload.ts
+  86838cad221a30b2 21-23,72-73,169-177,204-209
+src/main.ts
+  86838cad221a30b2 512-577,1259-1283
+openspec/specs/terminal-canvas-renderer/spec.md
+  856868c55c79f2d7 1-32
+src/utils/file-path-links.ts
+  86838cad221a30b2 1-151
+openspec/specs/terminal-content-persistence/spec.md
+  856868c55c79f2d7 1-50
+openspec/specs/terminal-smart-links/spec.md
+  856868c55c79f2d7 1-48
+openspec/specs/terminal-search/spec.md
+  856868c55c79f2d7 1-78
+src/components/TerminalSearchBar.tsx
+  86838cad221a30b2 1-177
+.npmrc
+  86838cad221a30b2 1
+openspec/specs/embedded-terminal/spec.md
+  86838cad221a30b2 133,135-136,141-148
+openspec/specs/terminal-unicode/spec.md
+  856868c55c79f2d7 1-29
+src/components/SettingsPanel.tsx
+  86838cad221a30b2 540,567
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "b9684a63c2a17009d89b31a1261682c4cf4a7542",
+  "prompts": {
+    "856868c55c79f2d7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2640893dcffeLI8qNsO8SOTVWt",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 345,
+      "total_deletions": 0,
+      "accepted_lines": 345,
+      "overriden_lines": 0
+    },
+    "86838cad221a30b2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26444f48bffent9sHrs1JdaliV",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1993,
+      "total_deletions": 208,
+      "accepted_lines": 1233,
+      "overriden_lines": 0
+    }
+  }
+}
