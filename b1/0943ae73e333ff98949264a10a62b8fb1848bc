@@ -1,0 +1,70 @@
+src/components/NoteFileList.tsx
+  a87e82358b024322 1-557
+src/main.ts
+  a87e82358b024322 1187-1296
+openspec/specs/note-editor/spec.md
+  a0c37c95763f9f7a 1-42
+src/ShortcutContext.tsx
+  a87e82358b024322 16,81-85,183
+src/utils/note-autosave.ts
+  a87e82358b024322 1-188
+openspec/specs/settings-panel/spec.md
+  a0c37c95763f9f7a 104-120
+openspec/specs/note-panel/spec.md
+  a0c37c95763f9f7a 1-153
+openspec/specs/note-autosave/spec.md
+  a0c37c95763f9f7a 1-53
+src/preload.ts
+  a87e82358b024322 69-73,195-209
+package.json
+  a87e82358b024322 48-49
+src/components/NotePanel.tsx
+  a87e82358b024322 1-557
+src/index.css
+  a87e82358b024322 503-632
+src/App.tsx
+  a87e82358b024322 2,9,32-35,161,172-173,267-271,299-308,446-473,504-507,518,524
+src/components/NoteEditor.tsx
+  a87e82358b024322 1-133
+openspec/specs/note-storage/spec.md
+  a0c37c95763f9f7a 1-55
+src/utils/note-settings.ts
+  a87e82358b024322 1-30
+src/components/SettingsPanel.tsx
+  a87e82358b024322 2,14,23,29,140,146,156,170,183,219-220,232-233,274,799-852
+openspec/specs/keyboard-shortcuts/spec.md
+  a0c37c95763f9f7a 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "b10943ae73e333ff98949264a10a62b8fb1848bc",
+  "prompts": {
+    "a0c37c95763f9f7a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2611c5cd1ffendy41pLi46QqPX",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 321,
+      "total_deletions": 0,
+      "accepted_lines": 321,
+      "overriden_lines": 0
+    },
+    "a87e82358b024322": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2641a404bffee2pr7Tis1QyT4p",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2704,
+      "total_deletions": 198,
+      "accepted_lines": 1860,
+      "overriden_lines": 0
+    }
+  }
+}
