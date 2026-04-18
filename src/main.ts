@@ -953,7 +953,6 @@ async function readSpecRootDirectory(
         path: dirPath,
         isDirectory: true,
         mtime: stat.mtimeMs,
-        children: await readTreeDirectory(dirPath, options),
       });
     } catch {
       // Missing or unreadable configured spec directories are simply omitted.

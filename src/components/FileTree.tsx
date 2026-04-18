@@ -641,17 +641,6 @@ const FileTree: React.FC<FileTreeProps> = ({
           let nextNodes = toTreeNodes(result.tree);
           let nextExpandedPaths = expandedPathsRef.current;
 
-          if (readOptions) {
-            const specRootPaths = nextNodes
-              .filter((node) => node.isDirectory && node.childrenLoaded)
-              .map((node) => node.path);
-
-            if (nextExpandedPaths.length === 0) {
-              nextExpandedPaths = specRootPaths;
-              onExpandedPathsChange(specRootPaths);
-            }
-          }
-
           const expandedPathsByDepth = [...new Set(nextExpandedPaths)]
             .sort((a, b) => getPathDepth(a) - getPathDepth(b));
 
