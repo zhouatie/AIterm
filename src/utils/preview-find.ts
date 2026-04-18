@@ -1,39 +1,57 @@
-export const FIND_HIGHLIGHT_ATTRIBUTE = 'data-preview-find-highlight';
-export const FIND_HIGHLIGHT_CURRENT_ATTRIBUTE = 'data-preview-find-current';
+export const PREVIEW_FIND_HIGHLIGHT_NAME = 'preview-find-highlight';
+export const PREVIEW_FIND_CURRENT_NAME = 'preview-find-current';
 
 const SKIPPED_TAG_NAMES = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'SCRIPT', 'STYLE']);
+
+type PreviewHighlightInstance = object;
+
+interface CSSHighlightsRegistry {
+  set(name: string, highlight: PreviewHighlightInstance): void;
+  delete(name: string): void;
+}
+
+interface HighlightConstructor {
+  new (...ranges: Range[]): PreviewHighlightInstance;
+}
+
+type HighlightWindow = Window & {
+  Highlight: HighlightConstructor;
+};
+
+type HighlightCSS = typeof CSS & {
+  highlights: CSSHighlightsRegistry;
+};
+
+export interface PreviewFindMatch {
+  range: Range;
+}
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function unwrapExistingHighlights(root: HTMLElement) {
-  const highlights = root.querySelectorAll<HTMLElement>(`span[${FIND_HIGHLIGHT_ATTRIBUTE}]`);
-  highlights.forEach((highlight) => {
-    const parent = highlight.parentNode;
-    if (!parent) return;
+function getHighlightConstructor(): HighlightConstructor {
+  return (window as HighlightWindow).Highlight;
+}
 
-    while (highlight.firstChild) {
-      parent.insertBefore(highlight.firstChild, highlight);
-    }
-    parent.removeChild(highlight);
-    parent.normalize();
-  });
+function getHighlightRegistry(): CSSHighlightsRegistry {
+  return (CSS as HighlightCSS).highlights;
+}
+
+export interface CollectPreviewFindMatchesOptions {
+  root: HTMLElement;
+  query: string;
 }
 
 export interface ApplyPreviewFindHighlightsOptions {
-  root: HTMLElement;
-  query: string;
+  matches: PreviewFindMatch[];
   currentIndex: number;
 }
 
-export function applyPreviewFindHighlights({
+export function collectPreviewFindMatches({
   root,
   query,
-  currentIndex,
-}: ApplyPreviewFindHighlightsOptions): HTMLElement[] {
-  unwrapExistingHighlights(root);
-
+}: CollectPreviewFindMatchesOptions): PreviewFindMatch[] {
   const normalizedQuery = query.trim();
   if (!normalizedQuery) return [];
 
@@ -43,58 +61,81 @@ export function applyPreviewFindHighlights({
       const parent = node.parentElement;
       if (!parent) return NodeFilter.FILTER_REJECT;
       if (SKIPPED_TAG_NAMES.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
-      if (parent.closest(`[${FIND_HIGHLIGHT_ATTRIBUTE}]`)) return NodeFilter.FILTER_REJECT;
       if (!node.textContent?.trim()) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     },
   });
 
-  const textNodes: Text[] = [];
+  const matches: PreviewFindMatch[] = [];
+
   while (walker.nextNode()) {
-    textNodes.push(walker.currentNode as Text);
-  }
-
-  const matches: HTMLElement[] = [];
-
-  textNodes.forEach((textNode) => {
+    const textNode = walker.currentNode as Text;
     const text = textNode.textContent ?? '';
     pattern.lastIndex = 0;
-    const nodeMatches = Array.from(text.matchAll(pattern));
-    if (nodeMatches.length === 0) return;
 
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-
-    nodeMatches.forEach((match) => {
-      const startIndex = match.index ?? 0;
-      const matchText = match[0];
-      if (startIndex > lastIndex) {
-        fragment.append(document.createTextNode(text.slice(lastIndex, startIndex)));
-      }
-
-      const highlight = document.createElement('span');
-      highlight.setAttribute(FIND_HIGHLIGHT_ATTRIBUTE, 'true');
-      highlight.textContent = matchText;
-      fragment.append(highlight);
-      matches.push(highlight);
-      lastIndex = startIndex + matchText.length;
-    });
-
-    if (lastIndex < text.length) {
-      fragment.append(document.createTextNode(text.slice(lastIndex)));
+    for (const match of text.matchAll(pattern)) {
+      const startOffset = match.index ?? 0;
+      const endOffset = startOffset + match[0].length;
+      const range = document.createRange();
+      range.setStart(textNode, startOffset);
+      range.setEnd(textNode, endOffset);
+      matches.push({ range });
     }
-
-    textNode.parentNode?.replaceChild(fragment, textNode);
-  });
-
-  if (matches.length > 0) {
-    const safeIndex = Math.min(Math.max(currentIndex, 0), matches.length - 1);
-    matches[safeIndex]?.setAttribute(FIND_HIGHLIGHT_CURRENT_ATTRIBUTE, 'true');
   }
 
   return matches;
 }
 
-export function clearPreviewFindHighlights(root: HTMLElement) {
-  unwrapExistingHighlights(root);
+export function clearPreviewFindHighlights() {
+  const registry = getHighlightRegistry();
+  registry.delete(PREVIEW_FIND_HIGHLIGHT_NAME);
+  registry.delete(PREVIEW_FIND_CURRENT_NAME);
+}
+
+export function applyPreviewFindHighlights({
+  matches,
+  currentIndex,
+}: ApplyPreviewFindHighlightsOptions): PreviewFindMatch[] {
+  clearPreviewFindHighlights();
+  if (matches.length === 0) return matches;
+
+  const Highlight = getHighlightConstructor();
+  const registry = getHighlightRegistry();
+  registry.set(
+    PREVIEW_FIND_HIGHLIGHT_NAME,
+    new Highlight(...matches.map((match) => match.range)),
+  );
+
+  const safeIndex = Math.min(Math.max(currentIndex, 0), matches.length - 1);
+  const currentMatch = matches[safeIndex];
+  if (currentMatch) {
+    registry.set(PREVIEW_FIND_CURRENT_NAME, new Highlight(currentMatch.range));
+  }
+
+  return matches;
+}
+
+export function scrollPreviewFindMatchIntoView(
+  container: HTMLElement,
+  match: PreviewFindMatch | undefined,
+) {
+  if (!match) return;
+
+  const rangeRect = match.range.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+
+  if (rangeRect.height > 0) {
+    const nextScrollTop = container.scrollTop
+      + (rangeRect.top - containerRect.top)
+      - ((container.clientHeight - rangeRect.height) / 2);
+    container.scrollTo({ top: Math.max(nextScrollTop, 0) });
+    return;
+  }
+
+  const anchorNode = match.range.startContainer;
+  const anchorElement = anchorNode instanceof Text ? anchorNode.parentElement : null;
+  anchorElement?.scrollIntoView({
+    block: 'center',
+    inline: 'nearest',
+  });
 }

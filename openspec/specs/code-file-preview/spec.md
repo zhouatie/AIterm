@@ -83,7 +83,7 @@ TBD - created by archiving change add-code-file-preview. Update Purpose after ar
 - **THEN** 预览区 SHALL 显示居中的占位提示文本（如"选择一个文件以预览"）
 
 ### Requirement: 代码预览内容查找高亮
-代码预览组件 SHALL 支持基于当前查找关键词高亮匹配文本，并在结果导航时定位到当前匹配项。
+代码预览组件 SHALL 支持基于当前查找关键词高亮匹配文本，并在结果导航时定位到当前匹配项。该能力在连续输入、快速切换匹配项和高亮更新时 SHALL 保持渲染稳定，不得因查找高亮导致代码预览或应用主内容区崩溃。
 
 #### Scenario: 代码预览高亮所有匹配项
 - **WHEN** 用户在代码文件预览中输入查找关键词，且当前文件内容存在匹配
@@ -99,3 +99,8 @@ TBD - created by archiving change add-code-file-preview. Update Purpose after ar
 - **WHEN** 当前匹配项位于代码预览可视区域之外
 - **THEN** 用户打开查找框或执行结果导航后，系统 SHALL 自动滚动代码预览
 - **THEN** 当前匹配项 SHALL 进入可视区域
+
+#### Scenario: 连续输入与导航不导致崩溃
+- **WHEN** 用户在代码文件预览查找框中快速连续输入关键词，或连续执行上一个、下一个结果导航
+- **THEN** 系统 SHALL 持续更新查找高亮、当前匹配项和滚动定位
+- **THEN** 系统 SHALL 不得因查找高亮更新导致未捕获渲染错误、代码预览空白或主内容区消失

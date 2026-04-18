@@ -264,16 +264,14 @@ html, body {
   height: 100%;
 }
 
-span[data-preview-find-highlight] {
+::highlight(preview-find-highlight) {
   background: color-mix(in srgb, var(--color-accent-primary) 28%, #fff3a6);
   color: inherit;
-  border-radius: 3px;
-  padding: 0 1px;
 }
 
-span[data-preview-find-current] {
+::highlight(preview-find-current) {
   background: color-mix(in srgb, var(--color-attention) 52%, #ffd36a);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-attention) 28%, transparent);
+  color: inherit;
 }
 
 /* --- Custom Scrollbar --- */

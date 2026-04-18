@@ -3,8 +3,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import {
+  collectPreviewFindMatches,
   applyPreviewFindHighlights,
   clearPreviewFindHighlights,
+  scrollPreviewFindMatchIntoView,
 } from '../utils/preview-find';
 
 interface MarkdownPreviewProps {
@@ -32,21 +34,21 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const matches = applyPreviewFindHighlights({
+    const matches = collectPreviewFindMatches({
       root: container,
       query: searchQuery,
+    });
+    applyPreviewFindHighlights({
+      matches,
       currentIndex: currentSearchIndex,
     });
     onSearchMatchCountChange?.(matches.length);
 
     const activeMatch = matches[currentSearchIndex] ?? matches[0];
-    activeMatch?.scrollIntoView({
-      block: 'center',
-      inline: 'nearest',
-    });
+    scrollPreviewFindMatchIntoView(container, activeMatch);
 
     return () => {
-      clearPreviewFindHighlights(container);
+      clearPreviewFindHighlights();
     };
   }, [content, currentSearchIndex, onSearchMatchCountChange, searchQuery]);
 
