@@ -1,0 +1,29 @@
+openspec/specs/keyboard-shortcuts/spec.md
+  955a66f0674bd4b4 77,80-81,84-89
+openspec/specs/terminal-search/spec.md
+  955a66f0674bd4b4 9,15-19,31
+src/ShortcutContext.tsx
+  955a66f0674bd4b4 330-333,345,410
+src/components/TerminalPanel.tsx
+  955a66f0674bd4b4 12,580
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "9dac91676af39664c2be16da6601dcdf8c59e882",
+  "prompts": {
+    "955a66f0674bd4b4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9e23-98c2-7010-a4c7-cdd6d0cf0bae",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 5,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    }
+  }
+}
