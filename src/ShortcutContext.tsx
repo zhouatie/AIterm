@@ -327,6 +327,10 @@ function loadStoredBindings(): ShortcutBindings {
   }
 }
 
+export function isTerminalKeyboardTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && Boolean(target.closest('.xterm'));
+}
+
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
@@ -338,7 +342,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
     // 该元素位于 .xterm 容器内。不应将其视为用户可编辑字段，
     // 否则终端获焦时所有面板快捷键（Meta+B / Meta+S 等）会被静默丢弃。
     // 注意：.xterm 是 xterm.js 的固定容器类名，应用内不应复用该类名。
-    return !target.closest('.xterm');
+    return !isTerminalKeyboardTarget(target);
   }
   return false;
 }
@@ -402,6 +406,8 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const actionId = shortcutLookup.get(shortcut);
       if (!actionId) return;
+
+      if (actionId === 'find-in-file-preview' && isTerminalKeyboardTarget(event.target)) return;
 
       const handler = actionHandlersRef.current.get(actionId);
       if (!handler) return;

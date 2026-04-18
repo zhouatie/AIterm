@@ -9,7 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import type { TerminalAttention, TerminalSessionInfo } from '../preload';
-import { useKeyboardShortcuts } from '../ShortcutContext';
+import { isTerminalKeyboardTarget, useKeyboardShortcuts } from '../ShortcutContext';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import {
   loadTabState,
@@ -577,6 +577,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       if (event.key === 'Meta') setIsCmdHeld(true);
       // Cmd+F to toggle terminal search bar
       if ((event.metaKey || event.ctrlKey) && event.key === 'f') {
+        if (!isTerminalKeyboardTarget(event.target)) return;
         event.preventDefault();
         event.stopPropagation();
         setSearchBarVisible((v) => !v);
