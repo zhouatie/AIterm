@@ -1,0 +1,23 @@
+openspec/specs/file-preview/spec.md
+  37cb461d44e23703 109-111,133-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "bbfd2db01b9b9743a5ec0cc94828a2d99cf9b5b3",
+  "prompts": {
+    "37cb461d44e23703": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_262097f46ffegIRP7CHfdN5wtP",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 149,
+      "total_deletions": 22,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
