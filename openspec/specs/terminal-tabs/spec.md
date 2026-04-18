@@ -340,17 +340,97 @@ terminal 侧边导航 SHALL 以毛玻璃导航表面呈现 workspace 与二级 t
 - **THEN** 侧边栏顶部 SHALL 有 inset 高光线增加"玻璃板"边缘感
 
 ### Requirement: Terminal 导航状态提示协调
-terminal 导航中的激活态、attention 提示与收起 / 展开入口 SHALL 使用协调一致的视觉语言，不得相互争抢用户注意力。
+terminal 导航中的激活态、agent status 提示与收起 / 展开入口 SHALL 使用协调一致的视觉语言，不得相互争抢用户注意力。
 
-#### Scenario: attention 提示独立于活跃态
-- **WHEN** 某个终端存在 attention 提示，且该终端不是当前活跃项
-- **THEN** attention 提示 SHALL 以独立但克制的方式可见
+#### Scenario: agent status 提示独立于活跃态
+- **WHEN** 某个终端存在 agent status 提示，且该终端不是当前活跃项
+- **THEN** agent status 提示 SHALL 以独立但克制的方式可见
 - **THEN** 该提示 SHALL 不覆盖或替代活跃 terminal tab 的焦点表达规则
 
 #### Scenario: 收起展开入口与侧边导航风格统一
 - **WHEN** terminal 侧边导航处于展开或收起状态
 - **THEN** 对应的收起 / 展开入口 SHALL 与导航表面使用一致的描边、背景与 hover 规则
 - **THEN** 该入口 SHALL 看起来属于终端工作台界面的一部分，而不是额外悬浮的小部件
+
+#### Scenario: agent status 状态变化不造成 tab 抖动
+- **WHEN** terminal tab 的 agent status 在 `running`、`completed`、`needs_user`、`error` 或无状态之间变化
+- **THEN** terminal tab 的文本、关闭按钮和整体宽度 SHALL 保持稳定
+- **THEN** 状态标识 SHALL 使用固定尺寸的视觉槽位呈现
+
+### Requirement: Terminal tab agent status 标识
+terminal 二级 tab SHALL 在固定位置展示 agent 当前状态标识，让用户在执行中、执行完成、待确认和错误状态之间建立清晰区分。
+
+#### Scenario: running 状态展示低干扰动效
+- **WHEN** terminal session 的 agent status 为 `running`
+- **THEN** 对应二级 tab SHALL 展示执行中的标识
+- **THEN** 该标识 SHALL 使用低干扰动画或呼吸效果表示 agent 正在工作
+
+#### Scenario: completed 状态展示完成反馈
+- **WHEN** terminal session 的 agent status 为 `completed`
+- **THEN** 对应二级 tab SHALL 展示完成标识
+- **THEN** 该标识 SHALL 与错误和待确认状态有明确视觉区分
+
+#### Scenario: needs_user 状态展示待确认反馈
+- **WHEN** terminal session 的 agent status 为 `needs_user`
+- **THEN** 对应二级 tab SHALL 展示需要用户介入的标识
+- **THEN** 该标识 SHALL 在多个状态中拥有最高视觉优先级
+
+#### Scenario: error 状态展示错误反馈
+- **WHEN** terminal session 的 agent status 为 `error`
+- **THEN** 对应二级 tab SHALL 展示错误标识
+- **THEN** 该标识 SHALL 与 completed 状态有明确视觉区分
+
+#### Scenario: 无状态保持原有 tab 表达
+- **WHEN** terminal session 没有 agent status 或状态被清除
+- **THEN** 对应二级 tab SHALL 保持原有活跃 / 非活跃视觉语义
+
+### Requirement: Agent status 详情展示
+terminal tab SHALL 在不增加常驻文本噪音的前提下提供 agent status 详情。
+
+#### Scenario: 悬停状态标识显示详情
+- **WHEN** 用户悬停 terminal tab 上的 agent status 标识
+- **THEN** 系统 SHALL 显示包含 agent 名称和状态消息的 tooltip 或等效轻量提示
+
+#### Scenario: tab 主体不常驻展示 agent 名称
+- **WHEN** terminal tab 存在 agent status
+- **THEN** tab 主体 SHALL NOT 常驻显示 Codex、Claude Code 或 OpenCode 名称文本
+- **THEN** tab 主体 SHALL 保持 terminal 名称为主要文本内容
+
+### Requirement: 收起侧边栏聚合状态提示
+terminal 侧边栏收起时 SHALL 在展开入口上展示可见的聚合 agent status 提示。
+
+#### Scenario: 收起时存在待确认状态
+- **WHEN** terminal 侧边栏处于收起状态且任一 session 具有 `needs_user` 状态
+- **THEN** 展开入口 SHALL 展示待确认聚合标识
+
+#### Scenario: 收起时存在错误状态
+- **WHEN** terminal 侧边栏处于收起状态且任一 session 具有 `error` 状态，且没有 `needs_user` 状态
+- **THEN** 展开入口 SHALL 展示错误聚合标识
+
+#### Scenario: 收起时存在运行状态
+- **WHEN** terminal 侧边栏处于收起状态且任一 session 具有 `running` 状态，且没有 `needs_user` 或 `error` 状态
+- **THEN** 展开入口 SHALL 展示执行中聚合标识
+
+#### Scenario: 收起时存在完成状态
+- **WHEN** terminal 侧边栏处于收起状态且任一 session 具有 `completed` 状态，且没有更高优先级状态
+- **THEN** 展开入口 SHALL 展示完成聚合标识
+
+#### Scenario: 展开侧边栏不清除状态
+- **WHEN** 用户通过展开入口展开 terminal 侧边栏
+- **THEN** 系统 SHALL 保留各 terminal tab 上的 agent status
+- **THEN** 系统 SHALL NOT 仅因展开侧边栏而清除状态
+
+### Requirement: Agent status 视觉优先级
+terminal 导航 SHALL 使用统一优先级决定同一入口上的 agent status 表达。
+
+#### Scenario: 多状态聚合时按优先级选择
+- **WHEN** 一个聚合入口需要代表多个 terminal session 的 agent status
+- **THEN** 系统 SHALL 按 `needs_user`、`error`、`running`、`completed`、`idle` 的顺序选择展示状态
+
+#### Scenario: active 与 needs_user 同时存在
+- **WHEN** 当前活跃 terminal tab 收到 `needs_user` 状态
+- **THEN** terminal tab SHALL 同时保留活跃态表达和待确认状态标识
+- **THEN** 待确认状态标识 SHALL 不被活跃态背景吞没
 
 ### Requirement: Tab 状态持久化
 系统 SHALL 在应用退出时自动保存当前 workspace/session 树结构及关键 UI 状态，以便下次启动时恢复。

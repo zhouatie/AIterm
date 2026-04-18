@@ -14,9 +14,10 @@ if (!url || !token || !id) {
 
 const agent = args.agent || inferAgent(hookInput);
 const event = normalizeEvent(args.event || inferEvent(hookInput), agent, hookInput);
+const state = args.state || inferState(agent, event, hookInput);
 const message = args.message || inferMessage(agent, event, hookInput);
 
-if (!agent || !event) {
+if (!agent || !event || !state) {
   process.exit(0);
 }
 
@@ -28,6 +29,7 @@ try {
       id,
       token,
       agent,
+      state,
       event,
       message,
       timestamp: Date.now(),
@@ -98,26 +100,79 @@ function normalizeEvent(event, agent, input) {
   return event;
 }
 
+function inferState(agent, event, input) {
+  if (agent === 'codex') {
+    if (event === 'UserPromptSubmit') return 'running';
+    if (event === 'Stop') return 'completed';
+    return '';
+  }
+
+  if (agent === 'claude-code') {
+    if (event === 'UserPromptSubmit') return 'running';
+    if (event === 'PermissionRequest') return 'needs_user';
+    if (event === 'Notification:permission_prompt') return 'needs_user';
+    if (event === 'Notification:idle_prompt') return 'needs_user';
+    if (event === 'Stop') return 'completed';
+    return '';
+  }
+
+  if (agent === 'opencode') {
+    if (event === 'session.status') return inferOpenCodeSessionStatusState(input);
+    if (event === 'permission.asked') return 'needs_user';
+    if (event === 'session.idle') return 'completed';
+    if (event === 'session.error') return 'error';
+    return '';
+  }
+
+  return '';
+}
+
+function inferOpenCodeSessionStatusState(input) {
+  if (!input || typeof input !== 'object') return 'running';
+  let status = '';
+  if (typeof input.status === 'string') {
+    status = input.status;
+  } else if (
+    input.properties &&
+    typeof input.properties === 'object' &&
+    typeof input.properties.status === 'string'
+  ) {
+    status = input.properties.status;
+  }
+  if (!status) return 'running';
+  if (status === 'idle') return 'completed';
+  if (status === 'error') return 'error';
+  return 'running';
+}
+
 function inferMessage(agent, event, input) {
   if (input && typeof input === 'object' && typeof input.message === 'string') {
     return input.message;
   }
 
   if (agent === 'claude-code') {
+    if (event === 'PermissionRequest') {
+      return 'Claude Code 等待权限确认。';
+    }
     if (event === 'Notification:permission_prompt') {
       return 'Claude Code 等待权限确认。';
     }
     if (event === 'Notification:idle_prompt') {
       return 'Claude Code 已暂停，等待你的下一步输入。';
     }
-    return 'Claude Code 需要你回到终端处理。';
+    if (event === 'UserPromptSubmit') return 'Claude Code 正在执行。';
+    if (event === 'Stop') return 'Claude Code 已完成当前回合。';
+    return 'Claude Code 状态已更新。';
   }
 
   if (agent === 'opencode') {
     if (event === 'permission.asked') return 'OpenCode 等待权限确认。';
-    if (event === 'session.idle') return 'OpenCode 已暂停，等待你的下一步输入。';
-    return 'OpenCode 需要你回到终端处理。';
+    if (event === 'session.idle') return 'OpenCode 已完成当前回合。';
+    if (event === 'session.error') return 'OpenCode 出现异常。';
+    if (event === 'session.status') return 'OpenCode 正在执行。';
+    return 'OpenCode 状态已更新。';
   }
 
-  return 'Codex 已停止当前回合，等待你的下一步输入。';
+  if (event === 'UserPromptSubmit') return 'Codex 正在执行。';
+  return 'Codex 已完成当前回合。';
 }

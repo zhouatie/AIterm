@@ -8,7 +8,7 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import type { TerminalAttention, TerminalSessionInfo } from '../preload';
+import type { TerminalAgentStatus, TerminalAgentStatusState, TerminalSessionInfo } from '../preload';
 import { isTerminalKeyboardTarget, useKeyboardShortcuts } from '../ShortcutContext';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import {
@@ -76,6 +76,19 @@ const ROW_HEIGHT = 34;
 const SIDEBAR_TOGGLE_SIZE = 28;
 /** Duration (ms) for the sidebar collapse/expand animation. */
 const SIDEBAR_COLLAPSE_MS = 180;
+const COMPLETED_STATUS_AUTO_CLEAR_MS = 2400;
+const CLEAR_ON_SELECT_STATES: readonly TerminalAgentStatusState[] = [
+  'needs_user',
+  'completed',
+  'error',
+];
+const AGENT_STATUS_PRIORITY: Record<TerminalAgentStatusState, number> = {
+  needs_user: 5,
+  error: 4,
+  running: 3,
+  completed: 2,
+  idle: 1,
+};
 
 function getLastPathSegment(cwd: string): string {
   const trimmed = cwd.replace(/\/+$/, '');
@@ -230,6 +243,56 @@ function getSessionDisplayLabel(
   return sessionNameOverrides[session.id] || session.displayLabel;
 }
 
+function getAgentDisplayName(agent: TerminalAgentStatus['agent']): string {
+  if (agent === 'claude-code') return 'Claude Code';
+  if (agent === 'opencode') return 'OpenCode';
+  return 'Codex';
+}
+
+function getAgentStatusLabel(state: TerminalAgentStatusState): string {
+  if (state === 'running') return '执行中';
+  if (state === 'completed') return '执行完成';
+  if (state === 'needs_user') return '待确认';
+  if (state === 'error') return '异常';
+  return '空闲';
+}
+
+function getAgentStatusColor(state: TerminalAgentStatusState, isActive: boolean): string {
+  if (state === 'running') return 'var(--color-agent-status-running)';
+  if (state === 'completed') return 'var(--color-agent-status-completed)';
+  if (state === 'needs_user') return 'var(--color-attention)';
+  if (state === 'error') return 'var(--color-agent-status-error)';
+  return isActive ? 'var(--color-accent-primary)' : 'var(--color-tab-inactive-dot)';
+}
+
+function getAgentStatusSoftColor(state: TerminalAgentStatusState): string {
+  if (state === 'running') return 'var(--color-agent-status-running-soft)';
+  if (state === 'completed') return 'var(--color-agent-status-completed-soft)';
+  if (state === 'needs_user') return 'var(--color-attention-soft)';
+  if (state === 'error') return 'var(--color-agent-status-error-soft)';
+  return 'transparent';
+}
+
+function getAgentStatusTooltip(status: TerminalAgentStatus | undefined): string | undefined {
+  if (!status || status.state === 'idle') return undefined;
+  const label = getAgentStatusLabel(status.state);
+  const agent = getAgentDisplayName(status.agent);
+  return `${agent} · ${label}\n${status.message}`;
+}
+
+function resolveHighestAgentStatus(
+  statuses: Iterable<TerminalAgentStatus>,
+): TerminalAgentStatus | undefined {
+  let highest: TerminalAgentStatus | undefined;
+  for (const status of statuses) {
+    if (status.state === 'idle') continue;
+    if (!highest || AGENT_STATUS_PRIORITY[status.state] > AGENT_STATUS_PRIORITY[highest.state]) {
+      highest = status;
+    }
+  }
+  return highest;
+}
+
 function moveSessionBetweenWorkspaces(
   workspaces: WorkspaceNode[],
   dragState: DragState,
@@ -333,10 +396,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const workspaceRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const sessionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const completedStatusTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const [workspaces, setWorkspaces] = useState<WorkspaceNode[]>([]);
   const [sessionNameOverrides, setSessionNameOverrides] = useState<Record<string, string>>({});
-  const [attentionBySessionId, setAttentionBySessionId] = useState<Record<string, TerminalAttention>>({});
+  const [agentStatusBySessionId, setAgentStatusBySessionId] = useState<Record<string, TerminalAgentStatus>>({});
   const [activeSessionId, setActiveSessionId] = useState<string>('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [menuState, setMenuState] = useState<SidebarMenuState | null>(null);
@@ -368,14 +432,37 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   workspacesRef.current = workspaces;
   sessionNameOverridesRef.current = sessionNameOverrides;
 
-  const clearSessionAttention = useCallback((sessionId: string) => {
-    setAttentionBySessionId((prev) => {
+  const cancelCompletedStatusTimer = useCallback((sessionId: string) => {
+    const timer = completedStatusTimersRef.current.get(sessionId);
+    if (!timer) return;
+    clearTimeout(timer);
+    completedStatusTimersRef.current.delete(sessionId);
+  }, []);
+
+  const clearSessionAgentStatus = useCallback((
+    sessionId: string,
+    states?: readonly TerminalAgentStatusState[],
+  ) => {
+    cancelCompletedStatusTimer(sessionId);
+    setAgentStatusBySessionId((prev) => {
+      const current = prev[sessionId];
+      if (!current) return prev;
+      if (states && !states.includes(current.state)) return prev;
       if (!(sessionId in prev)) return prev;
       const next = { ...prev };
       delete next[sessionId];
       return next;
     });
-  }, []);
+  }, [cancelCompletedStatusTimer]);
+
+  const scheduleCompletedStatusClear = useCallback((sessionId: string) => {
+    cancelCompletedStatusTimer(sessionId);
+    const timer = setTimeout(() => {
+      completedStatusTimersRef.current.delete(sessionId);
+      clearSessionAgentStatus(sessionId, ['completed']);
+    }, COMPLETED_STATUS_AUTO_CLEAR_MS);
+    completedStatusTimersRef.current.set(sessionId, timer);
+  }, [cancelCompletedStatusTimer, clearSessionAgentStatus]);
 
   const applySessionInfo = useCallback((info: TerminalSessionInfo) => {
     setWorkspaces((prev) =>
@@ -566,6 +653,15 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [createWorkspace, initialDirectory, applySessionInfo]);
 
   useEffect(() => {
+    return () => {
+      for (const timer of completedStatusTimersRef.current.values()) {
+        clearTimeout(timer);
+      }
+      completedStatusTimersRef.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
     return registerAction('toggle-terminal-sidebar', () => {
       setSidebarCollapsed((prev) => !prev);
     });
@@ -661,21 +757,37 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [applySessionInfo]);
 
   useEffect(() => {
-    const unsubscribe = window.terminalApi.onAttention((attention) => {
-      setAttentionBySessionId((prev) => ({
+    const unsubscribe = window.terminalApi.onAgentStatus((status) => {
+      if (status.state === 'idle') {
+        clearSessionAgentStatus(status.id);
+        return;
+      }
+
+      if (status.state === 'completed' && status.id === activeSessionId) {
+        scheduleCompletedStatusClear(status.id);
+      } else {
+        cancelCompletedStatusTimer(status.id);
+      }
+
+      setAgentStatusBySessionId((prev) => ({
         ...prev,
-        [attention.id]: attention,
+        [status.id]: status,
       }));
     });
     return unsubscribe;
-  }, []);
+  }, [
+    activeSessionId,
+    cancelCompletedStatusTimer,
+    clearSessionAgentStatus,
+    scheduleCompletedStatusClear,
+  ]);
 
   useEffect(() => {
-    const unsubscribe = window.terminalApi.onAttentionCleared(({ id }) => {
-      clearSessionAttention(id);
+    const unsubscribe = window.terminalApi.onAgentStatusCleared(({ id }) => {
+      clearSessionAgentStatus(id);
     });
     return unsubscribe;
-  }, [clearSessionAttention]);
+  }, [clearSessionAgentStatus]);
 
   useEffect(() => {
     if (sidebarCollapsed) {
@@ -703,7 +815,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [renameTargetKey]);
 
   const handleSelectSession = useCallback((sessionId: string) => {
-    clearSessionAttention(sessionId);
+    clearSessionAgentStatus(sessionId, CLEAR_ON_SELECT_STATES);
     setWorkspaces((prev) =>
       prev.map((workspace) => {
         const selectedSession = workspace.sessions.find((session) => session.id === sessionId);
@@ -716,7 +828,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       }),
     );
     setActiveSessionId(sessionId);
-  }, [clearSessionAttention]);
+  }, [clearSessionAgentStatus]);
 
   useEffect(() => {
     const unsubscribe = window.terminalApi.onActivateSession(({ id }) => {
@@ -814,7 +926,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     } catch {
       // Ignore dispose failures for already-closed sessions.
     }
-    clearSessionAttention(sessionId);
+    clearSessionAgentStatus(sessionId);
     setWorkspaces(nextWorkspaces);
 
     setSessionNameOverrides((prev) => {
@@ -845,7 +957,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     if (nextActiveSessionId) {
       setActiveSessionId(nextActiveSessionId);
     }
-  }, [activeSessionId, clearSessionAttention, createWorkspace, initialDirectory]);
+  }, [activeSessionId, clearSessionAgentStatus, createWorkspace, initialDirectory]);
 
   const handleCloseWorkspace = useCallback(async (workspaceId: string) => {
     const workspaceToClose = workspacesRef.current.find((workspace) => workspace.id === workspaceId);
@@ -866,7 +978,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       } catch {
         // Ignore dispose failures for already-closed sessions.
       }
-      clearSessionAttention(session.id);
+      clearSessionAgentStatus(session.id);
     }
     setWorkspaces(nextWorkspaces);
 
@@ -889,7 +1001,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     if (nextActiveSessionId) {
       setActiveSessionId(nextActiveSessionId);
     }
-  }, [activeSessionId, clearSessionAttention, createWorkspace, initialDirectory]);
+  }, [activeSessionId, clearSessionAgentStatus, createWorkspace, initialDirectory]);
 
   const handleStartWorkspaceRename = useCallback((workspaceId: string) => {
     const workspace = workspacesRef.current.find((item) => item.id === workspaceId);
@@ -1151,6 +1263,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     if (index < 8) return String(index + 1);
     return null;
   };
+  const aggregateAgentStatus = resolveHighestAgentStatus(Object.values(agentStatusBySessionId));
+  const aggregateAgentStatusTooltip = getAgentStatusTooltip(aggregateAgentStatus);
+  const sidebarToggleTitleWithStatus = aggregateAgentStatusTooltip
+    ? `${sidebarToggleTitle}\n${aggregateAgentStatusTooltip}`
+    : sidebarToggleTitle;
 
   return (
     <div
@@ -1454,8 +1571,15 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                   >
                     {workspace.sessions.map((session, sessionIndex) => {
                       const isActive = session.id === activeSessionId;
-                      const attention = attentionBySessionId[session.id];
-                      const hasAttention = !!attention;
+                      const agentStatus = agentStatusBySessionId[session.id];
+                      const hasAgentStatus = !!agentStatus && agentStatus.state !== 'idle';
+                      const agentStatusTitle = getAgentStatusTooltip(agentStatus);
+                      const agentStatusColor = agentStatus
+                        ? getAgentStatusColor(agentStatus.state, isActive)
+                        : getAgentStatusColor('idle', isActive);
+                      const agentStatusSoftColor = agentStatus
+                        ? getAgentStatusSoftColor(agentStatus.state)
+                        : 'transparent';
                       const isHovered = hoveredSessionId === session.id;
                       const isRenamingSession =
                         renameState?.type === 'session' && renameState.sessionId === session.id;
@@ -1539,20 +1663,35 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                           }}
                         >
                              <span
-                               title={attention?.message}
+                               title={agentStatusTitle}
                                style={{
-                                 width: 6,
-                                 height: 6,
-                                 borderRadius: '50%',
-                                 backgroundColor: hasAttention
-                                   ? 'var(--color-attention)'
-                                   : isActive
-                                   ? 'var(--color-accent-primary)'
-                                   : 'var(--color-tab-inactive-dot)',
-                                 boxShadow: hasAttention ? '0 0 0 4px var(--color-attention-soft)' : 'none',
+                                 width: 8,
+                                 height: 14,
+                                 display: 'inline-flex',
+                                 alignItems: 'center',
+                                 justifyContent: 'center',
                                  flexShrink: 0,
                                }}
-                             />
+                             >
+                               <span
+                                 style={{
+                                   width: 6,
+                                   height: 6,
+                                   borderRadius: agentStatus?.state === 'completed' ? 2 : '50%',
+                                   backgroundColor: agentStatusColor,
+                                   boxShadow: hasAgentStatus
+                                     ? `0 0 0 4px ${agentStatusSoftColor}`
+                                     : 'none',
+                                   transform: agentStatus?.state === 'error' ? 'rotate(45deg)' : 'none',
+                                   animation:
+                                     agentStatus?.state === 'running'
+                                       ? 'agent-status-breathe 1.4s ease-in-out infinite'
+                                       : agentStatus?.state === 'needs_user'
+                                       ? 'agent-status-pulse 1.6s ease-in-out infinite'
+                                       : 'none',
+                                 }}
+                               />
+                             </span>
                              <span
                                style={{
                                  width: '1.25rem',
@@ -1643,7 +1782,9 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                 }}
                                 onMouseEnter={(event) => {
                                   event.currentTarget.style.backgroundColor = 'var(--color-sidebar-item-hover)';
-                                  event.currentTarget.style.color = hasAttention ? 'var(--color-attention)' : 'var(--color-text-primary)';
+                                  event.currentTarget.style.color = agentStatus?.state === 'needs_user'
+                                    ? 'var(--color-attention)'
+                                    : 'var(--color-text-primary)';
                                 }}
                                 onMouseLeave={(event) => {
                                   event.currentTarget.style.backgroundColor = 'transparent';
@@ -1677,8 +1818,9 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           >
             <button
               onClick={() => setSidebarCollapsed(true)}
-              title={sidebarToggleTitle}
+              title={sidebarToggleTitleWithStatus}
               style={{
+                position: 'relative',
                 width: SIDEBAR_TOGGLE_SIZE,
                 height: SIDEBAR_TOGGLE_SIZE,
                 display: 'inline-flex',
@@ -1706,6 +1848,27 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
               }}
             >
               <PanelLeftClose size={14} />
+              {aggregateAgentStatus && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 3,
+                    top: 3,
+                    width: 7,
+                    height: 7,
+                    borderRadius: aggregateAgentStatus.state === 'completed' ? 2 : '50%',
+                    backgroundColor: getAgentStatusColor(aggregateAgentStatus.state, false),
+                    boxShadow: `0 0 0 3px ${getAgentStatusSoftColor(aggregateAgentStatus.state)}`,
+                    transform: aggregateAgentStatus.state === 'error' ? 'rotate(45deg)' : 'none',
+                    animation:
+                      aggregateAgentStatus.state === 'running'
+                        ? 'agent-status-breathe 1.4s ease-in-out infinite'
+                        : aggregateAgentStatus.state === 'needs_user'
+                        ? 'agent-status-pulse 1.6s ease-in-out infinite'
+                        : 'none',
+                  }}
+                />
+              )}
             </button>
           </div>
         )}
@@ -1750,7 +1913,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       {sidebarCollapsed && (
         <button
           onClick={() => setSidebarCollapsed(false)}
-          title={sidebarToggleTitle}
+          title={sidebarToggleTitleWithStatus}
           style={{
             position: 'absolute',
             bottom: 12,
@@ -1782,6 +1945,27 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           }}
         >
           <PanelLeftOpen size={14} />
+          {aggregateAgentStatus && (
+            <span
+              style={{
+                position: 'absolute',
+                right: 3,
+                top: 3,
+                width: 7,
+                height: 7,
+                borderRadius: aggregateAgentStatus.state === 'completed' ? 2 : '50%',
+                backgroundColor: getAgentStatusColor(aggregateAgentStatus.state, false),
+                boxShadow: `0 0 0 3px ${getAgentStatusSoftColor(aggregateAgentStatus.state)}`,
+                transform: aggregateAgentStatus.state === 'error' ? 'rotate(45deg)' : 'none',
+                animation:
+                  aggregateAgentStatus.state === 'running'
+                    ? 'agent-status-breathe 1.4s ease-in-out infinite'
+                    : aggregateAgentStatus.state === 'needs_user'
+                    ? 'agent-status-pulse 1.6s ease-in-out infinite'
+                    : 'none',
+              }}
+            />
+          )}
         </button>
       )}
 

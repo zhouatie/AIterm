@@ -1,5 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { TerminalAttention, TerminalAttentionCleared } from './terminal-attention';
+import type {
+  TerminalAgentStatus,
+  TerminalAgentStatusCleared,
+  TerminalAgentStatusState,
+} from './terminal-attention';
 
 export interface TerminalApi {
   create(cols: number, rows: number, cwd?: string): Promise<{ id: string }>;
@@ -15,15 +19,19 @@ export interface TerminalApi {
     callback: (data: { exitCode: number; signal?: number }) => void,
   ): () => void;
   onSessionInfoChanged(callback: (data: TerminalSessionInfo) => void): () => void;
-  onAttention(callback: (data: TerminalAttention) => void): () => void;
-  onAttentionCleared(callback: (data: TerminalAttentionCleared) => void): () => void;
+  onAgentStatus(callback: (data: TerminalAgentStatus) => void): () => void;
+  onAgentStatusCleared(callback: (data: TerminalAgentStatusCleared) => void): () => void;
   onActivateSession(callback: (data: { id: string }) => void): () => void;
   saveBuffer(sessionId: string, content: string): void;
   loadBuffer(sessionId: string): Promise<string | null>;
   cleanupBuffers(activeSessionIds: string[]): void;
 }
 
-export type { TerminalAttention, TerminalAttentionCleared } from './terminal-attention';
+export type {
+  TerminalAgentStatus,
+  TerminalAgentStatusCleared,
+  TerminalAgentStatusState,
+} from './terminal-attention';
 
 export interface TerminalSessionInfo {
   id: string;
@@ -134,25 +142,25 @@ contextBridge.exposeInMainWorld('terminalApi', {
     };
   },
 
-  onAttention: (callback: (data: TerminalAttention) => void) => {
+  onAgentStatus: (callback: (data: TerminalAgentStatus) => void) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
-      data: TerminalAttention,
+      data: TerminalAgentStatus,
     ) => callback(data);
-    ipcRenderer.on('terminal:attention', listener);
+    ipcRenderer.on('terminal:agentStatus', listener);
     return () => {
-      ipcRenderer.removeListener('terminal:attention', listener);
+      ipcRenderer.removeListener('terminal:agentStatus', listener);
     };
   },
 
-  onAttentionCleared: (callback: (data: TerminalAttentionCleared) => void) => {
+  onAgentStatusCleared: (callback: (data: TerminalAgentStatusCleared) => void) => {
     const listener = (
       _event: Electron.IpcRendererEvent,
-      data: TerminalAttentionCleared,
+      data: TerminalAgentStatusCleared,
     ) => callback(data);
-    ipcRenderer.on('terminal:attentionCleared', listener);
+    ipcRenderer.on('terminal:agentStatusCleared', listener);
     return () => {
-      ipcRenderer.removeListener('terminal:attentionCleared', listener);
+      ipcRenderer.removeListener('terminal:agentStatusCleared', listener);
     };
   },
 

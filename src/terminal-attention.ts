@@ -1,19 +1,29 @@
-export type TerminalAttentionAgent = 'codex' | 'claude-code' | 'opencode';
+export type TerminalAgentStatusAgent = 'codex' | 'claude-code' | 'opencode';
+export type TerminalAgentStatusState = 'running' | 'completed' | 'needs_user' | 'error' | 'idle';
 
-export interface TerminalAttention {
+export interface TerminalAgentStatus {
   id: string;
-  agent: TerminalAttentionAgent;
+  agent: TerminalAgentStatusAgent;
+  state: TerminalAgentStatusState;
   event: string;
   message: string;
   timestamp: number;
 }
 
-export interface TerminalAttentionCleared {
+export interface TerminalAgentStatusCleared {
   id: string;
 }
 
-export const TERMINAL_ATTENTION_AGENTS: readonly TerminalAttentionAgent[] = [
+export const TERMINAL_AGENT_STATUS_AGENTS: readonly TerminalAgentStatusAgent[] = [
   'codex',
   'claude-code',
   'opencode',
+];
+
+export const TERMINAL_AGENT_STATUS_STATES: readonly TerminalAgentStatusState[] = [
+  'running',
+  'completed',
+  'needs_user',
+  'error',
+  'idle',
 ];

@@ -6,13 +6,13 @@ import type {
   LiveViewApi,
   BrowserApi,
   GitApi,
-  TerminalAttention,
-  TerminalAttentionCleared,
+  TerminalAgentStatus,
+  TerminalAgentStatusCleared,
 } from './preload';
 
 export type {
-  TerminalAttention,
-  TerminalAttentionCleared,
+  TerminalAgentStatus,
+  TerminalAgentStatusCleared,
 };
 
 declare global {

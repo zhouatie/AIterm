@@ -19,9 +19,11 @@ import {
   type PtyNotificationEnv,
 } from './pty-manager';
 import {
-  TERMINAL_ATTENTION_AGENTS,
-  type TerminalAttention,
-  type TerminalAttentionAgent,
+  TERMINAL_AGENT_STATUS_AGENTS,
+  TERMINAL_AGENT_STATUS_STATES,
+  type TerminalAgentStatus,
+  type TerminalAgentStatusAgent,
+  type TerminalAgentStatusState,
 } from './terminal-attention';
 import {
   startLiveViewServer,
@@ -48,9 +50,11 @@ let mainWindow: BrowserWindow | null = null;
 let attentionServer: http.Server | null = null;
 let attentionNotifyUrl = '';
 let attentionNotifyToken = '';
-const attentionSessionIds = new Set<string>();
+const agentStatusBySessionId = new Map<string, TerminalAgentStatus>();
+const manualInterruptBySessionId = new Map<string, number>();
 const TERMINAL_OUTPUT_FLUSH_MS = 16;
 const TERMINAL_CLOSE_CONFIRM_BUTTON_INDEX = 1;
+const MANUAL_INTERRUPT_SUPPRESS_MS = 2500;
 
 interface TerminalStreamState {
   attached: boolean;
@@ -146,7 +150,8 @@ function clearAllTerminalStreamStates(): void {
 }
 
 function disposeAllTerminalSessions(): void {
-  attentionSessionIds.clear();
+  agentStatusBySessionId.clear();
+  manualInterruptBySessionId.clear();
   clearAllTerminalStreamStates();
   disposeAllSessions();
 }
@@ -173,69 +178,138 @@ function getAttentionNotificationEnv(): PtyNotificationEnv | undefined {
   };
 }
 
-function isTerminalAttentionAgent(value: unknown): value is TerminalAttentionAgent {
+function isTerminalAgentStatusAgent(value: unknown): value is TerminalAgentStatusAgent {
   return typeof value === 'string'
-    && TERMINAL_ATTENTION_AGENTS.includes(value as TerminalAttentionAgent);
+    && TERMINAL_AGENT_STATUS_AGENTS.includes(value as TerminalAgentStatusAgent);
 }
 
-function getAgentDisplayName(agent: TerminalAttentionAgent): string {
+function isTerminalAgentStatusState(value: unknown): value is TerminalAgentStatusState {
+  return typeof value === 'string'
+    && TERMINAL_AGENT_STATUS_STATES.includes(value as TerminalAgentStatusState);
+}
+
+function getAgentDisplayName(agent: TerminalAgentStatusAgent): string {
   if (agent === 'claude-code') return 'Claude Code';
   if (agent === 'opencode') return 'OpenCode';
   return 'Codex';
 }
 
-function sendTerminalAttention(attention: TerminalAttention): void {
-  attentionSessionIds.add(attention.id);
+function getAgentStatusFallbackMessage(agent: TerminalAgentStatusAgent, state: TerminalAgentStatusState): string {
+  const displayName = getAgentDisplayName(agent);
+  if (state === 'running') return `${displayName} 正在执行。`;
+  if (state === 'completed') return `${displayName} 已完成当前回合。`;
+  if (state === 'needs_user') return `${displayName} 等待处理。`;
+  if (state === 'error') return `${displayName} 出现异常。`;
+  return `${displayName} 当前空闲。`;
+}
 
-  try {
-    if (Notification.isSupported()) {
-      const notification = new Notification({
-        title: `${getAgentDisplayName(attention.agent)} 需要处理`,
-        body: attention.message || '请回到 GUI 终端继续处理。',
-      });
-      notification.on('click', () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          if (mainWindow.isMinimized()) mainWindow.restore();
-          mainWindow.show();
-          mainWindow.focus();
-          mainWindow.webContents.send('terminal:activateSession', { id: attention.id });
-        }
-      });
-      notification.show();
+function getAgentStatusNotificationTitle(status: TerminalAgentStatus): string {
+  const displayName = getAgentDisplayName(status.agent);
+  if (status.state === 'completed') return `${displayName} 已完成`;
+  if (status.state === 'error') return `${displayName} 出现异常`;
+  return `${displayName} 需要处理`;
+}
+
+function shouldShowAgentStatusNotification(state: TerminalAgentStatusState): boolean {
+  return state === 'needs_user' || state === 'completed' || state === 'error';
+}
+
+function clearTerminalAgentStatus(
+  id: string,
+  states?: readonly TerminalAgentStatusState[],
+): void {
+  const current = agentStatusBySessionId.get(id);
+  if (!current) return;
+  if (states && !states.includes(current.state)) return;
+
+  agentStatusBySessionId.delete(id);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('terminal:agentStatusCleared', { id });
+  }
+}
+
+function hasRecentManualInterrupt(id: string): boolean {
+  const timestamp = manualInterruptBySessionId.get(id);
+  if (!timestamp) return false;
+  if (Date.now() - timestamp <= MANUAL_INTERRUPT_SUPPRESS_MS) return true;
+  manualInterruptBySessionId.delete(id);
+  return false;
+}
+
+function isManualInterruptInput(data: string): boolean {
+  return data.includes('\u0003') || data.includes('\u0004') || data === '\u001b';
+}
+
+function markManualTerminalInterrupt(id: string): void {
+  manualInterruptBySessionId.set(id, Date.now());
+  clearTerminalAgentStatus(id);
+}
+
+function sendTerminalAgentStatus(status: TerminalAgentStatus): void {
+  if (status.state === 'running') {
+    manualInterruptBySessionId.delete(status.id);
+  } else if (hasRecentManualInterrupt(status.id)) {
+    return;
+  }
+
+  if (status.state === 'idle') {
+    agentStatusBySessionId.delete(status.id);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('terminal:agentStatusCleared', { id: status.id });
     }
-  } catch (error) {
-    console.error('[terminal-attention] Failed to show notification:', error);
+    return;
+  }
+
+  agentStatusBySessionId.set(status.id, status);
+
+  if (shouldShowAgentStatusNotification(status.state)) {
+    try {
+      if (Notification.isSupported()) {
+        const notification = new Notification({
+          title: getAgentStatusNotificationTitle(status),
+          body: status.message || '请回到 GUI 终端继续处理。',
+        });
+        notification.on('click', () => {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+            clearTerminalAgentStatus(status.id, ['needs_user', 'completed', 'error']);
+            mainWindow.webContents.send('terminal:activateSession', { id: status.id });
+          }
+        });
+        notification.show();
+      }
+    } catch (error) {
+      console.error('[terminal-agent-status] Failed to show notification:', error);
+    }
   }
 
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('terminal:attention', attention);
+    mainWindow.webContents.send('terminal:agentStatus', status);
   }
 }
 
-function clearTerminalAttention(id: string): void {
-  if (!attentionSessionIds.delete(id)) return;
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('terminal:attentionCleared', { id });
-  }
-}
-
-function parseAttentionPayload(payload: unknown): TerminalAttention | null {
+function parseAgentStatusPayload(payload: unknown): TerminalAgentStatus | null {
   if (!payload || typeof payload !== 'object') return null;
   const data = payload as Record<string, unknown>;
 
   if (data.token !== attentionNotifyToken) return null;
   if (typeof data.id !== 'string' || !hasSession(data.id)) return null;
-  if (!isTerminalAttentionAgent(data.agent)) return null;
+  if (!isTerminalAgentStatusAgent(data.agent)) return null;
   if (typeof data.event !== 'string' || data.event.trim() === '') return null;
+  if (!isTerminalAgentStatusState(data.state)) return null;
 
+  const event = data.event.trim();
   const message = typeof data.message === 'string' && data.message.trim()
     ? data.message.trim()
-    : `${getAgentDisplayName(data.agent)} 等待处理`;
+    : getAgentStatusFallbackMessage(data.agent, data.state);
 
   return {
     id: data.id,
     agent: data.agent,
-    event: data.event,
+    state: data.state,
+    event,
     message,
     timestamp: typeof data.timestamp === 'number' ? data.timestamp : Date.now(),
   };
@@ -275,16 +349,16 @@ async function handleAttentionRequest(
   try {
     const body = await readRequestBody(request);
     const payload = JSON.parse(body) as unknown;
-    const attention = parseAttentionPayload(payload);
-    if (!attention) {
+    const status = parseAgentStatusPayload(payload);
+    if (!status) {
       writeHttpResponse(response, 403, 'forbidden');
       return;
     }
 
-    sendTerminalAttention(attention);
+    sendTerminalAgentStatus(status);
     writeHttpResponse(response, 204);
   } catch (error) {
-    console.error('[terminal-attention] Failed to handle request:', error);
+    console.error('[terminal-agent-status] Failed to handle request:', error);
     if (!response.headersSent) {
       writeHttpResponse(response, 400, 'bad request');
     }
@@ -302,7 +376,7 @@ function startAttentionServer(): Promise<void> {
     });
 
     server.on('error', (error) => {
-      console.error('[terminal-attention] Failed to start server:', error);
+      console.error('[terminal-agent-status] Failed to start server:', error);
       attentionNotifyUrl = '';
       attentionNotifyToken = '';
       resolve();
@@ -324,7 +398,8 @@ function stopAttentionServer(): void {
   attentionServer = null;
   attentionNotifyUrl = '';
   attentionNotifyToken = '';
-  attentionSessionIds.clear();
+  agentStatusBySessionId.clear();
+  manualInterruptBySessionId.clear();
 }
 
 const createWindow = () => {
@@ -452,7 +527,8 @@ ipcMain.handle(
     // Notify renderer when PTY exits
     session.ptyProcess.onExit(
       ({ exitCode, signal }: { exitCode: number; signal?: number }) => {
-        clearTerminalAttention(session.id);
+        clearTerminalAgentStatus(session.id);
+        manualInterruptBySessionId.delete(session.id);
         const streamState = terminalStreamStates.get(session.id);
         if (streamState) {
           flushTerminalOutput(session.id);
@@ -484,7 +560,11 @@ ipcMain.on('terminal:output:detach', (_event, { id }: { id: string }) => {
 ipcMain.on(
   'terminal:input',
   (_event, { id, data }: { id: string; data: string }) => {
-    clearTerminalAttention(id);
+    if (isManualInterruptInput(data)) {
+      markManualTerminalInterrupt(id);
+    } else {
+      clearTerminalAgentStatus(id, ['needs_user']);
+    }
     writeToSession(id, data);
   },
 );
@@ -499,7 +579,8 @@ ipcMain.on(
 
 // terminal:dispose — kill PTY and release resources
 ipcMain.handle('terminal:dispose', (_event, { id }: { id: string }) => {
-  clearTerminalAttention(id);
+  clearTerminalAgentStatus(id);
+  manualInterruptBySessionId.delete(id);
   clearTerminalStreamState(id);
   disposeSession(id);
 });

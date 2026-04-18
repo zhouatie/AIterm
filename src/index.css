@@ -48,6 +48,12 @@
   --color-focus-soft: rgba(73, 104, 172, 0.18);
   --color-attention: #d0624f;
   --color-attention-soft: rgba(208, 98, 79, 0.18);
+  --color-agent-status-running: #3e68b2;
+  --color-agent-status-running-soft: rgba(62, 104, 178, 0.18);
+  --color-agent-status-completed: #2f8f62;
+  --color-agent-status-completed-soft: rgba(47, 143, 98, 0.18);
+  --color-agent-status-error: #c94b5f;
+  --color-agent-status-error-soft: rgba(201, 75, 95, 0.18);
 
   /* Icons */
   --color-icon-default: #7d8799;
@@ -163,6 +169,12 @@
   --color-focus-soft: rgba(138, 167, 240, 0.16);
   --color-attention: #ff8a76;
   --color-attention-soft: rgba(255, 138, 118, 0.22);
+  --color-agent-status-running: #8aa7f0;
+  --color-agent-status-running-soft: rgba(138, 167, 240, 0.20);
+  --color-agent-status-completed: #5fd395;
+  --color-agent-status-completed-soft: rgba(95, 211, 149, 0.20);
+  --color-agent-status-error: #ff6f88;
+  --color-agent-status-error-soft: rgba(255, 111, 136, 0.22);
 
   /* Icons */
   --color-icon-default: #8190a8;
@@ -304,6 +316,16 @@ span[data-preview-find-current] {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes agent-status-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes agent-status-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--color-attention-soft); }
+  50% { box-shadow: 0 0 0 5px var(--color-attention-soft); }
 }
 
 /* --- Markdown Body Styles --- */
