@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Check, EyeOff, Keyboard, Plus, Settings2, Trash2, X } from 'lucide-react';
+import { BookOpen, Check, EyeOff, Keyboard, NotebookPen, Plus, Settings2, Trash2, X } from 'lucide-react';
 import {
   SHORTCUT_ACTIONS,
   type ShortcutActionId,
@@ -11,6 +11,7 @@ import {
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import { normalizeSpecDirectoryNames } from '../utils/file-tree-settings';
 import { normalizeTerminalStartDirectory } from '../utils/terminal-settings';
+import { readNoteDirectory } from '../utils/note-settings';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -19,11 +20,13 @@ interface SettingsPanelProps {
   terminalStartDirectory: string;
   terminalRendererPreferWebgl: boolean;
   hiddenFolderNames: string[];
+  noteDirectory: string;
   onSave: (bindings: ShortcutBindings) => void;
   onSaveSpecDirectoryNames: (names: string[]) => void;
   onSaveTerminalStartDirectory: (value: string) => void;
   onSaveTerminalRendererPreferWebgl: (value: boolean) => void;
   onSaveHiddenFolderNames: (names: string[]) => void;
+  onSaveNoteDirectory: (value: string) => void;
   onClose: () => void;
 }
 
@@ -134,11 +137,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   terminalStartDirectory,
   terminalRendererPreferWebgl,
   hiddenFolderNames,
+  noteDirectory,
   onSave,
   onSaveSpecDirectoryNames,
   onSaveTerminalStartDirectory,
   onSaveTerminalRendererPreferWebgl,
   onSaveHiddenFolderNames,
+  onSaveNoteDirectory,
   onClose,
 }) => {
   const [draftBindings, setDraftBindings] = useState<ShortcutBindings>(bindings);
@@ -148,6 +153,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     terminalRendererPreferWebgl,
   );
   const [draftHiddenFolderNames, setDraftHiddenFolderNames] = useState<string[]>(hiddenFolderNames);
+  const [draftNoteDirectory, setDraftNoteDirectory] = useState(noteDirectory);
   const [newHiddenFolderInput, setNewHiddenFolderInput] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ShortcutActionId, string>>>({});
   const [specDirectoryError, setSpecDirectoryError] = useState('');
@@ -161,6 +167,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setDraftTerminalStartDirectory(terminalStartDirectory);
     setDraftTerminalRendererPreferWebgl(terminalRendererPreferWebgl);
     setDraftHiddenFolderNames(hiddenFolderNames);
+    setDraftNoteDirectory(noteDirectory);
     setNewHiddenFolderInput('');
     setFieldErrors({});
     setSpecDirectoryError('');
@@ -173,6 +180,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     terminalStartDirectory,
     terminalRendererPreferWebgl,
     hiddenFolderNames,
+    noteDirectory,
   ]);
 
   useEffect(() => {
@@ -208,7 +216,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       || draftSpecDirectoryKey !== normalizedSpecDirectoryKey
       || normalizedTerminalStartDirectory !== terminalStartDirectory
       || draftTerminalRendererPreferWebgl !== terminalRendererPreferWebgl
-      || [...draftHiddenFolderNames].sort().join('\n') !== [...hiddenFolderNames].sort().join('\n'),
+      || [...draftHiddenFolderNames].sort().join('\n') !== [...hiddenFolderNames].sort().join('\n')
+      || draftNoteDirectory.trim() !== noteDirectory,
     [
       draftBindings,
       bindings,
@@ -220,6 +229,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       terminalRendererPreferWebgl,
       draftHiddenFolderNames,
       hiddenFolderNames,
+      draftNoteDirectory,
+      noteDirectory,
     ],
   );
 
@@ -260,6 +271,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     onSaveTerminalStartDirectory(normalizedTerminalStartDirectory);
     onSaveTerminalRendererPreferWebgl(draftTerminalRendererPreferWebgl);
     onSaveHiddenFolderNames(draftHiddenFolderNames);
+    onSaveNoteDirectory(draftNoteDirectory.trim());
     setSaveFeedback('所有更改已保存');
   };
 
@@ -782,6 +794,60 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </button>
                   </div>
                 </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) 260px',
+                  gap: 16,
+                  alignItems: 'start',
+                  padding: '16px 0',
+                  borderTop: '1px solid var(--color-border-light)',
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: 'var(--color-text-primary)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    <NotebookPen size={14} />
+                    笔记目录
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                    笔记文件的存储路径。留空使用默认目录（应用数据目录下的 notes 文件夹）。
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={draftNoteDirectory}
+                  onChange={(event) => {
+                    setDraftNoteDirectory(event.target.value);
+                    setSaveFeedback('');
+                  }}
+                  placeholder="留空使用默认目录"
+                  spellCheck={false}
+                  style={{
+                    width: '100%',
+                    minHeight: 42,
+                    borderRadius: 10,
+                    border: '1px solid var(--color-border-primary)',
+                    backgroundColor: 'var(--color-bg-secondary)',
+                    color: 'var(--color-text-primary)',
+                    padding: '0 12px',
+                    fontSize: 13,
+                    lineHeight: 1.45,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

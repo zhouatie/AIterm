@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from 'react';
-import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast, Globe, GitCompareArrows } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast, Globe, GitCompareArrows, NotebookPen } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
 import LiveViewPanel from './components/LiveViewPanel';
 import BrowserPanel from './components/BrowserPanel';
 import GitDiffPanel from './components/GitDiffPanel';
+import NotePanel from './components/NotePanel';
 import SplitLayout from './components/SplitLayout';
 import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
@@ -28,6 +29,10 @@ import {
   readTerminalRendererPreferWebgl,
   saveTerminalRendererPreferWebgl,
 } from './utils/terminal-settings';
+import {
+  readNoteDirectory,
+  saveNoteDirectory,
+} from './utils/note-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 import { startRecording, stopLiveRecording, forceCheckout } from './live-view-recorder';
 import type { TerminalSessionInfo } from './preload';
@@ -153,6 +158,7 @@ const AppContent: React.FC = () => {
     readTerminalRendererPreferWebgl,
   );
   const [hiddenFolderNames, setHiddenFolderNamesState] = useState(getHiddenFolderNames);
+  const [noteDirectory, setNoteDirectoryState] = useState(readNoteDirectory);
   const fileTreeToggleTitle = getIconButtonTooltip({
     label: panelVisible ? '收起文件树' : '展开文件树',
     bindings,
@@ -163,8 +169,8 @@ const AppContent: React.FC = () => {
   const [isLiveViewOpen, setIsLiveViewOpen] = useState(false);
   const [liveViewActive, setLiveViewActive] = useState(false);
 
-  // Overlay panel state — browser and git diff are mutually exclusive
-  type OverlayPanel = 'none' | 'browser' | 'git-diff';
+  // Overlay panel state — browser, git diff, and notes are mutually exclusive
+  type OverlayPanel = 'none' | 'browser' | 'git-diff' | 'notes';
   const [activeOverlay, setActiveOverlay] = useState<OverlayPanel>('none');
 
   // Track the active session's git info for icon state
@@ -258,6 +264,11 @@ const AppContent: React.FC = () => {
     setHiddenFolderNamesState(getHiddenFolderNames());
   }, []);
 
+  const handleSaveNoteDirectory = useCallback((value: string) => {
+    saveNoteDirectory(value);
+    setNoteDirectoryState(readNoteDirectory());
+  }, []);
+
   useEffect(() => {
     return registerAction('toggle-file-tree', () => {
       togglePanel();
@@ -284,6 +295,16 @@ const AppContent: React.FC = () => {
       toggleGitDiff();
     });
   }, [registerAction, toggleGitDiff]);
+
+  const toggleNotes = useCallback(() => {
+    setActiveOverlay((prev) => (prev === 'notes' ? 'none' : 'notes'));
+  }, []);
+
+  useEffect(() => {
+    return registerAction('toggle-notes', () => {
+      toggleNotes();
+    });
+  }, [registerAction, toggleNotes]);
 
   return (
     <>
@@ -422,6 +443,34 @@ const AppContent: React.FC = () => {
           >
             <Globe size={16} />
           </button>
+
+          {/* Notes panel toggle */}
+          <button
+            onClick={toggleNotes}
+            title={getIconButtonTooltip({
+              label: activeOverlay === 'notes' ? '关闭笔记' : '打开笔记',
+              bindings,
+              actionId: 'toggle-notes',
+            })}
+            style={{
+              ...toggleButtonStyle,
+              marginLeft: 4,
+              ...(activeOverlay === 'notes'
+                ? {
+                    backgroundColor: 'var(--color-surface-content-elevated)',
+                    borderColor: 'var(--color-border-primary)',
+                    color: ICON_COLOR_ACTIVE,
+                    boxShadow: 'var(--color-shadow-soft)',
+                  }
+                : {}),
+            }}
+            onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
+            onMouseLeave={(e) => {
+              if (activeOverlay !== 'notes') resetChromeButtonHover(e.currentTarget);
+            }}
+          >
+            <NotebookPen size={16} />
+          </button>
         </div>
 
         <div
@@ -452,6 +501,10 @@ const AppContent: React.FC = () => {
             branchName={activeSessionInfo?.branchName ?? null}
             gitRoot={activeSessionInfo?.gitRoot ?? null}
           />
+          <NotePanel
+            isOpen={activeOverlay === 'notes'}
+            onClose={() => setActiveOverlay('none')}
+          />
         </div>
       </div>
 
@@ -462,11 +515,13 @@ const AppContent: React.FC = () => {
         terminalStartDirectory={terminalStartDirectory}
         terminalRendererPreferWebgl={terminalRendererPreferWebgl}
         hiddenFolderNames={hiddenFolderNames}
+        noteDirectory={noteDirectory}
         onSave={saveBindings}
         onSaveSpecDirectoryNames={handleSaveSpecDirectoryNames}
         onSaveTerminalStartDirectory={handleSaveTerminalStartDirectory}
         onSaveTerminalRendererPreferWebgl={handleSaveTerminalRendererPreferWebgl}
         onSaveHiddenFolderNames={handleSaveHiddenFolderNames}
+        onSaveNoteDirectory={handleSaveNoteDirectory}
         onClose={closeSettings}
       />
 

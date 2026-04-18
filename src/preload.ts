@@ -79,6 +79,11 @@ export interface FileApi {
   showInFolder(filePath: string): void;
   fileExists(filePath: string): Promise<boolean>;
   openFilePreview(filePath: string, line?: number, col?: number): void;
+  ensureDir(dirPath: string): Promise<{ success?: boolean; error?: string }>;
+  deleteFile(filePath: string): Promise<{ success?: boolean; error?: string }>;
+  rename(oldPath: string, newPath: string): Promise<{ success?: boolean; error?: string }>;
+  scanNotes(rootPath: string): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
+  getUserDataPath(): Promise<{ path: string }>;
 }
 
 contextBridge.exposeInMainWorld('terminalApi', {
@@ -215,6 +220,20 @@ contextBridge.exposeInMainWorld('fileApi', {
 
   openFilePreview: (filePath: string, line?: number, col?: number) =>
     ipcRenderer.send('fs:open-file-preview', { filePath, line, col }),
+  ensureDir: (dirPath: string) =>
+    ipcRenderer.invoke('fs:ensure-dir', { dirPath }),
+
+  deleteFile: (filePath: string) =>
+    ipcRenderer.invoke('fs:delete-file', { filePath }),
+
+  rename: (oldPath: string, newPath: string) =>
+    ipcRenderer.invoke('fs:rename', { oldPath, newPath }),
+
+  scanNotes: (rootPath: string) =>
+    ipcRenderer.invoke('fs:scan-notes', { rootPath }),
+
+  getUserDataPath: () =>
+    ipcRenderer.invoke('app:get-user-data-path'),
 } satisfies FileApi);
 
 export interface ThemeApi {

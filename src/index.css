@@ -522,6 +522,136 @@ span[data-preview-find-current] {
   background-color: var(--hljs-addition-bg);
 }
 
+/* --- Milkdown Editor Theme --- */
+.milkdown-theme .milkdown {
+  outline: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.milkdown-theme .milkdown .editor {
+  outline: none;
+  flex: 1;
+  min-height: 100%;
+}
+.milkdown-theme .milkdown h1 {
+  font-size: 1.75em;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+  color: var(--color-text-heading);
+  border-bottom: 1px solid var(--color-border-heading);
+  padding-bottom: 0.3em;
+}
+.milkdown-theme .milkdown h2 {
+  font-size: 1.4em;
+  font-weight: 700;
+  margin: 0.9em 0 0.4em;
+  color: var(--color-text-heading);
+}
+.milkdown-theme .milkdown h3 {
+  font-size: 1.15em;
+  font-weight: 600;
+  margin: 0.8em 0 0.35em;
+  color: var(--color-text-heading);
+}
+.milkdown-theme .milkdown h4,
+.milkdown-theme .milkdown h5,
+.milkdown-theme .milkdown h6 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0.7em 0 0.3em;
+  color: var(--color-text-heading);
+}
+.milkdown-theme .milkdown p {
+  margin: 0.5em 0;
+  color: var(--color-text-body);
+}
+.milkdown-theme .milkdown a {
+  color: var(--color-accent-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.milkdown-theme .milkdown blockquote {
+  margin: 0.5em 0;
+  padding: 2px 0 2px 16px;
+  border-left: 3px solid var(--color-accent-divider);
+  color: var(--color-text-tertiary);
+}
+.milkdown-theme .milkdown code {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.88em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--color-bg-code);
+  color: var(--color-text-primary);
+}
+.milkdown-theme .milkdown pre {
+  margin: 0.6em 0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--color-bg-code);
+  overflow-x: auto;
+  border: 1px solid var(--color-border-primary);
+}
+.milkdown-theme .milkdown pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.milkdown-theme .milkdown ul,
+.milkdown-theme .milkdown ol {
+  margin: 0.4em 0;
+  padding-left: 1.5em;
+}
+.milkdown-theme .milkdown li {
+  margin: 0.15em 0;
+}
+.milkdown-theme .milkdown li[data-item-type="task"] {
+  list-style: none;
+  margin-left: -1.5em;
+  padding-left: 0;
+}
+.milkdown-theme .milkdown li[data-item-type="task"] input[type="checkbox"] {
+  margin-right: 6px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.milkdown-theme .milkdown hr {
+  border: none;
+  border-top: 1px solid var(--color-border-primary);
+  margin: 1em 0;
+}
+.milkdown-theme .milkdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.6em 0;
+  font-size: 13px;
+}
+.milkdown-theme .milkdown th,
+.milkdown-theme .milkdown td {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border-table);
+  text-align: left;
+}
+.milkdown-theme .milkdown th {
+  background: var(--color-bg-secondary);
+  font-weight: 600;
+}
+.milkdown-theme .milkdown img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+.milkdown-theme .milkdown strong {
+  font-weight: 700;
+}
+.milkdown-theme .milkdown del {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
 /* Live View — recording indicator pulse */
 @keyframes live-dot-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); }

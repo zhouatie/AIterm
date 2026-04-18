@@ -13,6 +13,7 @@ export type ShortcutActionId =
   | 'toggle-terminal-sidebar'
   | 'toggle-browser'
   | 'toggle-git-diff'
+  | 'toggle-notes'
   | 'find-in-file-preview'
   | 'create-workspace'
   | 'create-terminal-tab'
@@ -76,6 +77,11 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
     id: 'toggle-git-diff',
     title: 'Git Diff 面板展示/收起',
     description: '切换 Git Diff 面板的显示状态',
+  },
+  {
+    id: 'toggle-notes',
+    title: '笔记面板展示/收起',
+    description: '切换笔记面板的显示状态',
   },
   {
     id: 'find-in-file-preview',
@@ -174,6 +180,7 @@ export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindings = {
   'toggle-terminal-sidebar': 'Meta+B',
   'toggle-browser': 'Meta+L',
   'toggle-git-diff': 'Meta+G',
+  'toggle-notes': 'Meta+O',
   'find-in-file-preview': 'Meta+F',
   'create-workspace': 'Meta+N',
   'create-terminal-tab': 'Meta+T',

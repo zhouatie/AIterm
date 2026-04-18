@@ -30,6 +30,7 @@
 - **THEN** 浏览器面板展示/收起 SHALL 默认绑定为 `Command + L`
 - **THEN** 文件预览内容查找 SHALL 默认绑定为 `Command + F`
 - **THEN** Git Diff 面板展示/收起 SHALL 默认绑定为 `Command + G`
+- **THEN** 笔记面板展示/收起 SHALL 默认绑定为 `Command + O`
 
 ### Requirement: 快捷键配置持久化
 系统 SHALL 支持保存用户自定义快捷键，并在后续启动时恢复。

@@ -1330,6 +1330,116 @@ ipcMain.handle('fs:scan-md-files', async (_event, { rootPath: dirPath }: { rootP
   }
 });
 
+// fs:ensure-dir — recursively create a directory (mkdir -p)
+ipcMain.handle('fs:ensure-dir', async (_event, { dirPath }: { dirPath: string }) => {
+  try {
+    const resolved = path.resolve(dirPath);
+    await fs.promises.mkdir(resolved, { recursive: true });
+    return { success: true };
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+});
+
+// fs:scan-notes — simple recursive scan for note directories.
+// Includes ALL files and directories (including empty dirs), skips only dotfiles.
+// No gitignore filtering, no empty-dir pruning.
+ipcMain.handle('fs:scan-notes', async (_event, { rootPath: dirPath }: { rootPath: string }) => {
+  async function scanDir(dp: string): Promise<ScanTreeNode[]> {
+    let rawEntries;
+    try {
+      rawEntries = await fs.promises.readdir(dp, { withFileTypes: true });
+    } catch {
+      return [];
+    }
+
+    const dirs: ScanTreeNode[] = [];
+    const files: ScanTreeNode[] = [];
+
+    for (const entry of rawEntries) {
+      if (entry.name.startsWith('.')) continue;
+      const entryPath = path.join(dp, entry.name);
+
+      try {
+        const stat = await fs.promises.stat(entryPath);
+        if (entry.isDirectory()) {
+          dirs.push({
+            name: entry.name,
+            path: entryPath,
+            isDirectory: true,
+            mtime: stat.mtimeMs,
+            children: await scanDir(entryPath),
+          });
+        } else if (entry.isFile()) {
+          files.push({
+            name: entry.name,
+            path: entryPath,
+            isDirectory: false,
+            mtime: stat.mtimeMs,
+          });
+        }
+      } catch {
+        // Skip entries that can't be stat'd
+      }
+    }
+
+    dirs.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
+    files.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
+    return [...dirs, ...files];
+  }
+
+  try {
+    const resolved = path.resolve(dirPath);
+    const tree = await scanDir(resolved);
+    return { tree };
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+});
+
+// fs:delete-file — delete a file or directory (recursive for directories)
+ipcMain.handle('fs:delete-file', async (_event, { filePath }: { filePath: string }) => {
+  try {
+    const resolved = path.resolve(filePath);
+    const stat = await fs.promises.stat(resolved);
+    if (stat.isDirectory()) {
+      await fs.promises.rm(resolved, { recursive: true });
+    } else {
+      await fs.promises.unlink(resolved);
+    }
+    return { success: true };
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+});
+
+// fs:rename — rename a file or directory (fails if target already exists)
+ipcMain.handle(
+  'fs:rename',
+  async (_event, { oldPath, newPath }: { oldPath: string; newPath: string }) => {
+    try {
+      const resolvedOld = path.resolve(oldPath);
+      const resolvedNew = path.resolve(newPath);
+      // Check if target already exists
+      try {
+        await fs.promises.access(resolvedNew);
+        return { error: '目标名称已存在' };
+      } catch {
+        // Target doesn't exist — safe to rename
+      }
+      await fs.promises.rename(resolvedOld, resolvedNew);
+      return { success: true };
+    } catch (err) {
+      return { error: (err as Error).message };
+    }
+  },
+);
+
+// app:get-user-data-path — return Electron userData directory
+ipcMain.handle('app:get-user-data-path', () => {
+  return { path: app.getPath('userData') };
+});
+
 // fs:show-in-folder — reveal a file/directory in the system file manager
 ipcMain.on('fs:show-in-folder', (_event, { filePath: targetPath }: { filePath: string }) => {
   const resolved = path.resolve(targetPath);
