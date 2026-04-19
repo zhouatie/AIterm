@@ -1,7 +1,8 @@
 # Capability: settings-panel
 
 ## Purpose
-应用内设置面板，负责统一承载基础配置入口，包括快捷键配置、spec 目录配置和隐藏文件夹配置。
+应用内设置面板，负责统一承载基础配置入口，包括快捷键配置、spec 目录配置、隐藏文件夹配置以及笔记 Vault 管理入口。
+
 ## Requirements
 ### Requirement: 设置面板打开与关闭
 应用 SHALL 提供一个应用内设置面板，并支持通过固定快捷键 `Command + ,` 打开。
@@ -103,18 +104,20 @@
 - **THEN** 之后新建或重新初始化的终端实例 SHALL 使用该偏好决定是否尝试启用 WebGL renderer
 
 ### Requirement: 笔记目录配置
-设置面板 SHALL 提供笔记存储目录配置项，允许用户指定笔记文件的存储位置。
+设置面板 SHALL 将原有的单笔记目录输入框升级为 Vault 管理入口，允许用户维护多个 Vault 并指定当前激活项。
 
-#### Scenario: 展示笔记目录配置项
+#### Scenario: 展示 Vault 管理区
 - **WHEN** 用户打开设置面板
-- **THEN** 系统 SHALL 展示笔记目录配置项
-- **THEN** 配置项 SHALL 显示当前生效的笔记目录路径（若未配置则显示默认路径提示）
+- **THEN** 系统 SHALL 展示已保存 Vault 列表
+- **THEN** 每个 Vault 项 SHALL 展示显示名称与根路径
+- **THEN** 系统 SHALL 明确标记当前激活 Vault
 
-#### Scenario: 保存笔记目录配置
-- **WHEN** 用户输入自定义笔记目录路径并点击保存
-- **THEN** 系统 SHALL 将路径持久化到 localStorage
-- **THEN** 笔记面板 SHALL 使用新路径加载笔记列表
+#### Scenario: 新增 Vault
+- **WHEN** 用户输入一个新的 Vault 根路径并点击保存
+- **THEN** 系统 SHALL 校验该路径为绝对路径且可访问
+- **THEN** 校验通过后，系统 SHALL 将其加入 Vault 列表
 
-#### Scenario: 清空笔记目录配置
-- **WHEN** 用户清空笔记目录输入框并保存
-- **THEN** 系统 SHALL 回退到使用默认笔记目录
+#### Scenario: 切换当前激活 Vault
+- **WHEN** 用户在设置面板中将某个已保存 Vault 设为当前激活项并保存
+- **THEN** 系统 SHALL 持久化新的当前激活 Vault
+- **THEN** 笔记面板 SHALL 使用该 Vault 重新加载笔记树

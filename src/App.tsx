@@ -30,8 +30,11 @@ import {
   saveTerminalRendererPreferWebgl,
 } from './utils/terminal-settings';
 import {
-  readNoteDirectory,
-  saveNoteDirectory,
+  readNoteVaultSettings,
+  resolveNoteVaultSettings,
+  saveNoteVaultSettings,
+  NOTE_DIRECTORY_CHANGED_EVENT,
+  type NoteVaultSettings,
 } from './utils/note-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 import { startRecording, stopLiveRecording, forceCheckout } from './live-view-recorder';
@@ -158,7 +161,7 @@ const AppContent: React.FC = () => {
     readTerminalRendererPreferWebgl,
   );
   const [hiddenFolderNames, setHiddenFolderNamesState] = useState(getHiddenFolderNames);
-  const [noteDirectory, setNoteDirectoryState] = useState(readNoteDirectory);
+  const [noteVaultSettings, setNoteVaultSettingsState] = useState<NoteVaultSettings>(readNoteVaultSettings);
   const fileTreeToggleTitle = getIconButtonTooltip({
     label: panelVisible ? '收起文件树' : '展开文件树',
     bindings,
@@ -264,9 +267,21 @@ const AppContent: React.FC = () => {
     setHiddenFolderNamesState(getHiddenFolderNames());
   }, []);
 
-  const handleSaveNoteDirectory = useCallback((value: string) => {
-    saveNoteDirectory(value);
-    setNoteDirectoryState(readNoteDirectory());
+  const handleSaveNoteVaultSettings = useCallback((value: NoteVaultSettings) => {
+    saveNoteVaultSettings(value);
+    setNoteVaultSettingsState(readNoteVaultSettings());
+  }, []);
+
+  useEffect(() => {
+    const refreshNoteVaultSettings = () => {
+      void resolveNoteVaultSettings().then((settings) => {
+        setNoteVaultSettingsState(settings);
+      });
+    };
+
+    refreshNoteVaultSettings();
+    window.addEventListener(NOTE_DIRECTORY_CHANGED_EVENT, refreshNoteVaultSettings);
+    return () => window.removeEventListener(NOTE_DIRECTORY_CHANGED_EVENT, refreshNoteVaultSettings);
   }, []);
 
   useEffect(() => {
@@ -515,13 +530,13 @@ const AppContent: React.FC = () => {
         terminalStartDirectory={terminalStartDirectory}
         terminalRendererPreferWebgl={terminalRendererPreferWebgl}
         hiddenFolderNames={hiddenFolderNames}
-        noteDirectory={noteDirectory}
+        noteVaultSettings={noteVaultSettings}
         onSave={saveBindings}
         onSaveSpecDirectoryNames={handleSaveSpecDirectoryNames}
         onSaveTerminalStartDirectory={handleSaveTerminalStartDirectory}
         onSaveTerminalRendererPreferWebgl={handleSaveTerminalRendererPreferWebgl}
         onSaveHiddenFolderNames={handleSaveHiddenFolderNames}
-        onSaveNoteDirectory={handleSaveNoteDirectory}
+        onSaveNoteVaultSettings={handleSaveNoteVaultSettings}
         onClose={closeSettings}
       />
 

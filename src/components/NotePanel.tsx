@@ -1,29 +1,27 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Clock3,
-  FilePlus,
-  FolderOpen,
-  NotebookPen,
-  Star,
-  X,
-} from 'lucide-react';
+import { FilePlus, NotebookPen, X } from 'lucide-react';
 import type { ScanTreeNode } from '../preload';
 import NoteEditor from './NoteEditor';
 import NoteFileList from './NoteFileList';
-import { resolveNoteDirectory, NOTE_DIRECTORY_CHANGED_EVENT } from '../utils/note-settings';
+import {
+  getActiveNoteVault,
+  readNoteVaultSettings,
+  resolveNoteVaultSettings,
+  saveNoteVaultSettings,
+  NOTE_DIRECTORY_CHANGED_EVENT,
+  type NoteVaultSettings,
+} from '../utils/note-settings';
 import * as autosave from '../utils/note-autosave';
 import type { AutoSaveStatus } from '../utils/note-autosave';
 import {
   cleanupWorkbenchState,
+  getVaultWorkbenchState,
   readNoteWorkbenchState,
-  RECENT_NOTES_LIMIT,
   removeWorkbenchPath,
   renameWorkbenchPath,
   saveNoteWorkbenchState,
-  toggleFavoritePath,
-  touchRecentNote,
+  updateVaultWorkbenchState,
   type NoteWorkbenchState,
-  type NoteWorkbenchView,
 } from '../utils/note-workbench-state';
 
 interface NotePanelProps {
@@ -104,22 +102,10 @@ const floatingCloseButtonStyle: React.CSSProperties = {
   boxShadow: '0 10px 28px color-mix(in srgb, var(--color-shadow) 18%, transparent)',
 };
 
-const viewRailStyle: React.CSSProperties = {
-  width: 58,
-  flexShrink: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 6,
-  padding: '14px 6px',
-  borderRight: '1px solid var(--color-border-primary)',
-  background:
-    'linear-gradient(180deg, color-mix(in srgb, var(--color-accent-primary) 10%, transparent) 0%, transparent 40%)',
-};
-
-const folderPaneStyle: React.CSSProperties = {
-  width: 248,
-  minWidth: 216,
-  maxWidth: '26vw',
+const explorerPaneStyle: React.CSSProperties = {
+  width: 288,
+  minWidth: 240,
+  maxWidth: '32vw',
   flexShrink: 0,
   borderRight: '1px solid var(--color-border-primary)',
   overflow: 'hidden',
@@ -128,6 +114,10 @@ const folderPaneStyle: React.CSSProperties = {
 function getFileName(filePath: string): string {
   const index = filePath.lastIndexOf('/');
   return index >= 0 ? filePath.slice(index + 1) : filePath;
+}
+
+function joinPath(parentPath: string, name: string): string {
+  return `${parentPath.replace(/\/+$/, '')}/${name}`;
 }
 
 function getDisplayName(fileName: string): string {
@@ -200,42 +190,13 @@ function collectNoteIndex(nodes: ScanTreeNode[], rootPath: string): Map<string, 
 }
 
 function statesEqual(a: NoteWorkbenchState, b: NoteWorkbenchState): boolean {
-  if (
-    a.activeView !== b.activeView
-    || a.selectedFolderPath !== b.selectedFolderPath
-    || a.currentNotePath !== b.currentNotePath
-    || a.favorites.length !== b.favorites.length
-    || a.recent.length !== b.recent.length
-  ) {
-    return false;
-  }
-
-  for (let index = 0; index < a.favorites.length; index += 1) {
-    if (a.favorites[index] !== b.favorites[index]) return false;
-  }
-
-  for (let index = 0; index < a.recent.length; index += 1) {
-    if (
-      a.recent[index].path !== b.recent[index].path
-      || a.recent[index].accessedAt !== b.recent[index].accessedAt
-    ) {
-      return false;
-    }
-  }
-
-  return true;
+  return JSON.stringify(a) === JSON.stringify(b);
 }
 
 const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
-  const [noteDir, setNoteDir] = useState('');
+  const [vaultSettings, setVaultSettings] = useState<NoteVaultSettings>(readNoteVaultSettings);
   const [tree, setTree] = useState<ScanTreeNode[]>([]);
-  const [workspaceState, setWorkspaceState] = useState<NoteWorkbenchState>(() => {
-    const stored = readNoteWorkbenchState();
-    return {
-      ...stored,
-      selectedFolderPath: stored.selectedFolderPath ?? null,
-    };
-  });
+  const [workspaceState, setWorkspaceState] = useState<NoteWorkbenchState>(readNoteWorkbenchState);
   const [currentNote, setCurrentNote] = useState<CurrentNote | null>(null);
   const [saveStatus, setSaveStatus] = useState<AutoSaveStatus>('saved');
   const [searchQuery, setSearchQuery] = useState('');
@@ -243,6 +204,10 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
   const [pendingRenamePath, setPendingRenamePath] = useState<string | null>(null);
   const initialized = useRef(false);
   const currentNoteRef = useRef<CurrentNote | null>(null);
+
+  const activeVault = useMemo(() => getActiveNoteVault(vaultSettings), [vaultSettings]);
+  const activeVaultId = activeVault?.id ?? null;
+  const noteDir = activeVault?.rootPath ?? '';
 
   useEffect(() => {
     currentNoteRef.current = currentNote;
@@ -267,43 +232,52 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
     setTree(normalizeTree(result.tree ?? []));
   }, []);
 
+  const reloadVaultState = useCallback(async (options?: { resetCurrentNote?: boolean; resetSearch?: boolean }) => {
+    const settings = await resolveNoteVaultSettings();
+    const vault = getActiveNoteVault(settings);
+
+    if (options?.resetCurrentNote !== false && currentNoteRef.current) {
+      autosave.flush(currentNoteRef.current.filePath);
+      autosave.unregisterFile(currentNoteRef.current.filePath);
+      setCurrentNote(null);
+      setSaveStatus('saved');
+    }
+
+    setVaultSettings(settings);
+    setPendingRenamePath(null);
+    if (options?.resetSearch !== false) {
+      setSearchQuery('');
+    }
+
+    if (!vault) {
+      setTree([]);
+      return;
+    }
+
+    await window.fileApi.ensureDir(vault.rootPath);
+    await loadTree(vault.rootPath);
+  }, [loadTree]);
+
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
 
-    void (async () => {
-      const dir = await resolveNoteDirectory();
-      await window.fileApi.ensureDir(dir);
-      setNoteDir(dir);
-      await loadTree(dir);
-    })();
+    void reloadVaultState({ resetCurrentNote: false, resetSearch: false });
 
     autosave.startGlobalHandlers();
     return () => {
       autosave.stopGlobalHandlers();
     };
-  }, [loadTree]);
+  }, [reloadVaultState]);
 
   useEffect(() => {
     const handler = () => {
-      void (async () => {
-        const dir = await resolveNoteDirectory();
-        await window.fileApi.ensureDir(dir);
-        if (currentNoteRef.current) {
-          autosave.flush(currentNoteRef.current.filePath);
-          autosave.unregisterFile(currentNoteRef.current.filePath);
-          setCurrentNote(null);
-          setSaveStatus('saved');
-        }
-        setNoteDir(dir);
-        setPendingRenamePath(null);
-        await loadTree(dir);
-      })();
+      void reloadVaultState({ resetCurrentNote: true, resetSearch: true });
     };
 
     window.addEventListener(NOTE_DIRECTORY_CHANGED_EVENT, handler);
     return () => window.removeEventListener(NOTE_DIRECTORY_CHANGED_EVENT, handler);
-  }, [loadTree]);
+  }, [reloadVaultState]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -325,21 +299,25 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
   const folderPaths = useMemo(() => collectFolderPaths(tree, noteDir), [tree, noteDir]);
 
   useEffect(() => {
-    if (!noteDir) return;
+    if (!activeVaultId || !noteDir) return;
 
-    const nextState = cleanupWorkbenchState(workspaceState, new Set(noteIndex.keys()), folderPaths);
-    const selectedFolderPath = nextState.selectedFolderPath ?? noteDir;
-    const normalized = {
-      ...nextState,
-      selectedFolderPath,
-    };
+    const cleaned = cleanupWorkbenchState(workspaceState, activeVaultId, new Set(noteIndex.keys()), folderPaths);
+    const normalized = updateVaultWorkbenchState(cleaned, activeVaultId, (prev) => ({
+      ...prev,
+      selectedFolderPath: prev.selectedFolderPath ?? noteDir,
+    }));
 
     if (!statesEqual(workspaceState, normalized)) {
       updateWorkspaceState(() => normalized);
     }
-  }, [folderPaths, noteDir, noteIndex, updateWorkspaceState, workspaceState]);
+  }, [activeVaultId, folderPaths, noteDir, noteIndex, updateWorkspaceState, workspaceState]);
 
-  const selectedFolderPath = workspaceState.selectedFolderPath ?? noteDir;
+  const vaultWorkbenchState = useMemo(
+    () => (activeVaultId ? getVaultWorkbenchState(workspaceState, activeVaultId) : { selectedFolderPath: null, currentNotePath: null }),
+    [activeVaultId, workspaceState],
+  );
+
+  const selectedFolderPath = vaultWorkbenchState.selectedFolderPath ?? noteDir;
 
   const allNotes = useMemo(
     () => Array.from(noteIndex.values()).sort(
@@ -347,36 +325,6 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
     ),
     [noteIndex],
   );
-
-  const favoriteNotes = useMemo(
-    () => workspaceState.favorites
-      .map((path) => noteIndex.get(path))
-      .filter((item): item is NoteListItem => Boolean(item)),
-    [noteIndex, workspaceState.favorites],
-  );
-
-  const recentNotes = useMemo(
-    () => workspaceState.recent
-      .map((entry) => {
-        const item = noteIndex.get(entry.path);
-        return item ? { ...item, mtime: entry.accessedAt } : null;
-      })
-      .filter((item): item is NoteListItem => Boolean(item))
-      .slice(0, RECENT_NOTES_LIMIT),
-    [noteIndex, workspaceState.recent],
-  );
-
-  const currentViewNotes = useMemo(() => {
-    if (workspaceState.activeView === 'recent') return recentNotes;
-    if (workspaceState.activeView === 'favorites') return favoriteNotes;
-    return allNotes;
-  }, [allNotes, favoriteNotes, recentNotes, workspaceState.activeView]);
-
-  const visibleNotes = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return currentViewNotes;
-    return currentViewNotes.filter((item) => item.displayName.toLowerCase().includes(query));
-  }, [currentViewNotes, searchQuery]);
 
   const currentNoteMeta = currentNote ? noteIndex.get(currentNote.filePath) ?? {
     path: currentNote.filePath,
@@ -389,15 +337,14 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
   const openNote = useCallback(async (
     filePath: string,
     fileName?: string,
-    options?: { focusEditor?: boolean; touchRecent?: boolean; syncState?: boolean },
+    options?: { focusEditor?: boolean; syncState?: boolean },
   ) => {
+    if (!activeVaultId) return;
+
     const prevNote = currentNoteRef.current;
 
     if (prevNote?.filePath === filePath) {
       setFocusEditorPath(options?.focusEditor ? filePath : null);
-      if (options?.touchRecent !== false) {
-        updateWorkspaceState((prev) => touchRecentNote({ ...prev, currentNotePath: filePath }, filePath));
-      }
       return;
     }
 
@@ -428,50 +375,55 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
     setFocusEditorPath(options?.focusEditor ? filePath : null);
 
     if (options?.syncState !== false) {
-      updateWorkspaceState((prev) => touchRecentNote({ ...prev, currentNotePath: filePath }, filePath));
+      updateWorkspaceState((prev) => updateVaultWorkbenchState(prev, activeVaultId, (vaultState) => ({
+        ...vaultState,
+        currentNotePath: filePath,
+      })));
     }
-  }, [updateWorkspaceState]);
+  }, [activeVaultId, updateWorkspaceState]);
 
   useEffect(() => {
-    if (!noteDir || !workspaceState.currentNotePath) return;
-    if (currentNote?.filePath === workspaceState.currentNotePath) return;
+    if (!noteDir || !vaultWorkbenchState.currentNotePath) return;
+    if (currentNote?.filePath === vaultWorkbenchState.currentNotePath) return;
 
-    if (!noteIndex.has(workspaceState.currentNotePath)) {
+    if (!noteIndex.has(vaultWorkbenchState.currentNotePath)) {
       return;
     }
 
-    void openNote(workspaceState.currentNotePath, undefined, {
+    void openNote(vaultWorkbenchState.currentNotePath, undefined, {
       focusEditor: false,
-      touchRecent: false,
       syncState: false,
     });
-  }, [currentNote?.filePath, noteDir, noteIndex, openNote, workspaceState.currentNotePath]);
+  }, [currentNote?.filePath, noteDir, noteIndex, openNote, vaultWorkbenchState.currentNotePath]);
 
   useEffect(() => {
-    if (workspaceState.currentNotePath) return;
+    if (vaultWorkbenchState.currentNotePath) return;
     if (!currentNote) return;
 
     autosave.unregisterFile(currentNote.filePath);
     setCurrentNote(null);
     setSaveStatus('saved');
-  }, [currentNote, workspaceState.currentNotePath]);
-
-  const setCurrentView = useCallback((view: NoteWorkbenchView) => {
-    updateWorkspaceState((prev) => ({
-      ...prev,
-      activeView: view,
-    }));
-    setSearchQuery('');
-  }, [updateWorkspaceState]);
+  }, [currentNote, vaultWorkbenchState.currentNotePath]);
 
   const handleSelectFolder = useCallback((folderPath: string) => {
-    updateWorkspaceState((prev) => ({
-      ...prev,
+    if (!activeVaultId) return;
+    updateWorkspaceState((prev) => updateVaultWorkbenchState(prev, activeVaultId, (vaultState) => ({
+      ...vaultState,
       selectedFolderPath: folderPath,
-    }));
-  }, [updateWorkspaceState]);
+    })));
+  }, [activeVaultId, updateWorkspaceState]);
+
+  const handleVaultChange = useCallback((vaultId: string) => {
+    const nextSettings = {
+      ...vaultSettings,
+      activeVaultId: vaultId,
+    };
+    setVaultSettings(nextSettings);
+    saveNoteVaultSettings(nextSettings);
+  }, [vaultSettings]);
 
   const createNote = useCallback(async (inDir?: string) => {
+    if (!activeVaultId) return;
     const targetDir = inDir || selectedFolderPath || noteDir;
     if (!targetDir) return;
 
@@ -493,15 +445,17 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    updateWorkspaceState((prev) => ({
-      ...prev,
+    updateWorkspaceState((prev) => updateVaultWorkbenchState(prev, activeVaultId, (vaultState) => ({
+      ...vaultState,
       selectedFolderPath: targetDir,
-    }));
+      currentNotePath: filePath,
+    })));
     await loadTree(noteDir);
-    await openNote(filePath, `${name}.md`, { focusEditor: true });
-  }, [loadTree, noteDir, openNote, selectedFolderPath, updateWorkspaceState]);
+    await openNote(filePath, `${name}.md`, { focusEditor: true, syncState: false });
+  }, [activeVaultId, loadTree, noteDir, openNote, selectedFolderPath, updateWorkspaceState]);
 
   const createFolder = useCallback(async (inDir?: string): Promise<string | null> => {
+    if (!activeVaultId) return null;
     const targetDir = inDir || selectedFolderPath || noteDir;
     if (!targetDir) return null;
 
@@ -523,17 +477,22 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
       return null;
     }
 
-    updateWorkspaceState((prev) => ({
-      ...prev,
-      activeView: 'all',
+    updateWorkspaceState((prev) => updateVaultWorkbenchState(prev, activeVaultId, (vaultState) => ({
+      ...vaultState,
       selectedFolderPath: folderPath,
-    }));
+    })));
     setPendingRenamePath(folderPath);
     await loadTree(noteDir);
     return folderPath;
-  }, [loadTree, noteDir, selectedFolderPath, updateWorkspaceState]);
+  }, [activeVaultId, loadTree, noteDir, selectedFolderPath, updateWorkspaceState]);
 
   const handleRename = useCallback(async (oldPath: string, newPath: string, isDirectory: boolean): Promise<boolean> => {
+    if (!activeVaultId) return false;
+    if (oldPath === newPath) {
+      setPendingRenamePath(null);
+      return true;
+    }
+
     const prevNote = currentNoteRef.current;
     const affectsCurrent = prevNote
       ? (prevNote.filePath === oldPath || (isDirectory && prevNote.filePath.startsWith(oldPath + '/')))
@@ -549,7 +508,7 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
       return false;
     }
 
-    updateWorkspaceState((prev) => renameWorkbenchPath(prev, oldPath, newPath, isDirectory));
+    updateWorkspaceState((prev) => renameWorkbenchPath(prev, activeVaultId, oldPath, newPath, isDirectory));
 
     if (affectsCurrent && prevNote) {
       const nextPath = isDirectory
@@ -569,9 +528,31 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
     await loadTree(noteDir);
     setPendingRenamePath(null);
     return true;
-  }, [loadTree, noteDir, updateWorkspaceState]);
+  }, [activeVaultId, loadTree, noteDir, updateWorkspaceState]);
+
+  const handleMoveNode = useCallback(async (
+    sourcePath: string,
+    targetDirPath: string,
+    isDirectory: boolean,
+  ): Promise<boolean> => {
+    if (!activeVaultId) return false;
+
+    const sourceName = getFileName(sourcePath);
+    const currentParentPath = getParentPath(sourcePath);
+    if (currentParentPath === targetDirPath) {
+      return false;
+    }
+
+    if (isDirectory && (targetDirPath === sourcePath || targetDirPath.startsWith(sourcePath + '/'))) {
+      return false;
+    }
+
+    return handleRename(sourcePath, joinPath(targetDirPath, sourceName), isDirectory);
+  }, [activeVaultId, handleRename]);
 
   const handleDelete = useCallback(async (filePath: string, _fileName: string, isDirectory: boolean) => {
+    if (!activeVaultId) return;
+
     const confirmed = window.confirm(
       isDirectory
         ? '确定要删除这个文件夹及其所有内容吗？此操作不可撤销。'
@@ -584,17 +565,9 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
         || (isDirectory && currentNoteRef.current.filePath.startsWith(filePath + '/')))
       : false;
 
-    const sourceList = visibleNotes.length > 0 ? visibleNotes : currentViewNotes;
-    const currentIndex = currentNoteRef.current
-      ? sourceList.findIndex((item) => item.path === currentNoteRef.current?.filePath)
-      : -1;
-    const fallbackCandidates = sourceList.filter((item) => {
-      if (isDirectory) return !item.path.startsWith(filePath + '/');
-      return item.path !== filePath;
-    });
-    const fallbackNote = currentIndex >= 0
-      ? fallbackCandidates[Math.min(currentIndex, fallbackCandidates.length - 1)] ?? null
-      : fallbackCandidates[0] ?? null;
+    const fallbackNote = allNotes.find((item) => (
+      isDirectory ? !item.path.startsWith(filePath + '/') : item.path !== filePath
+    )) ?? null;
 
     if (isCurrentDeleted && currentNoteRef.current) {
       autosave.flush(currentNoteRef.current.filePath);
@@ -606,7 +579,7 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    updateWorkspaceState((prev) => removeWorkbenchPath(prev, filePath, isDirectory));
+    updateWorkspaceState((prev) => removeWorkbenchPath(prev, activeVaultId, filePath, isDirectory));
     await loadTree(noteDir);
 
     if (isCurrentDeleted) {
@@ -616,20 +589,10 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
       setCurrentNote(null);
       setSaveStatus('saved');
       if (fallbackNote) {
-        await openNote(fallbackNote.path, fallbackNote.name, { focusEditor: false });
-      } else {
-        updateWorkspaceState((prev) => ({
-          ...prev,
-          currentNotePath: null,
-        }));
+        await openNote(fallbackNote.path, fallbackNote.name, { focusEditor: false, syncState: true });
       }
     }
-  }, [currentViewNotes, loadTree, noteDir, openNote, updateWorkspaceState, visibleNotes]);
-
-  const toggleFavorite = useCallback(() => {
-    if (!currentNote) return;
-    updateWorkspaceState((prev) => toggleFavoritePath(prev, currentNote.filePath));
-  }, [currentNote, updateWorkspaceState]);
+  }, [activeVaultId, allNotes, loadTree, noteDir, openNote, updateWorkspaceState]);
 
   const handleContentChange = useCallback((markdown: string) => {
     setCurrentNote((prev) => {
@@ -641,34 +604,6 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
       };
     });
   }, []);
-
-  const isFavorite = currentNote ? workspaceState.favorites.includes(currentNote.filePath) : false;
-
-  const viewConfigs: Array<{
-    id: NoteWorkbenchView;
-    label: string;
-    icon: React.ReactNode;
-    count: number;
-  }> = [
-    {
-      id: 'recent',
-      label: '最近',
-      icon: <Clock3 size={16} />,
-      count: recentNotes.length,
-    },
-    {
-      id: 'favorites',
-      label: '收藏',
-      icon: <Star size={16} />,
-      count: favoriteNotes.length,
-    },
-    {
-      id: 'all',
-      label: '全部',
-      icon: <FolderOpen size={16} />,
-      count: allNotes.length,
-    },
-  ];
 
   const statusLabel = saveStatus === 'editing'
     ? '编辑中'
@@ -688,58 +623,28 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
         </button>
 
         <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <div style={viewRailStyle}>
-            {viewConfigs.map((view) => {
-              const active = workspaceState.activeView === view.id;
-              return (
-                <button
-                  key={view.id}
-                  onClick={() => setCurrentView(view.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 44,
-                    height: 44,
-                    padding: 0,
-                    margin: '0 auto',
-                    borderRadius: 12,
-                    border: active ? '1px solid var(--color-border-primary)' : '1px solid transparent',
-                    background: active ? 'var(--color-surface-content-elevated)' : 'transparent',
-                    color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                    cursor: 'pointer',
-                    transition: 'background 0.16s ease, border-color 0.16s ease, color 0.16s ease',
-                  }}
-                  title={`${view.label} (${view.count})`}
-                >
-                  <span style={{ opacity: active ? 1 : 0.72 }}>{view.icon}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={folderPaneStyle}>
-            {noteDir && (
+          <div style={explorerPaneStyle}>
+            {activeVault && noteDir && (
               <NoteFileList
+                currentVault={activeVault}
+                vaults={vaultSettings.vaults}
                 noteDir={noteDir}
                 tree={tree}
-                activeView={workspaceState.activeView}
                 selectedFolderPath={selectedFolderPath}
                 activeFilePath={currentNote?.filePath ?? null}
                 requestedRenamePath={pendingRenamePath}
                 searchQuery={searchQuery}
                 onSearchQueryChange={setSearchQuery}
-                recentNotes={recentNotes}
-                favoriteNotes={favoriteNotes}
-                allNoteCount={allNotes.length}
+                onVaultChange={handleVaultChange}
                 onSelectFolder={handleSelectFolder}
                 onFileSelect={(filePath, fileName) => {
-                  void openNote(filePath, fileName, { focusEditor: false });
+                  void openNote(filePath, fileName, { focusEditor: false, syncState: true });
                 }}
                 onCreateNote={createNote}
                 onCreateFolder={createFolder}
                 onDeleteNote={handleDelete}
                 onRename={handleRename}
+                onMoveNode={handleMoveNode}
               />
             )}
           </div>
@@ -784,23 +689,13 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
                         textOverflow: 'ellipsis',
                       }}
                     >
+                      <span>{activeVault?.name ?? '当前 Vault'}</span>
+                      <span>·</span>
                       <span>{getRelativePath(currentNoteMeta.folderPath, noteDir)}</span>
                       <span>·</span>
                       <span>{statusLabel}</span>
                     </div>
                   </div>
-
-                  <button
-                    onClick={toggleFavorite}
-                    style={{
-                      ...headerButtonStyle,
-                      color: isFavorite ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
-                      background: isFavorite ? 'var(--color-bg-selected)' : 'transparent',
-                    }}
-                    title={isFavorite ? '取消收藏' : '收藏这条笔记'}
-                  >
-                    <Star size={16} style={{ fill: isFavorite ? 'currentColor' : 'none' }} />
-                  </button>
                 </div>
 
                 <NoteEditor
@@ -827,11 +722,13 @@ const NotePanel: React.FC<NotePanelProps> = ({ isOpen, onClose }) => {
               >
                 <NotebookPen size={44} style={{ opacity: 0.34 }} />
                 <div>
-                  <div style={{ fontSize: 16, color: 'var(--color-text-primary)', marginBottom: 6 }}>开始写一条新笔记</div>
+                  <div style={{ fontSize: 16, color: 'var(--color-text-primary)', marginBottom: 6 }}>
+                    在 {activeVault?.name ?? '当前 Vault'} 里开始写一条新笔记
+                  </div>
                   <div style={{ fontSize: 13, lineHeight: 1.7 }}>
-                    从左侧导航树里打开笔记，
+                    从左侧文件树打开笔记，
                     <br />
-                    也可以直接新建一条开始记录。
+                    或者直接在当前选中文件夹下新建一条开始记录。
                   </div>
                 </div>
                 <button

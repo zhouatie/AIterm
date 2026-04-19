@@ -1,34 +1,49 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronRight, FilePlus, FileText, Folder, FolderOpen, Search, Trash2 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ChevronRight,
+  FilePlus,
+  FileText,
+  Folder,
+  FolderOpen,
+  GripVertical,
+  MoreHorizontal,
+  Plus,
+  Search,
+} from 'lucide-react';
+import ContextMenu, { type ContextMenuBounds, type ContextMenuItem } from './ContextMenu';
 import type { ScanTreeNode } from '../preload';
-import type { NoteWorkbenchView } from '../utils/note-workbench-state';
-
-interface NavigationNoteItem {
-  path: string;
-  name: string;
-  displayName: string;
-  folderPath: string;
-  mtime: number;
-}
+import type { NoteVault } from '../utils/note-settings';
 
 interface NoteFileListProps {
+  currentVault: NoteVault | null;
+  vaults: NoteVault[];
   noteDir: string;
   tree: ScanTreeNode[];
-  activeView: NoteWorkbenchView;
   selectedFolderPath: string;
   activeFilePath: string | null;
   requestedRenamePath: string | null;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
-  recentNotes: NavigationNoteItem[];
-  favoriteNotes: NavigationNoteItem[];
-  allNoteCount: number;
-  onSelectFolder: (folderPath: string) => void;
+  onVaultChange: (vaultId: string) => void;
   onFileSelect: (filePath: string, fileName: string) => void;
+  onSelectFolder: (folderPath: string) => void;
   onCreateNote: (inDir?: string) => void;
   onCreateFolder: (inDir?: string) => Promise<string | null>;
   onDeleteNote: (filePath: string, fileName: string, isDirectory: boolean) => void;
   onRename: (oldPath: string, newPath: string, isDirectory: boolean) => Promise<boolean>;
+  onMoveNode: (sourcePath: string, targetDirPath: string, isDirectory: boolean) => Promise<boolean>;
+}
+
+interface ContextMenuState {
+  x: number;
+  y: number;
+  items: ContextMenuItem[];
+  bounds?: ContextMenuBounds;
+}
+
+interface DragState {
+  path: string;
+  isDirectory: boolean;
 }
 
 const containerStyle: React.CSSProperties = {
@@ -39,11 +54,11 @@ const containerStyle: React.CSSProperties = {
   background: 'var(--color-bg-secondary)',
 };
 
-const sectionHeaderStyle: React.CSSProperties = {
+const headerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'stretch',
-  gap: 8,
+  gap: 10,
   padding: '12px 12px 10px',
   borderBottom: '1px solid var(--color-border-primary)',
 };
@@ -52,42 +67,41 @@ const iconButtonStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 24,
-  height: 24,
-  border: 'none',
+  width: 28,
+  height: 28,
+  border: '1px solid transparent',
   background: 'transparent',
-  borderRadius: 6,
+  borderRadius: 8,
   cursor: 'pointer',
   color: 'var(--color-text-tertiary)',
   padding: 0,
-  transition: 'background 0.16s ease, color 0.16s ease',
+  transition: 'background 0.16s ease, border-color 0.16s ease, color 0.16s ease',
+};
+
+const dragHandleStyle: React.CSSProperties = {
+  ...iconButtonStyle,
+  width: 18,
+  height: 28,
+  flexShrink: 0,
+  cursor: 'grab',
+  color: 'var(--color-text-muted)',
 };
 
 const treeScrollStyle: React.CSSProperties = {
   flex: 1,
   overflow: 'auto',
-  padding: '6px 0 12px',
+  padding: '8px 0 12px',
 };
 
 const searchBoxStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 8,
-  height: 32,
+  height: 34,
   padding: '0 10px',
-  borderRadius: 9,
+  borderRadius: 10,
   border: '1px solid var(--color-border-primary)',
   background: 'var(--color-bg-primary)',
-};
-
-const actionButtonBaseStyle: React.CSSProperties = {
-  ...iconButtonStyle,
-  width: 20,
-  height: 20,
-  opacity: 0,
-  pointerEvents: 'none',
-  flexShrink: 0,
-  transition: 'opacity 0.15s ease, background 0.15s ease, color 0.15s ease',
 };
 
 function getDisplayName(fileName: string): string {
@@ -95,13 +109,8 @@ function getDisplayName(fileName: string): string {
 }
 
 function getParentPath(filePath: string): string {
-  const idx = filePath.lastIndexOf('/');
-  return idx >= 0 ? filePath.slice(0, idx) : filePath;
-}
-
-function getBaseName(filePath: string): string {
-  const idx = filePath.lastIndexOf('/');
-  return idx >= 0 ? filePath.slice(idx + 1) : filePath;
+  const index = filePath.lastIndexOf('/');
+  return index >= 0 ? filePath.slice(0, index) : filePath;
 }
 
 function getRelativePath(targetPath: string, rootPath: string): string {
@@ -110,14 +119,53 @@ function getRelativePath(targetPath: string, rootPath: string): string {
   return targetPath.slice(rootPath.length + 1);
 }
 
-function formatTimeLabel(timestamp: number): string {
-  if (!timestamp) return '未知时间';
-  return new Intl.DateTimeFormat('zh-CN', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(timestamp));
+function getPathName(nodePath: string): string {
+  const trimmed = nodePath.replace(/\/+$/, '');
+  const index = trimmed.lastIndexOf('/');
+  return index >= 0 ? trimmed.slice(index + 1) : trimmed;
+}
+
+function buildMovedPath(sourcePath: string, targetDirPath: string): string {
+  return `${targetDirPath.replace(/\/+$/, '')}/${getPathName(sourcePath)}`;
+}
+
+function canDropOnFolder(dragState: DragState | null, targetDirPath: string): boolean {
+  if (!dragState) return false;
+  if (getParentPath(dragState.path) === targetDirPath) return false;
+  if (!dragState.isDirectory) return true;
+  return targetDirPath !== dragState.path && !targetDirPath.startsWith(dragState.path + '/');
+}
+
+function replaceExpandedPaths(
+  paths: Set<string>,
+  oldPath: string,
+  newPath: string,
+  isDirectory: boolean,
+): Set<string> {
+  const next = new Set<string>();
+
+  for (const path of paths) {
+    if (path === oldPath) {
+      next.add(newPath);
+      continue;
+    }
+
+    if (isDirectory && path.startsWith(oldPath + '/')) {
+      next.add(newPath + path.slice(oldPath.length));
+      continue;
+    }
+
+    next.add(path);
+  }
+
+  return next;
+}
+
+function countVisibleNotes(nodes: ScanTreeNode[]): number {
+  return nodes.reduce((count, node) => {
+    if (!node.isDirectory) return count + 1;
+    return count + countVisibleNotes(node.children ?? []);
+  }, 0);
 }
 
 function getAncestors(filePath: string, rootPath: string): string[] {
@@ -147,11 +195,21 @@ function filterTreeByQuery(nodes: ScanTreeNode[], query: string): ScanTreeNode[]
   });
 }
 
-function countVisibleNotes(nodes: ScanTreeNode[]): number {
-  return nodes.reduce((count, node) => {
-    if (!node.isDirectory) return count + 1;
-    return count + countVisibleNotes(node.children ?? []);
-  }, 0);
+function buildTreeRowStyle(selected: boolean): React.CSSProperties {
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 30,
+    paddingRight: 10,
+    borderRadius: 8,
+    color: selected ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+    background: selected ? 'var(--color-bg-selected)' : 'transparent',
+    boxShadow: selected ? 'var(--shadow-tree-row-hover)' : 'none',
+    cursor: 'pointer',
+    userSelect: 'none',
+    transition: 'background-color 150ms ease, box-shadow 150ms ease, color 0.16s ease',
+  };
 }
 
 interface InlineRenameProps {
@@ -198,7 +256,7 @@ const InlineRename: React.FC<InlineRenameProps> = ({ initialValue, onConfirm, on
         flex: 1,
         minWidth: 0,
         height: 22,
-        borderRadius: 5,
+        borderRadius: 6,
         border: '1px solid var(--color-accent-primary)',
         background: 'var(--color-bg-primary)',
         color: 'var(--color-text-primary)',
@@ -211,43 +269,6 @@ const InlineRename: React.FC<InlineRenameProps> = ({ initialValue, onConfirm, on
   );
 };
 
-function buildTreeRowStyle(selected: boolean): React.CSSProperties {
-  return {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    minHeight: 30,
-    paddingRight: 10,
-    borderLeft: selected ? '3px solid var(--color-tree-indicator)' : '3px solid transparent',
-    borderRadius: 8,
-    color: selected ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-    background: selected ? 'var(--color-bg-selected)' : 'transparent',
-    boxShadow: selected ? 'var(--shadow-tree-row-hover)' : 'none',
-    cursor: 'pointer',
-    userSelect: 'none',
-    transition: 'background-color 150ms ease, box-shadow 150ms ease, color 0.16s ease',
-  };
-}
-
-function buildHoverHandlers(selected: boolean, setHovered: (next: boolean) => void) {
-  return {
-    onMouseEnter: (event: React.MouseEvent<HTMLDivElement>) => {
-      setHovered(true);
-      if (!selected) {
-        event.currentTarget.style.background = 'var(--color-tree-row-hover)';
-        event.currentTarget.style.boxShadow = 'var(--shadow-tree-row-hover)';
-      }
-    },
-    onMouseLeave: (event: React.MouseEvent<HTMLDivElement>) => {
-      setHovered(false);
-      if (!selected) {
-        event.currentTarget.style.background = 'transparent';
-        event.currentTarget.style.boxShadow = 'none';
-      }
-    },
-  };
-}
-
 interface TreeRowProps {
   node: ScanTreeNode;
   depth: number;
@@ -256,14 +277,20 @@ interface TreeRowProps {
   expandedPaths: Set<string>;
   renamingPath: string | null;
   searchActive: boolean;
+  activeRowRef: React.RefObject<HTMLDivElement | null>;
+  dragState: DragState | null;
+  dropTargetPath: string | null;
   onToggleExpanded: (path: string) => void;
   onSelectFolder: (folderPath: string) => void;
   onFileSelect: (filePath: string, fileName: string) => void;
   onStartRename: (path: string) => void;
   onConfirmRename: (oldPath: string, newName: string, isDirectory: boolean) => void;
   onCancelRename: () => void;
-  onCreateNote: (inDir?: string) => void;
-  onDeleteNote: (filePath: string, fileName: string, isDirectory: boolean) => void;
+  onContextMenu: (event: React.MouseEvent, node: ScanTreeNode) => void;
+  onDragStart: (event: React.DragEvent<HTMLDivElement>, node: ScanTreeNode) => void;
+  onDragEnd: () => void;
+  onDragOverFolder: (event: React.DragEvent<HTMLDivElement>, node: ScanTreeNode) => void;
+  onDropOnFolder: (event: React.DragEvent<HTMLDivElement>, node: ScanTreeNode) => void;
 }
 
 const TreeRow: React.FC<TreeRowProps> = ({
@@ -274,14 +301,20 @@ const TreeRow: React.FC<TreeRowProps> = ({
   expandedPaths,
   renamingPath,
   searchActive,
+  activeRowRef,
+  dragState,
+  dropTargetPath,
   onToggleExpanded,
   onSelectFolder,
   onFileSelect,
   onStartRename,
   onConfirmRename,
   onCancelRename,
-  onCreateNote,
-  onDeleteNote,
+  onContextMenu,
+  onDragStart,
+  onDragEnd,
+  onDragOverFolder,
+  onDropOnFolder,
 }) => {
   const [hovered, setHovered] = useState(false);
   const isDirectory = node.isDirectory;
@@ -290,31 +323,35 @@ const TreeRow: React.FC<TreeRowProps> = ({
   const isActiveFile = !isDirectory && node.path === activeFilePath;
   const isRenaming = renamingPath === node.path;
   const isSelected = isSelectedFolder || isActiveFile;
-  const showActions = hovered || isSelected;
+  const isDropTarget = isDirectory && dropTargetPath === node.path;
+  const isDraggingSelf = dragState?.path === node.path;
   const paddingLeft = 12 + depth * 16;
+  const rowStyle = buildTreeRowStyle(isSelected);
 
   return (
     <>
       <div
+        ref={isActiveFile ? activeRowRef : undefined}
         style={{
-          ...buildTreeRowStyle(isSelected),
-          paddingLeft: Math.max(9, paddingLeft - 3),
+          ...rowStyle,
+          paddingLeft: paddingLeft,
+          background: isDropTarget
+            ? 'color-mix(in srgb, var(--color-accent-primary) 18%, var(--color-bg-selected))'
+            : (hovered && !isSelected ? 'var(--color-tree-row-hover)' : rowStyle.background),
+          opacity: isDraggingSelf ? 0.52 : 1,
         }}
-        {...buildHoverHandlers(isSelected, setHovered)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         onClick={() => {
           if (isDirectory) {
             onSelectFolder(node.path);
-            if (!searchActive) {
-              onToggleExpanded(node.path);
-            }
             return;
           }
           onFileSelect(node.path, node.name);
         }}
-        onDoubleClick={(event) => {
-          event.stopPropagation();
-          onStartRename(node.path);
-        }}
+        onContextMenu={(event) => onContextMenu(event, node)}
+        onDragOver={isDirectory ? (event) => onDragOverFolder(event, node) : undefined}
+        onDrop={isDirectory ? (event) => onDropOnFolder(event, node) : undefined}
       >
         {isDirectory ? (
           <button
@@ -348,7 +385,7 @@ const TreeRow: React.FC<TreeRowProps> = ({
           <FileText size={14} style={{ opacity: 0.72, flexShrink: 0 }} />
         )}
 
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
           {isRenaming ? (
             <InlineRename
               initialValue={isDirectory ? node.name : getDisplayName(node.name)}
@@ -362,38 +399,26 @@ const TreeRow: React.FC<TreeRowProps> = ({
           )}
         </div>
 
-        {!isRenaming && isDirectory && (
-          <button
-            onClick={(event) => {
-              event.stopPropagation();
-              onCreateNote(node.path);
-            }}
-            style={{
-              ...actionButtonBaseStyle,
-              opacity: showActions ? 1 : 0,
-              pointerEvents: showActions ? 'auto' : 'none',
-            }}
-            title="在此文件夹新建笔记"
-          >
-            <FilePlus size={13} />
-          </button>
-        )}
-
         {!isRenaming && (
-          <button
+          <div
+            draggable
             onClick={(event) => {
+              event.preventDefault();
               event.stopPropagation();
-              onDeleteNote(node.path, node.name, isDirectory);
             }}
+            onMouseDown={(event) => {
+              event.stopPropagation();
+            }}
+            onDragStart={(event) => onDragStart(event, node)}
+            onDragEnd={onDragEnd}
             style={{
-              ...actionButtonBaseStyle,
-              opacity: showActions ? 1 : 0,
-              pointerEvents: showActions ? 'auto' : 'none',
+              ...dragHandleStyle,
+              opacity: hovered || isSelected || isDraggingSelf ? 1 : 0.72,
             }}
-            title={isDirectory ? '删除文件夹' : '删除笔记'}
+            title={isDirectory ? '拖拽移动文件夹' : '拖拽移动笔记'}
           >
-            <Trash2 size={13} />
-          </button>
+            <GripVertical size={13} />
+          </div>
         )}
       </div>
 
@@ -407,152 +432,68 @@ const TreeRow: React.FC<TreeRowProps> = ({
           expandedPaths={expandedPaths}
           renamingPath={renamingPath}
           searchActive={searchActive}
+          activeRowRef={activeRowRef}
+          dragState={dragState}
+          dropTargetPath={dropTargetPath}
           onToggleExpanded={onToggleExpanded}
           onSelectFolder={onSelectFolder}
           onFileSelect={onFileSelect}
           onStartRename={onStartRename}
           onConfirmRename={onConfirmRename}
           onCancelRename={onCancelRename}
-          onCreateNote={onCreateNote}
-          onDeleteNote={onDeleteNote}
+          onContextMenu={onContextMenu}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          onDragOverFolder={onDragOverFolder}
+          onDropOnFolder={onDropOnFolder}
         />
       ))}
     </>
   );
 };
 
-interface FlatNoteRowProps {
-  item: NavigationNoteItem;
-  noteDir: string;
-  activeFilePath: string | null;
-  renamingPath: string | null;
-  onFileSelect: (filePath: string, fileName: string) => void;
-  onStartRename: (path: string) => void;
-  onConfirmRename: (oldPath: string, newName: string, isDirectory: boolean) => void;
-  onCancelRename: () => void;
-  onDeleteNote: (filePath: string, fileName: string, isDirectory: boolean) => void;
-}
-
-const FlatNoteRow: React.FC<FlatNoteRowProps> = ({
-  item,
-  noteDir,
-  activeFilePath,
-  renamingPath,
-  onFileSelect,
-  onStartRename,
-  onConfirmRename,
-  onCancelRename,
-  onDeleteNote,
-}) => {
-  const [hovered, setHovered] = useState(false);
-  const isSelected = item.path === activeFilePath;
-  const isRenaming = renamingPath === item.path;
-  const showActions = hovered || isSelected;
-
-  return (
-    <div
-      style={{
-        ...buildTreeRowStyle(isSelected),
-        alignItems: 'flex-start',
-        paddingTop: 8,
-        paddingBottom: 8,
-        paddingLeft: 9,
-      }}
-      {...buildHoverHandlers(isSelected, setHovered)}
-      onClick={() => onFileSelect(item.path, item.name)}
-      onDoubleClick={(event) => {
-        event.stopPropagation();
-        onStartRename(item.path);
-      }}
-    >
-      <div style={{ width: 18, flexShrink: 0 }} />
-      <FileText size={14} style={{ opacity: 0.72, flexShrink: 0, marginTop: 2 }} />
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {isRenaming ? (
-          <InlineRename
-            initialValue={item.displayName}
-            onConfirm={(newName) => onConfirmRename(item.path, newName, false)}
-            onCancel={onCancelRename}
-          />
-        ) : (
-          <>
-            <div
-              style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                color: 'var(--color-text-primary)',
-              }}
-            >
-              {item.displayName}
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 11,
-                color: 'var(--color-text-muted)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-              title={`${getRelativePath(item.folderPath, noteDir)} · ${formatTimeLabel(item.mtime)}`}
-            >
-              {getRelativePath(item.folderPath, noteDir)} · {formatTimeLabel(item.mtime)}
-            </div>
-          </>
-        )}
-      </div>
-
-      {!isRenaming && (
-        <button
-          onClick={(event) => {
-            event.stopPropagation();
-            onDeleteNote(item.path, item.name, false);
-          }}
-          style={{
-            ...actionButtonBaseStyle,
-            opacity: showActions ? 1 : 0,
-            pointerEvents: showActions ? 'auto' : 'none',
-            marginTop: 1,
-          }}
-          title="删除笔记"
-        >
-          <Trash2 size={13} />
-        </button>
-      )}
-    </div>
-  );
-};
-
 const NoteFileList: React.FC<NoteFileListProps> = ({
+  currentVault,
+  vaults,
   noteDir,
   tree,
-  activeView,
   selectedFolderPath,
   activeFilePath,
   requestedRenamePath,
   searchQuery,
   onSearchQueryChange,
-  recentNotes,
-  favoriteNotes,
-  allNoteCount,
-  onSelectFolder,
+  onVaultChange,
   onFileSelect,
+  onSelectFolder,
   onCreateNote,
   onCreateFolder,
   onDeleteNote,
   onRename,
+  onMoveNode,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const activeRowRef = useRef<HTMLDivElement | null>(null);
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set([noteDir]));
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => new Set(noteDir ? [noteDir] : []));
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const [dropTargetPath, setDropTargetPath] = useState<string | null>(null);
 
   useEffect(() => {
     if (!requestedRenamePath) return;
     setRenamingPath(requestedRenamePath);
   }, [requestedRenamePath]);
 
+  useEffect(() => {
+    setExpandedPaths((prev) => {
+      const next = new Set(prev);
+      if (noteDir) next.add(noteDir);
+      return next;
+    });
+  }, [noteDir]);
+
   const autoExpandedPaths = useMemo(() => {
+    if (!noteDir) return new Set<string>();
     const paths = new Set<string>([noteDir]);
     for (const path of getAncestors(selectedFolderPath, noteDir)) {
       paths.add(path);
@@ -568,13 +509,16 @@ const NoteFileList: React.FC<NoteFileListProps> = ({
   useEffect(() => {
     setExpandedPaths((prev) => {
       const next = new Set(prev);
-      next.add(noteDir);
       for (const path of autoExpandedPaths) {
         next.add(path);
       }
       return next;
     });
-  }, [autoExpandedPaths, noteDir, tree]);
+  }, [autoExpandedPaths, tree]);
+
+  useEffect(() => {
+    activeRowRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [activeFilePath, searchQuery, tree]);
 
   const toggleExpanded = useCallback((path: string) => {
     setExpandedPaths((prev) => {
@@ -603,47 +547,235 @@ const NoteFileList: React.FC<NoteFileListProps> = ({
     }
   }, [onRename]);
 
-  const handleCreateFolder = useCallback(async () => {
-    const folderPath = await onCreateFolder(selectedFolderPath);
+  const openContextMenu = useCallback((event: { clientX: number; clientY: number }, items: ContextMenuItem[]) => {
+    const containerBounds = containerRef.current?.getBoundingClientRect();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      items,
+      bounds: containerBounds
+        ? {
+            left: containerBounds.left + 8,
+            right: containerBounds.right - 8,
+            top: containerBounds.top + 8,
+            bottom: containerBounds.bottom - 8,
+          }
+        : undefined,
+    });
+  }, []);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  const clearDragState = useCallback(() => {
+    setDragState(null);
+    setDropTargetPath(null);
+  }, []);
+
+  const handleCreateFolder = useCallback(async (targetDir?: string) => {
+    const folderPath = await onCreateFolder(targetDir ?? selectedFolderPath);
     if (folderPath) {
-      setExpandedPaths((prev) => new Set(prev).add(selectedFolderPath));
+      setExpandedPaths((prev) => new Set(prev).add(targetDir ?? selectedFolderPath));
       setRenamingPath(folderPath);
     }
   }, [onCreateFolder, selectedFolderPath]);
 
-  const isSearchActive = searchQuery.trim().length > 0;
-  const filteredTree = useMemo(
-    () => (activeView === 'all' ? filterTreeByQuery(tree, searchQuery) : []),
-    [activeView, searchQuery, tree],
-  );
-  const flatItems = useMemo(() => {
-    const source = activeView === 'recent' ? recentNotes : favoriteNotes;
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return source;
-    return source.filter((item) => item.displayName.toLowerCase().includes(query));
-  }, [activeView, favoriteNotes, recentNotes, searchQuery]);
+  const buildBlankMenuItems = useCallback((): ContextMenuItem[] => {
+    const targetDir = selectedFolderPath || noteDir;
+    return [
+      {
+        label: '新建笔记',
+        onSelect: () => {
+          onCreateNote(targetDir);
+          closeContextMenu();
+        },
+      },
+      {
+        label: '新建文件夹',
+        onSelect: async () => {
+          await handleCreateFolder(targetDir);
+          closeContextMenu();
+        },
+      },
+      { type: 'separator' },
+      {
+        label: '在 Finder 中显示',
+        disabled: !noteDir,
+        onSelect: () => {
+          if (!noteDir) return;
+          window.fileApi.showInFolder(noteDir);
+          closeContextMenu();
+        },
+      },
+    ];
+  }, [closeContextMenu, handleCreateFolder, noteDir, onCreateNote, selectedFolderPath]);
 
-  const viewTitle = activeView === 'recent'
-    ? '最近'
-    : activeView === 'favorites'
-      ? '收藏'
-      : '全部';
-  const resultCount = activeView === 'recent'
-    ? recentNotes.length
-    : activeView === 'favorites'
-      ? favoriteNotes.length
-      : allNoteCount;
-  const visibleCount = activeView === 'all' ? countVisibleNotes(filteredTree) : flatItems.length;
+  const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: ScanTreeNode) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const items: ContextMenuItem[] = node.isDirectory
+      ? [
+          {
+            label: '新建笔记',
+            onSelect: () => {
+              onCreateNote(node.path);
+              closeContextMenu();
+            },
+          },
+          {
+            label: '新建文件夹',
+            onSelect: async () => {
+              await handleCreateFolder(node.path);
+              closeContextMenu();
+            },
+          },
+          { type: 'separator' },
+          {
+            label: '重命名',
+            onSelect: () => {
+              setRenamingPath(node.path);
+              closeContextMenu();
+            },
+          },
+          {
+            label: '删除',
+            onSelect: () => {
+              onDeleteNote(node.path, node.name, true);
+              closeContextMenu();
+            },
+          },
+          {
+            label: '在 Finder 中显示',
+            onSelect: () => {
+              window.fileApi.showInFolder(node.path);
+              closeContextMenu();
+            },
+          },
+        ]
+      : [
+          {
+            label: '打开',
+            onSelect: () => {
+              onFileSelect(node.path, node.name);
+              closeContextMenu();
+            },
+          },
+          {
+            label: '重命名',
+            onSelect: () => {
+              setRenamingPath(node.path);
+              closeContextMenu();
+            },
+          },
+          {
+            label: '删除',
+            onSelect: () => {
+              onDeleteNote(node.path, node.name, false);
+              closeContextMenu();
+            },
+          },
+          {
+            label: '在 Finder 中显示',
+            onSelect: () => {
+              window.fileApi.showInFolder(node.path);
+              closeContextMenu();
+            },
+          },
+        ];
+
+    openContextMenu(event, items);
+  }, [closeContextMenu, handleCreateFolder, onCreateNote, onDeleteNote, onFileSelect, openContextMenu]);
+
+  const handleDragStart = useCallback((event: React.DragEvent<HTMLDivElement>, node: ScanTreeNode) => {
+    const nextDragState: DragState = {
+      path: node.path,
+      isDirectory: node.isDirectory,
+    };
+
+    closeContextMenu();
+    setRenamingPath((prev) => (prev === node.path ? null : prev));
+    setDragState(nextDragState);
+    setDropTargetPath(null);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', node.path);
+  }, [closeContextMenu]);
+
+  const handleDragOverFolder = useCallback((event: React.DragEvent<HTMLDivElement>, node: ScanTreeNode) => {
+    if (!node.isDirectory) return;
+    if (!canDropOnFolder(dragState, node.path)) {
+      setDropTargetPath(null);
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'move';
+    setDropTargetPath(node.path);
+  }, [dragState]);
+
+  const handleDropOnFolder = useCallback(async (event: React.DragEvent<HTMLDivElement>, node: ScanTreeNode) => {
+    if (!node.isDirectory || !dragState) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!canDropOnFolder(dragState, node.path)) {
+      clearDragState();
+      return;
+    }
+
+    const sourcePath = dragState.path;
+    const isDirectory = dragState.isDirectory;
+    const nextPath = buildMovedPath(sourcePath, node.path);
+
+    clearDragState();
+    const moved = await onMoveNode(sourcePath, node.path, isDirectory);
+    if (!moved) return;
+
+    setExpandedPaths((prev) => {
+      const next = replaceExpandedPaths(prev, sourcePath, nextPath, isDirectory);
+      next.add(noteDir);
+      next.add(node.path);
+      return next;
+    });
+  }, [clearDragState, dragState, noteDir, onMoveNode]);
+
+  const filteredTree = useMemo(() => filterTreeByQuery(tree, searchQuery), [searchQuery, tree]);
+  const isSearchActive = searchQuery.trim().length > 0;
+  const visibleCount = countVisibleNotes(filteredTree);
 
   return (
-    <div style={containerStyle}>
-      <div style={sectionHeaderStyle}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)' }}>{viewTitle}</div>
+    <div ref={containerRef} style={containerStyle}>
+      <div style={headerStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <select
+              value={currentVault?.id ?? ''}
+              onChange={(event) => onVaultChange(event.target.value)}
+              style={{
+                width: '100%',
+                height: 34,
+                borderRadius: 10,
+                border: '1px solid var(--color-border-primary)',
+                background: 'var(--color-bg-primary)',
+                color: 'var(--color-text-primary)',
+                padding: '0 10px',
+                fontSize: 13,
+                fontWeight: 600,
+                outline: 'none',
+              }}
+            >
+              {vaults.map((vault) => (
+                <option key={vault.id} value={vault.id}>
+                  {vault.name}
+                </option>
+              ))}
+            </select>
             <div
               style={{
-                marginTop: 2,
+                marginTop: 4,
                 fontSize: 11,
                 color: 'var(--color-text-muted)',
                 whiteSpace: 'nowrap',
@@ -652,26 +784,39 @@ const NoteFileList: React.FC<NoteFileListProps> = ({
               }}
               title={noteDir}
             >
-              {isSearchActive ? `${visibleCount} 条结果` : `${resultCount} 条内容`} · {getBaseName(noteDir) || noteDir}
+              {isSearchActive ? `${visibleCount} 条结果` : `${visibleCount} 条内容`} · {noteDir || '未选择 Vault'}
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-            <button
-              onClick={() => onCreateNote(selectedFolderPath)}
-              style={iconButtonStyle}
-              title="新建笔记"
-            >
-              <FilePlus size={14} />
-            </button>
-            <button
-              onClick={() => { void handleCreateFolder(); }}
-              style={iconButtonStyle}
-              title="新建文件夹"
-            >
-              <FolderOpen size={14} />
-            </button>
-          </div>
+          <button
+            onClick={() => onCreateNote(selectedFolderPath || noteDir)}
+            style={iconButtonStyle}
+            title="新建笔记"
+          >
+            <FilePlus size={15} />
+          </button>
+          <button
+            onClick={() => {
+              void handleCreateFolder(selectedFolderPath || noteDir);
+            }}
+            style={iconButtonStyle}
+            title="新建文件夹"
+          >
+            <Plus size={15} />
+          </button>
+          <button
+            onClick={(event) => {
+              const bounds = event.currentTarget.getBoundingClientRect();
+              openContextMenu(
+                { clientX: bounds.left, clientY: bounds.bottom + 4 },
+                buildBlankMenuItems(),
+              );
+            }}
+            style={iconButtonStyle}
+            title="更多"
+          >
+            <MoreHorizontal size={15} />
+          </button>
         </div>
 
         <div style={searchBoxStyle}>
@@ -681,7 +826,7 @@ const NoteFileList: React.FC<NoteFileListProps> = ({
             value={searchQuery}
             spellCheck={false}
             onChange={(event) => onSearchQueryChange(event.target.value)}
-            placeholder="搜索当前视图..."
+            placeholder="搜索当前 Vault..."
             style={{
               flex: 1,
               minWidth: 0,
@@ -696,69 +841,83 @@ const NoteFileList: React.FC<NoteFileListProps> = ({
         </div>
       </div>
 
-      <div style={treeScrollStyle}>
-        {activeView === 'all' && (
-          <div
-            style={{
-              ...buildTreeRowStyle(selectedFolderPath === noteDir),
-              minHeight: 30,
-              paddingLeft: 9,
-            }}
-            onClick={() => onSelectFolder(noteDir)}
-            onMouseEnter={(event) => {
-              if (selectedFolderPath !== noteDir) {
-                event.currentTarget.style.background = 'var(--color-tree-row-hover)';
-                event.currentTarget.style.boxShadow = 'var(--shadow-tree-row-hover)';
-              }
-            }}
-            onMouseLeave={(event) => {
-              if (selectedFolderPath !== noteDir) {
-                event.currentTarget.style.background = 'transparent';
-                event.currentTarget.style.boxShadow = 'none';
-              }
-            }}
-          >
-            <div style={{ width: 18, flexShrink: 0 }} />
-            <FolderOpen size={14} style={{ color: 'var(--color-icon-folder)', flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>全部目录</span>
-          </div>
-        )}
-
-        {activeView === 'all' ? (
-          filteredTree.length === 0 ? (
-            <div
-              style={{
-                padding: '18px 14px',
-                fontSize: 12,
-                color: 'var(--color-text-muted)',
-                lineHeight: 1.6,
-              }}
-            >
-              {isSearchActive ? '没有匹配的笔记。' : '还没有笔记内容，先新建一条吧。'}
-            </div>
+      <div
+        style={treeScrollStyle}
+        onDragOver={(event) => {
+          if (!dragState) return;
+          if (event.target === event.currentTarget) {
+            setDropTargetPath(null);
+          }
+        }}
+        onDragLeave={(event) => {
+          if (!dragState) return;
+          if (event.currentTarget === event.target) {
+            setDropTargetPath(null);
+          }
+        }}
+        onContextMenu={(event) => {
+          if (event.target !== event.currentTarget) return;
+          event.preventDefault();
+          openContextMenu(event, buildBlankMenuItems());
+        }}
+      >
+        <div
+          style={{
+            ...buildTreeRowStyle(selectedFolderPath === noteDir),
+            paddingLeft: 12,
+            background: dropTargetPath === noteDir
+              ? 'color-mix(in srgb, var(--color-accent-primary) 18%, var(--color-bg-selected))'
+              : buildTreeRowStyle(selectedFolderPath === noteDir).background,
+          }}
+          onClick={() => onSelectFolder(noteDir)}
+          onDragOver={(event) => {
+            if (!canDropOnFolder(dragState, noteDir)) {
+              setDropTargetPath(null);
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            event.dataTransfer.dropEffect = 'move';
+            setDropTargetPath(noteDir);
+          }}
+          onDrop={(event) => {
+            if (!dragState) return;
+            event.preventDefault();
+            event.stopPropagation();
+            void handleDropOnFolder(event, {
+              name: currentVault?.name ?? '当前 Vault',
+              path: noteDir,
+              isDirectory: true,
+              children: tree,
+            });
+          }}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            const rootNode: ScanTreeNode = {
+              name: currentVault?.name ?? '当前 Vault',
+              path: noteDir,
+              isDirectory: true,
+              children: tree,
+            };
+            handleNodeContextMenu(event, rootNode);
+          }}
+        >
+          <div style={{ width: 18, flexShrink: 0 }} />
+          <FolderOpen size={14} style={{ color: 'var(--color-icon-folder)', flexShrink: 0 }} />
+          {renamingPath === noteDir ? (
+            <InlineRename
+              initialValue={currentVault?.name ?? 'notes'}
+              onConfirm={() => setRenamingPath(null)}
+              onCancel={() => setRenamingPath(null)}
+            />
           ) : (
-            filteredTree.map((node) => (
-              <TreeRow
-                key={node.path}
-                node={node}
-                depth={0}
-                selectedFolderPath={selectedFolderPath}
-                activeFilePath={activeFilePath}
-                expandedPaths={expandedPaths}
-                renamingPath={renamingPath}
-                searchActive={isSearchActive}
-                onToggleExpanded={toggleExpanded}
-                onSelectFolder={onSelectFolder}
-                onFileSelect={onFileSelect}
-                onStartRename={setRenamingPath}
-                onConfirmRename={handleConfirmRename}
-                onCancelRename={() => setRenamingPath(null)}
-                onCreateNote={onCreateNote}
-                onDeleteNote={onDeleteNote}
-              />
-            ))
-          )
-        ) : flatItems.length === 0 ? (
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {currentVault?.name ?? '当前 Vault'}
+            </span>
+          )}
+        </div>
+
+        {filteredTree.length === 0 ? (
           <div
             style={{
               padding: '18px 14px',
@@ -767,25 +926,47 @@ const NoteFileList: React.FC<NoteFileListProps> = ({
               lineHeight: 1.6,
             }}
           >
-            {isSearchActive ? '没有匹配的笔记。' : `这个${viewTitle}视图里还没有内容。`}
+            {isSearchActive ? '没有匹配的笔记。' : '这个 Vault 里还没有笔记内容，先新建一条吧。'}
           </div>
         ) : (
-          flatItems.map((item) => (
-            <FlatNoteRow
-              key={item.path}
-              item={item}
-              noteDir={noteDir}
+          filteredTree.map((node) => (
+            <TreeRow
+              key={node.path}
+              node={node}
+              depth={0}
+              selectedFolderPath={selectedFolderPath}
               activeFilePath={activeFilePath}
+              expandedPaths={expandedPaths}
               renamingPath={renamingPath}
+              searchActive={isSearchActive}
+              activeRowRef={activeRowRef}
+              dragState={dragState}
+              dropTargetPath={dropTargetPath}
+              onToggleExpanded={toggleExpanded}
+              onSelectFolder={onSelectFolder}
               onFileSelect={onFileSelect}
               onStartRename={setRenamingPath}
               onConfirmRename={handleConfirmRename}
               onCancelRename={() => setRenamingPath(null)}
-              onDeleteNote={onDeleteNote}
+              onContextMenu={handleNodeContextMenu}
+              onDragStart={handleDragStart}
+              onDragEnd={clearDragState}
+              onDragOverFolder={handleDragOverFolder}
+              onDropOnFolder={handleDropOnFolder}
             />
           ))
         )}
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenu.items}
+          bounds={contextMenu.bounds}
+          onClose={closeContextMenu}
+        />
+      )}
     </div>
   );
 };

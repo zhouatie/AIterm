@@ -11,7 +11,10 @@ import {
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import { normalizeSpecDirectoryNames } from '../utils/file-tree-settings';
 import { normalizeTerminalStartDirectory } from '../utils/terminal-settings';
-import { readNoteDirectory } from '../utils/note-settings';
+import {
+  createNoteVault,
+  type NoteVaultSettings,
+} from '../utils/note-settings';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -20,13 +23,13 @@ interface SettingsPanelProps {
   terminalStartDirectory: string;
   terminalRendererPreferWebgl: boolean;
   hiddenFolderNames: string[];
-  noteDirectory: string;
+  noteVaultSettings: NoteVaultSettings;
   onSave: (bindings: ShortcutBindings) => void;
   onSaveSpecDirectoryNames: (names: string[]) => void;
   onSaveTerminalStartDirectory: (value: string) => void;
   onSaveTerminalRendererPreferWebgl: (value: boolean) => void;
   onSaveHiddenFolderNames: (names: string[]) => void;
-  onSaveNoteDirectory: (value: string) => void;
+  onSaveNoteVaultSettings: (value: NoteVaultSettings) => void;
   onClose: () => void;
 }
 
@@ -137,13 +140,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   terminalStartDirectory,
   terminalRendererPreferWebgl,
   hiddenFolderNames,
-  noteDirectory,
+  noteVaultSettings,
   onSave,
   onSaveSpecDirectoryNames,
   onSaveTerminalStartDirectory,
   onSaveTerminalRendererPreferWebgl,
   onSaveHiddenFolderNames,
-  onSaveNoteDirectory,
+  onSaveNoteVaultSettings,
   onClose,
 }) => {
   const [draftBindings, setDraftBindings] = useState<ShortcutBindings>(bindings);
@@ -153,11 +156,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     terminalRendererPreferWebgl,
   );
   const [draftHiddenFolderNames, setDraftHiddenFolderNames] = useState<string[]>(hiddenFolderNames);
-  const [draftNoteDirectory, setDraftNoteDirectory] = useState(noteDirectory);
+  const [draftNoteVaultSettings, setDraftNoteVaultSettings] = useState<NoteVaultSettings>(noteVaultSettings);
+  const [newVaultRootPath, setNewVaultRootPath] = useState('');
   const [newHiddenFolderInput, setNewHiddenFolderInput] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ShortcutActionId, string>>>({});
   const [specDirectoryError, setSpecDirectoryError] = useState('');
   const [terminalDirectoryError, setTerminalDirectoryError] = useState('');
+  const [noteVaultError, setNoteVaultError] = useState('');
   const [saveFeedback, setSaveFeedback] = useState<string>('');
 
   useEffect(() => {
@@ -167,11 +172,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setDraftTerminalStartDirectory(terminalStartDirectory);
     setDraftTerminalRendererPreferWebgl(terminalRendererPreferWebgl);
     setDraftHiddenFolderNames(hiddenFolderNames);
-    setDraftNoteDirectory(noteDirectory);
+    setDraftNoteVaultSettings(noteVaultSettings);
+    setNewVaultRootPath('');
     setNewHiddenFolderInput('');
     setFieldErrors({});
     setSpecDirectoryError('');
     setTerminalDirectoryError('');
+    setNoteVaultError('');
     setSaveFeedback('');
   }, [
     isOpen,
@@ -180,7 +187,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     terminalStartDirectory,
     terminalRendererPreferWebgl,
     hiddenFolderNames,
-    noteDirectory,
+    noteVaultSettings,
   ]);
 
   useEffect(() => {
@@ -217,7 +224,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       || normalizedTerminalStartDirectory !== terminalStartDirectory
       || draftTerminalRendererPreferWebgl !== terminalRendererPreferWebgl
       || [...draftHiddenFolderNames].sort().join('\n') !== [...hiddenFolderNames].sort().join('\n')
-      || draftNoteDirectory.trim() !== noteDirectory,
+      || JSON.stringify(draftNoteVaultSettings) !== JSON.stringify(noteVaultSettings)
+      || newVaultRootPath.trim().length > 0,
     [
       draftBindings,
       bindings,
@@ -229,8 +237,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       terminalRendererPreferWebgl,
       draftHiddenFolderNames,
       hiddenFolderNames,
-      draftNoteDirectory,
-      noteDirectory,
+      draftNoteVaultSettings,
+      noteVaultSettings,
+      newVaultRootPath,
     ],
   );
 
@@ -239,6 +248,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setFieldErrors(errors);
     setSpecDirectoryError('');
     setTerminalDirectoryError('');
+    setNoteVaultError('');
 
     if (Object.keys(errors).length > 0) {
       setSaveFeedback('存在未解决的快捷键冲突或空值');
@@ -266,12 +276,51 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       }
     }
 
+    let nextNoteVaultSettings = draftNoteVaultSettings;
+    const trimmedNewVaultRootPath = newVaultRootPath.trim();
+
+    if (trimmedNewVaultRootPath) {
+      if (!trimmedNewVaultRootPath.startsWith('/')) {
+        setNoteVaultError('请输入绝对路径');
+        setSaveFeedback('存在未解决的配置错误');
+        return;
+      }
+
+      const nextVault = createNoteVault(trimmedNewVaultRootPath);
+      const exists = draftNoteVaultSettings.vaults.some((vault) => vault.rootPath === nextVault.rootPath);
+      if (exists) {
+        setNoteVaultError('这个 Vault 已存在');
+        setSaveFeedback('存在未解决的配置错误');
+        return;
+      }
+
+      const { error } = await window.fileApi.ensureDir(nextVault.rootPath);
+      if (error) {
+        setNoteVaultError('目录不存在且无法创建，或当前路径不可访问');
+        setSaveFeedback('存在未解决的配置错误');
+        return;
+      }
+
+      nextNoteVaultSettings = {
+        vaults: [...draftNoteVaultSettings.vaults, nextVault],
+        activeVaultId: draftNoteVaultSettings.activeVaultId ?? nextVault.id,
+      };
+    }
+
+    if (nextNoteVaultSettings.vaults.length === 0) {
+      setNoteVaultError('至少保留一个 Vault');
+      setSaveFeedback('存在未解决的配置错误');
+      return;
+    }
+
     onSave(draftBindings);
     onSaveSpecDirectoryNames(normalizedDraftSpecDirectories);
     onSaveTerminalStartDirectory(normalizedTerminalStartDirectory);
     onSaveTerminalRendererPreferWebgl(draftTerminalRendererPreferWebgl);
     onSaveHiddenFolderNames(draftHiddenFolderNames);
-    onSaveNoteDirectory(draftNoteDirectory.trim());
+    onSaveNoteVaultSettings(nextNoteVaultSettings);
+    setDraftNoteVaultSettings(nextNoteVaultSettings);
+    setNewVaultRootPath('');
     setSaveFeedback('所有更改已保存');
   };
 
@@ -819,35 +868,105 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     }}
                   >
                     <NotebookPen size={14} />
-                    笔记目录
+                    Vault 管理
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-                    笔记文件的存储路径。留空使用默认目录（应用数据目录下的 notes 文件夹）。
+                    维护应用内可切换的 Obsidian Vault。可以新增 Vault，并指定当前激活项。
                   </div>
+                  {noteVaultError && (
+                    <div style={{ fontSize: 12, color: '#d14343', marginTop: 8 }}>
+                      {noteVaultError}
+                    </div>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  value={draftNoteDirectory}
-                  onChange={(event) => {
-                    setDraftNoteDirectory(event.target.value);
-                    setSaveFeedback('');
-                  }}
-                  placeholder="留空使用默认目录"
-                  spellCheck={false}
-                  style={{
-                    width: '100%',
-                    minHeight: 42,
-                    borderRadius: 10,
-                    border: '1px solid var(--color-border-primary)',
-                    backgroundColor: 'var(--color-bg-secondary)',
-                    color: 'var(--color-text-primary)',
-                    padding: '0 12px',
-                    fontSize: 13,
-                    lineHeight: 1.45,
-                    outline: 'none',
-                    fontFamily: 'inherit',
-                  }}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {draftNoteVaultSettings.vaults.map((vault) => {
+                    const active = draftNoteVaultSettings.activeVaultId === vault.id;
+                    return (
+                      <button
+                        key={vault.id}
+                        type="button"
+                        onClick={() => {
+                          setDraftNoteVaultSettings((prev) => ({
+                            ...prev,
+                            activeVaultId: vault.id,
+                          }));
+                          setSaveFeedback('');
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 10,
+                          width: '100%',
+                          minHeight: 52,
+                          padding: '10px 12px',
+                          borderRadius: 10,
+                          border: active ? '1px solid var(--color-accent-primary)' : '1px solid var(--color-border-primary)',
+                          backgroundColor: active ? 'var(--color-bg-selected)' : 'var(--color-bg-secondary)',
+                          color: 'var(--color-text-primary)',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 10,
+                            height: 10,
+                            marginTop: 5,
+                            borderRadius: '50%',
+                            backgroundColor: active ? 'var(--color-accent-primary)' : 'var(--color-border-primary)',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span style={{ minWidth: 0, flex: 1 }}>
+                          <span style={{ display: 'block', fontSize: 13, fontWeight: 600 }}>
+                            {vault.name}
+                          </span>
+                          <span
+                            style={{
+                              display: 'block',
+                              marginTop: 4,
+                              fontSize: 11,
+                              color: 'var(--color-text-muted)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title={vault.rootPath}
+                          >
+                            {vault.rootPath}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                  <input
+                    type="text"
+                    value={newVaultRootPath}
+                    onChange={(event) => {
+                      setNewVaultRootPath(event.target.value);
+                      setNoteVaultError('');
+                      setSaveFeedback('');
+                    }}
+                    placeholder="输入新的 Vault 绝对路径"
+                    spellCheck={false}
+                    style={{
+                      width: '100%',
+                      minHeight: 42,
+                      borderRadius: 10,
+                      border: noteVaultError
+                        ? '1px solid #d14343'
+                        : '1px solid var(--color-border-primary)',
+                      backgroundColor: 'var(--color-bg-secondary)',
+                      color: 'var(--color-text-primary)',
+                      padding: '0 12px',
+                      fontSize: 13,
+                      lineHeight: 1.45,
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

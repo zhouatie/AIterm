@@ -1,9 +1,5 @@
-# Capability: note-storage
+## MODIFIED Requirements
 
-## Purpose
-笔记存储层，负责管理默认 Vault、多个自定义 Vault 的持久化状态，以及笔记文件所依赖的目录创建与重命名 IPC。
-
-## Requirements
 ### Requirement: 默认笔记存储目录
 系统 SHALL 提供默认的笔记 Vault，位于 Electron userData 路径下的 `notes` 子目录，并在没有任何已保存 Vault 时作为初始激活项。
 
@@ -32,26 +28,3 @@
 - **WHEN** 系统读取到旧的单笔记目录配置但尚未建立 Vault 列表
 - **THEN** 系统 SHALL 将该目录迁移为一个 Vault 条目
 - **THEN** 该迁移后的 Vault SHALL 成为当前激活 Vault
-
-### Requirement: 目录创建 IPC
-主进程 SHALL 提供目录创建的 IPC 接口，供渲染进程调用。
-
-#### Scenario: 创建目录
-- **WHEN** 渲染进程通过 `fs:ensure-dir` IPC 请求创建目录
-- **THEN** 主进程 SHALL 递归创建目标目录（等同于 `mkdir -p`）
-- **THEN** 若目录已存在，SHALL 静默成功不报错
-
-### Requirement: 获取 userData 路径
-渲染进程 SHALL 能够获取 Electron 的 userData 路径，用于拼接默认笔记目录。
-
-#### Scenario: 获取 userData 路径
-- **WHEN** 渲染进程通过 IPC 请求 userData 路径
-- **THEN** 主进程 SHALL 返回 `app.getPath('userData')` 的值
-
-### Requirement: 文件/文件夹重命名 IPC
-主进程 SHALL 提供文件和文件夹重命名的 IPC 接口，供渲染进程调用。
-
-#### Scenario: 重命名文件或文件夹
-- **WHEN** 渲染进程通过 `fs:rename` IPC 请求将 oldPath 重命名为 newPath
-- **THEN** 主进程 SHALL 执行重命名操作
-- **THEN** 若 newPath 已存在，SHALL 返回错误而不覆盖
