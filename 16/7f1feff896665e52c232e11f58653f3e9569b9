@@ -1,0 +1,23 @@
+package.json
+  6f4696e92f1c84f7 51,58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "167f1feff896665e52c232e11f58653f3e9569b9",
+  "prompts": {
+    "6f4696e92f1c84f7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019da629-e7e3-7373-b45d-ca47c03fccec",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
