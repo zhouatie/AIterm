@@ -1,0 +1,36 @@
+scripts/aiterm-notify.mjs
+  97302bd53c6e902a 3,16-20,63-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "b988ebb9e5f6dd0456a2d7a5955987214dd2b96f",
+  "prompts": {
+    "2d588752ad34bf6e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019db056-d598-7661-815b-37aa8fec3378",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 212,
+      "total_deletions": 0,
+      "accepted_lines": 212,
+      "overriden_lines": 0
+    },
+    "97302bd53c6e902a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019daf6d-a58e-7951-a6b6-5e67d8de6728",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 59,
+      "total_deletions": 4,
+      "accepted_lines": 59,
+      "overriden_lines": 0
+    }
+  }
+}
