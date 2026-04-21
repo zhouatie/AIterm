@@ -37,7 +37,7 @@ interface BrowserPanelProps {
 // Constants
 // ---------------------------------------------------------------------------
 
-const DEFAULT_URL = 'https://www.google.com';
+const DEFAULT_URL = 'about:blank';
 const TAB_BAR_HEIGHT = 38;
 const NAV_BAR_HEIGHT = 36;
 const HISTORY_KEY = 'browser-url-history';
