@@ -1,9 +1,5 @@
-# Capability: note-editor
+## MODIFIED Requirements
 
-## Purpose
-笔记编辑器，基于 Vditor 提供所见即所得的 Markdown 编辑体验，支持主题适配、任务列表渲染和内容变更通知。
-
-## Requirements
 ### Requirement: Markdown 所见即所得编辑
 笔记编辑器 SHALL 使用 Vditor 提供所见即所得的 Markdown 编辑体验，用户输入的 Markdown 语法 SHALL 实时渲染为格式化内容。标准 GFM 任务列表语法在编辑器中 SHALL 呈现为可见的 checkbox 任务项，而不是仅显示原始标记文本。
 
@@ -31,23 +27,3 @@
 #### Scenario: 撤销与重做
 - **WHEN** 用户按下 `Cmd+Z` 或 `Cmd+Shift+Z`
 - **THEN** 编辑器 SHALL 执行撤销或重做操作
-
-### Requirement: 编辑器主题适配
-编辑器 SHALL 适配应用的 light/dark/system 三种主题模式，视觉上与应用其他部分保持一致。
-
-#### Scenario: 跟随应用主题切换
-- **WHEN** 用户切换应用主题（浅色/深色/跟随系统）
-- **THEN** 编辑器的背景色、文字色、代码块样式、引用块样式 SHALL 随主题变化
-- **THEN** 编辑器 SHALL 使用应用现有的 CSS variables（如 `--color-bg-primary`、`--color-text-primary`）
-
-#### Scenario: 编辑器作用域样式控制
-- **WHEN** 编辑器初始化
-- **THEN** 编辑器内元素的样式 SHALL 通过笔记编辑器作用域 CSS 自定义实现
-- **THEN** 主题适配 SHALL 与应用现有视觉变量保持一致
-
-### Requirement: 编辑器内容变更通知
-编辑器 SHALL 在内容变更时通过回调通知外部，以触发自动保存流程。
-
-#### Scenario: 内容变更回调
-- **WHEN** 用户在编辑器中修改任何内容（打字、删除、粘贴、格式变更等）
-- **THEN** 编辑器 SHALL 通过内容变更回调将最新的 Markdown 字符串传递给外部

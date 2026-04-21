@@ -1,34 +1,17 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { Editor, rootCtx, defaultValueCtx } from '@milkdown/kit/core';
-import { commonmark } from '@milkdown/kit/preset/commonmark';
-import { gfm } from '@milkdown/kit/preset/gfm';
-import { history } from '@milkdown/kit/plugin/history';
-import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
-import { clipboard } from '@milkdown/kit/plugin/clipboard';
-import { Milkdown, MilkdownProvider, useEditor, useInstance } from '@milkdown/react';
-import { replaceAll } from '@milkdown/kit/utils';
-
-// ---------------------------------------------------------------------------
-// Styles (CSS-in-JS, using app CSS variables for theme integration)
-// ---------------------------------------------------------------------------
+import Vditor from 'vditor';
+import 'vditor/dist/index.css';
+import 'vditor/dist/js/i18n/zh_CN.js';
+import { useTheme } from '../ThemeContext';
 
 const editorWrapperStyle: React.CSSProperties = {
   flex: 1,
-  overflow: 'auto',
-  padding: '20px 28px',
-  fontSize: 14,
-  lineHeight: 1.7,
-  color: 'var(--color-text-primary)',
-  background: 'var(--color-bg-primary)',
-  display: 'flex',
-  flexDirection: 'column',
   minHeight: 0,
+  overflow: 'hidden',
+  background:
+    'linear-gradient(180deg, color-mix(in srgb, var(--color-surface-content-elevated) 72%, transparent) 0%, transparent 120px)',
   cursor: 'text',
 };
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 interface NoteEditorProps {
   /** The markdown content to initialize/replace the editor with. */
@@ -41,93 +24,115 @@ interface NoteEditorProps {
   autoFocus?: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Inner component (must be inside MilkdownProvider)
-// ---------------------------------------------------------------------------
-
-const MilkdownEditor: React.FC<NoteEditorProps> = ({ content, fileKey, onContentChange, autoFocus }) => {
+const NoteEditor: React.FC<NoteEditorProps> = (props) => {
+  const { content, onContentChange, autoFocus } = props;
+  const { theme } = useTheme();
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const vditorRef = useRef<Vditor | null>(null);
   const onContentChangeRef = useRef(onContentChange);
+  const isSyncingRef = useRef(false);
+  const lastKnownContentRef = useRef(content);
+
   onContentChangeRef.current = onContentChange;
 
-  // Track whether this is the initial load to suppress the first markdownUpdated callback
-  const suppressNextRef = useRef(true);
-
-  const editorReturn = useEditor((root) => {
-    return Editor.make()
-      .config((ctx) => {
-        ctx.set(rootCtx, root);
-        ctx.set(defaultValueCtx, content);
-        ctx.get(listenerCtx)
-          .markdownUpdated((_ctx, markdown, _prevMarkdown) => {
-            if (suppressNextRef.current) {
-              suppressNextRef.current = false;
-              return;
-            }
-            onContentChangeRef.current(markdown);
-          });
-      })
-      .use(commonmark)
-      .use(gfm)
-      .use(history)
-      .use(listener)
-      .use(clipboard);
+  const focusEditor = useCallback(() => {
+    vditorRef.current?.focus();
   }, []);
 
-  // Auto-focus the editor after mount
+  const isVditorInitialized = useCallback((instance: Vditor) => {
+    return Boolean((instance as Vditor & { vditor?: { element?: HTMLElement } }).vditor?.element);
+  }, []);
+
+  useEffect(() => {
+    const root = wrapperRef.current;
+    if (!root) return;
+
+    let disposed = false;
+
+    const vditor = new Vditor(root, {
+      value: content,
+      mode: 'ir',
+      i18n: window.VditorI18n,
+      theme: theme === 'dark' ? 'dark' : 'classic',
+      cache: { enable: false },
+      toolbar: [],
+      toolbarConfig: {
+        hide: true,
+        pin: false,
+      },
+      counter: { enable: false },
+      outline: {
+        enable: false,
+        position: 'left',
+      },
+      height: '100%',
+      minHeight: 0,
+      placeholder: '输入 Markdown，支持任务列表、标题、代码块',
+      input(value) {
+        lastKnownContentRef.current = value;
+        if (isSyncingRef.current) return;
+        onContentChangeRef.current(value);
+      },
+      after() {
+        if (!disposed && autoFocus) {
+          window.setTimeout(() => {
+            if (!disposed) {
+              vditor.focus();
+            }
+          }, 80);
+        }
+      },
+    });
+
+    vditorRef.current = vditor;
+    lastKnownContentRef.current = content;
+
+    return () => {
+      disposed = true;
+      vditorRef.current = null;
+      if (isVditorInitialized(vditor)) {
+        vditor.destroy();
+      }
+      root.innerHTML = '';
+    };
+  }, []);
+
+  useEffect(() => {
+    const vditor = vditorRef.current;
+    if (!vditor) return;
+
+    const nextTheme = theme === 'dark' ? 'dark' : 'classic';
+    vditor.setTheme(nextTheme);
+  }, [theme]);
+
+  useEffect(() => {
+    const vditor = vditorRef.current;
+    if (!vditor) return;
+    if (content === lastKnownContentRef.current) return;
+    if (content === vditor.getValue()) {
+      lastKnownContentRef.current = content;
+      return;
+    }
+
+    isSyncingRef.current = true;
+    vditor.setValue(content, true);
+    lastKnownContentRef.current = content;
+    window.setTimeout(() => {
+      isSyncingRef.current = false;
+    }, 0);
+  }, [content]);
+
   useEffect(() => {
     if (!autoFocus) return;
-    if (editorReturn.loading) return;
-    // Give the editor a tick to fully render
-    const timer = setTimeout(() => {
-      const editorEl = document.querySelector('.milkdown-theme .milkdown .editor') as HTMLElement | null;
-      if (editorEl) {
-        editorEl.focus();
-      }
+
+    const timer = window.setTimeout(() => {
+      focusEditor();
     }, 100);
-    return () => clearTimeout(timer);
-  }, [autoFocus, editorReturn.loading]);
 
-  // When fileKey changes (user switches to different note), replace editor content
-  const [loading, getInstance] = useInstance();
-  const prevFileKeyRef = useRef(fileKey);
+    return () => window.clearTimeout(timer);
+  }, [autoFocus, focusEditor]);
 
-  useEffect(() => {
-    if (loading) return;
-    if (prevFileKeyRef.current === fileKey) return;
-    prevFileKeyRef.current = fileKey;
-
-    const editor = getInstance();
-    if (editor) {
-      suppressNextRef.current = true;
-      editor.action(replaceAll(content));
-    }
-  }, [fileKey, content, loading, getInstance]);
-
-  return <Milkdown />;
-};
-
-// ---------------------------------------------------------------------------
-// Outer component (provides MilkdownProvider)
-// ---------------------------------------------------------------------------
-
-const NoteEditor: React.FC<NoteEditorProps> = (props) => {
-  const handleWrapperClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // If the click target is the wrapper itself (not the editor content),
-    // focus the ProseMirror editor so clicking empty space works
-    const target = e.target as HTMLElement;
-    const editorEl = target.closest('.milkdown-theme')?.querySelector('.milkdown .editor') as HTMLElement | null;
-    if (editorEl && !editorEl.contains(target)) {
-      editorEl.focus();
-    }
-  }, []);
-
-  return (
-    <div style={editorWrapperStyle} className="milkdown-theme" onClick={handleWrapperClick}>
-      <MilkdownProvider>
-        <MilkdownEditor {...props} />
-      </MilkdownProvider>
-    </div>
-  );
+  return <div ref={wrapperRef} style={editorWrapperStyle} className="note-editor" />;
 };
 
 export default NoteEditor;

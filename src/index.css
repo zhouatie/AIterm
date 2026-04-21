@@ -520,20 +520,62 @@ html, body {
   background-color: var(--hljs-addition-bg);
 }
 
-/* --- Milkdown Editor Theme --- */
-.milkdown-theme .milkdown {
-  outline: none;
+/* --- Note Editor / Vditor --- */
+.note-editor {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
+  min-height: 0;
+  background: transparent;
 }
-.milkdown-theme .milkdown .editor {
-  outline: none;
-  flex: 1;
+.note-editor .vditor {
+  --border-color: transparent;
+  --second-color: color-mix(in srgb, var(--color-text-muted) 64%, transparent);
+  --panel-background-color: var(--color-surface-content-elevated);
+  --panel-shadow: 0 12px 32px color-mix(in srgb, var(--color-shadow) 20%, transparent);
+  --toolbar-background-color: var(--color-surface-content-elevated);
+  --toolbar-icon-color: var(--color-text-secondary);
+  --toolbar-icon-hover-color: var(--color-accent-primary);
+  --textarea-background-color: transparent;
+  --textarea-text-color: var(--color-text-primary);
+  --resize-icon-color: var(--color-text-muted);
+  --resize-background-color: var(--color-border-primary);
+  --resize-hover-icon-color: var(--color-text-primary);
+  --resize-hover-background-color: var(--color-accent-primary);
+  --count-background-color: color-mix(in srgb, var(--color-accent-primary) 14%, transparent);
+  --heading-border-color: var(--color-border-heading);
+  --blockquote-color: var(--color-text-tertiary);
+  --ir-heading-color: var(--color-text-heading);
+  --ir-title-color: var(--color-text-muted);
+  --ir-bi-color: var(--color-accent-primary);
+  --ir-link-color: var(--color-accent-link);
+  --ir-bracket-color: var(--color-text-secondary);
+  --ir-paren-color: var(--color-text-muted);
+  border: 0;
+  border-radius: 0;
   min-height: 100%;
+  height: 100%;
+  background: transparent;
+  box-shadow: none;
 }
-.milkdown-theme .milkdown h1 {
+.note-editor .vditor-content {
+  min-height: 0;
+  background: transparent;
+}
+.note-editor .vditor-ir {
+  padding: 28px 40px 44px;
+  background: transparent;
+}
+.note-editor .vditor-reset {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: 0 0 72px;
+}
+.note-editor .vditor-ir__node {
+  max-width: none;
+}
+.note-editor .vditor-reset h1 {
   font-size: 1.75em;
   font-weight: 700;
   margin: 1em 0 0.5em;
@@ -541,42 +583,47 @@ html, body {
   border-bottom: 1px solid var(--color-border-heading);
   padding-bottom: 0.3em;
 }
-.milkdown-theme .milkdown h2 {
+.note-editor .vditor-reset h2 {
   font-size: 1.4em;
   font-weight: 700;
   margin: 0.9em 0 0.4em;
   color: var(--color-text-heading);
 }
-.milkdown-theme .milkdown h3 {
+.note-editor .vditor-reset h3 {
   font-size: 1.15em;
   font-weight: 600;
   margin: 0.8em 0 0.35em;
   color: var(--color-text-heading);
 }
-.milkdown-theme .milkdown h4,
-.milkdown-theme .milkdown h5,
-.milkdown-theme .milkdown h6 {
+.note-editor .vditor-reset h4,
+.note-editor .vditor-reset h5,
+.note-editor .vditor-reset h6 {
   font-size: 1em;
   font-weight: 600;
   margin: 0.7em 0 0.3em;
   color: var(--color-text-heading);
 }
-.milkdown-theme .milkdown p {
+.note-editor .vditor-reset p {
   margin: 0.5em 0;
   color: var(--color-text-body);
 }
-.milkdown-theme .milkdown a {
+.note-editor .vditor-reset::before {
+  content: '';
+  display: block;
+  height: 8px;
+}
+.note-editor .vditor-reset a {
   color: var(--color-accent-link);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.milkdown-theme .milkdown blockquote {
+.note-editor .vditor-reset blockquote {
   margin: 0.5em 0;
   padding: 2px 0 2px 16px;
   border-left: 3px solid var(--color-accent-divider);
   color: var(--color-text-tertiary);
 }
-.milkdown-theme .milkdown code {
+.note-editor .vditor-reset code:not(.hljs):not(.highlight-chroma) {
   font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
   font-size: 0.88em;
   padding: 2px 5px;
@@ -584,7 +631,7 @@ html, body {
   background: var(--color-bg-code);
   color: var(--color-text-primary);
 }
-.milkdown-theme .milkdown pre {
+.note-editor .vditor-reset pre {
   margin: 0.6em 0;
   padding: 14px 16px;
   border-radius: 8px;
@@ -592,60 +639,56 @@ html, body {
   overflow-x: auto;
   border: 1px solid var(--color-border-primary);
 }
-.milkdown-theme .milkdown pre code {
+.note-editor .vditor-reset pre > code {
   padding: 0;
   background: transparent;
   border-radius: 0;
   font-size: 13px;
   line-height: 1.55;
 }
-.milkdown-theme .milkdown ul,
-.milkdown-theme .milkdown ol {
+.note-editor .vditor-reset ul,
+.note-editor .vditor-reset ol {
   margin: 0.4em 0;
   padding-left: 1.5em;
 }
-.milkdown-theme .milkdown li {
+.note-editor .vditor-reset li {
   margin: 0.15em 0;
 }
-.milkdown-theme .milkdown li[data-item-type="task"] {
-  list-style: none;
-  margin-left: -1.5em;
-  padding-left: 0;
+.note-editor .vditor-task {
+  color: var(--color-text-body);
 }
-.milkdown-theme .milkdown li[data-item-type="task"] input[type="checkbox"] {
-  margin-right: 6px;
-  vertical-align: middle;
+.note-editor .vditor-task input {
   cursor: pointer;
 }
-.milkdown-theme .milkdown hr {
+.note-editor .vditor-reset hr {
   border: none;
   border-top: 1px solid var(--color-border-primary);
   margin: 1em 0;
 }
-.milkdown-theme .milkdown table {
+.note-editor .vditor-reset table {
   border-collapse: collapse;
   width: 100%;
   margin: 0.6em 0;
   font-size: 13px;
 }
-.milkdown-theme .milkdown th,
-.milkdown-theme .milkdown td {
+.note-editor .vditor-reset th,
+.note-editor .vditor-reset td {
   padding: 6px 12px;
   border: 1px solid var(--color-border-table);
   text-align: left;
 }
-.milkdown-theme .milkdown th {
+.note-editor .vditor-reset th {
   background: var(--color-bg-secondary);
   font-weight: 600;
 }
-.milkdown-theme .milkdown img {
+.note-editor .vditor-reset img {
   max-width: 100%;
   border-radius: 6px;
 }
-.milkdown-theme .milkdown strong {
+.note-editor .vditor-reset strong {
   font-weight: 700;
 }
-.milkdown-theme .milkdown del {
+.note-editor .vditor-reset del {
   text-decoration: line-through;
   color: var(--color-text-muted);
 }

@@ -125,8 +125,10 @@ const toggleButtonStyle = {
   justifyContent: 'center',
   width: 28,
   height: 28,
-  border: '1px solid transparent',
-  background: 'transparent',
+  borderWidth: 1,
+  borderStyle: 'solid',
+  borderColor: 'transparent',
+  backgroundColor: 'transparent',
   borderRadius: 8,
   cursor: 'pointer',
   color: ICON_COLOR,
@@ -410,6 +412,22 @@ const AppContent: React.FC = () => {
       toggleNotes();
     });
   }, [registerAction, toggleNotes]);
+
+  useEffect(() => {
+    const handleNotesShortcut = (event: KeyboardEvent) => {
+      const shortcut = eventToShortcut(event);
+      if (!shortcut || shortcut !== bindings['toggle-notes']) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      toggleNotes();
+    };
+
+    window.addEventListener('keydown', handleNotesShortcut, true);
+    return () => {
+      window.removeEventListener('keydown', handleNotesShortcut, true);
+    };
+  }, [bindings, toggleNotes]);
 
   const revealTerminalUi = useCallback(() => {
     switchPanel(TERMINAL_PANEL_ID);
