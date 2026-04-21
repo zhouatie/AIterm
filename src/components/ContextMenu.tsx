@@ -20,6 +20,13 @@ export interface ContextMenuBounds {
   bottom?: number;
 }
 
+export interface PathMenuLabels {
+  copyFilename?: string;
+  copyRelativePath?: string;
+  copyAbsolutePath?: string;
+  reveal?: string;
+}
+
 interface ContextMenuProps {
   x: number;
   y: number;
@@ -61,55 +68,79 @@ export function createPathMenuItems({
   rootPath,
   onClose,
   revealLabel = 'Reveal in Finder',
+  labels,
+  includeFilename = true,
+  absoluteFirst = false,
+  includeRevealSeparator = true,
 }: {
   nodePath: string | null;
   rootPath?: string | null;
   onClose: () => void;
   revealLabel?: string;
+  labels?: PathMenuLabels;
+  includeFilename?: boolean;
+  absoluteFirst?: boolean;
+  includeRevealSeparator?: boolean;
 }): ContextMenuItem[] {
   const resolvedPath = nodePath?.trim() || '';
   const resolvedRootPath = rootPath?.trim() || '';
   const disabled = !resolvedPath;
+  const resolvedLabels = {
+    copyFilename: labels?.copyFilename ?? 'Copy Filename',
+    copyRelativePath: labels?.copyRelativePath ?? 'Copy Relative Path',
+    copyAbsolutePath: labels?.copyAbsolutePath ?? 'Copy Absolute Path',
+    reveal: labels?.reveal ?? revealLabel,
+  };
+  const relativePathItem: ContextMenuActionItem = {
+    label: resolvedLabels.copyRelativePath,
+    disabled,
+    onSelect: async () => {
+      if (!resolvedPath) return;
+      await copyText(getRelativePath(resolvedPath, resolvedRootPath || resolvedPath));
+      onClose();
+    },
+  };
+  const absolutePathItem: ContextMenuActionItem = {
+    label: resolvedLabels.copyAbsolutePath,
+    disabled,
+    onSelect: async () => {
+      if (!resolvedPath) return;
+      await copyText(resolvedPath);
+      onClose();
+    },
+  };
 
-  return [
-    {
-      label: 'Copy Filename',
+  const items: ContextMenuItem[] = [];
+
+  if (includeFilename) {
+    items.push({
+      label: resolvedLabels.copyFilename,
       disabled,
       onSelect: async () => {
         if (!resolvedPath) return;
         await copyText(getFileName(resolvedPath));
         onClose();
       },
+    });
+  }
+
+  items.push(...(absoluteFirst ? [absolutePathItem, relativePathItem] : [relativePathItem, absolutePathItem]));
+
+  if (includeRevealSeparator) {
+    items.push({ type: 'separator' });
+  }
+
+  items.push({
+    label: resolvedLabels.reveal,
+    disabled,
+    onSelect: () => {
+      if (!resolvedPath) return;
+      window.fileApi.showInFolder(resolvedPath);
+      onClose();
     },
-    {
-      label: 'Copy Relative Path',
-      disabled,
-      onSelect: async () => {
-        if (!resolvedPath) return;
-        await copyText(getRelativePath(resolvedPath, resolvedRootPath || resolvedPath));
-        onClose();
-      },
-    },
-    {
-      label: 'Copy Absolute Path',
-      disabled,
-      onSelect: async () => {
-        if (!resolvedPath) return;
-        await copyText(resolvedPath);
-        onClose();
-      },
-    },
-    { type: 'separator' },
-    {
-      label: revealLabel,
-      disabled,
-      onSelect: () => {
-        if (!resolvedPath) return;
-        window.fileApi.showInFolder(resolvedPath);
-        onClose();
-      },
-    },
-  ];
+  });
+
+  return items;
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
