@@ -1,0 +1,43 @@
+src/utils/terminal-settings.ts
+  2d588752ad34bf6e 26
+openspec/changes/archive/2026-04-21-default-terminal-canvas-renderer/tasks.md
+  2d588752ad34bf6e 1-14
+openspec/changes/archive/2026-04-21-default-terminal-canvas-renderer/proposal.md
+  2d588752ad34bf6e 1-28
+openspec/specs/settings-panel/spec.md
+  2d588752ad34bf6e 87,93,97
+openspec/changes/archive/2026-04-21-default-terminal-canvas-renderer/design.md
+  2d588752ad34bf6e 1-73
+openspec/changes/archive/2026-04-21-default-terminal-canvas-renderer/specs/settings-panel/spec.md
+  2d588752ad34bf6e 1-22
+openspec/changes/archive/2026-04-21-default-terminal-canvas-renderer/specs/embedded-terminal/spec.md
+  2d588752ad34bf6e 1-73
+src/components/SettingsPanel.tsx
+  2d588752ad34bf6e 601,628
+src/components/TerminalInstance.tsx
+  2d588752ad34bf6e 262,280
+openspec/specs/embedded-terminal/spec.md
+  2d588752ad34bf6e 79,129-133
+openspec/changes/archive/2026-04-21-default-terminal-canvas-renderer/.openspec.yaml
+  2d588752ad34bf6e 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "9d3111d2306bf892eb231a40a910c174dbd0ea37",
+  "prompts": {
+    "2d588752ad34bf6e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019db056-d598-7661-815b-37aa8fec3378",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 14,
+      "total_deletions": 13,
+      "accepted_lines": 226,
+      "overriden_lines": 0
+    }
+  }
+}
