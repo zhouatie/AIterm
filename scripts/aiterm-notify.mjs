@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Shared AIterm notification CLI for Codex / Claude Code / OpenCode.
 // Codex requires `[features].codex_hooks = true` in config.toml for hooks to run.
 const args = parseArgs(process.argv.slice(2));
 const hookInput = await readHookInput();
@@ -12,10 +13,11 @@ if (!url || !token || !id) {
   process.exit(0);
 }
 
-const agent = args.agent || inferAgent(hookInput);
-const event = normalizeEvent(args.event || inferEvent(hookInput), agent, hookInput);
-const state = args.state || inferState(agent, event, hookInput);
-const message = args.message || inferMessage(agent, event, hookInput);
+const preset = getPreset(args.preset);
+const agent = args.agent || preset.agent || inferAgent(hookInput);
+const event = normalizeEvent(args.event || preset.event || inferEvent(hookInput), agent, hookInput);
+const state = args.state || preset.state || inferState(agent, event, hookInput);
+const message = args.message || preset.message || inferMessage(agent, event, hookInput);
 
 if (!agent || !event || !state) {
   process.exit(0);
@@ -56,6 +58,59 @@ function parseArgs(argv) {
     index += 1;
   }
   return parsed;
+}
+
+function getPreset(name) {
+  if (!name) return emptyPreset();
+
+  switch (name) {
+    case 'codex-running':
+      return {
+        agent: 'codex',
+        event: 'UserPromptSubmit',
+        state: 'running',
+        message: 'Codex 正在执行。',
+      };
+    case 'codex-stop':
+      return {
+        agent: 'codex',
+        event: 'Stop',
+        state: 'completed',
+        message: 'Codex 已完成当前回合。',
+      };
+    case 'claude-running':
+      return {
+        agent: 'claude-code',
+        event: 'UserPromptSubmit',
+        state: 'running',
+        message: 'Claude Code 正在执行。',
+      };
+    case 'claude-permission':
+      return {
+        agent: 'claude-code',
+        event: 'PermissionRequest',
+        state: 'needs_user',
+        message: 'Claude Code 等待权限确认。',
+      };
+    case 'claude-stop':
+      return {
+        agent: 'claude-code',
+        event: 'Stop',
+        state: 'completed',
+        message: 'Claude Code 已完成当前回合。',
+      };
+    default:
+      return emptyPreset();
+  }
+}
+
+function emptyPreset() {
+  return {
+    agent: '',
+    event: '',
+    state: '',
+    message: '',
+  };
 }
 
 async function readHookInput() {
