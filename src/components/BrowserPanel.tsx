@@ -1,4 +1,12 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, {
+  forwardRef,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+  useImperativeHandle,
+} from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -8,6 +16,7 @@ import {
   Clock,
   Search,
 } from 'lucide-react';
+import type { BrowserShortcutCommand } from '../preload';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,6 +40,11 @@ interface HistoryEntry {
 interface BrowserPanelProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+export interface BrowserPanelHandle {
+  executeCommand: (command: BrowserShortcutCommand) => void;
+  openUrl: (url: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -295,7 +309,7 @@ const tabCloseStyle: React.CSSProperties = {
 // Component
 // ---------------------------------------------------------------------------
 
-const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
+const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(({ isOpen, onClose }, ref) => {
   // --- Tab state ---
   const [tabs, setTabs] = useState<BrowserTab[]>(() => [createTab()]);
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id);
@@ -400,6 +414,25 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
     setActiveTabId(tabId);
   }, []);
 
+  const selectRelativeTab = useCallback((direction: -1 | 1) => {
+    if (tabs.length <= 1) return;
+
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+    if (currentIndex === -1) return;
+
+    const nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
+    const nextTab = tabs[nextIndex];
+    if (!nextTab) return;
+    setActiveTabId(nextTab.id);
+  }, [activeTabId, tabs]);
+
+  const selectTabByIndex = useCallback((oneBased: number) => {
+    if (oneBased < 1 || oneBased > tabs.length) return;
+    const nextTab = tabs[oneBased - 1];
+    if (!nextTab) return;
+    setActiveTabId(nextTab.id);
+  }, [tabs]);
+
   // -----------------------------------------------------------------------
   // Update tab metadata from webview events
   // -----------------------------------------------------------------------
@@ -483,6 +516,76 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
     const wv = webviewRefs.current.get(activeTabId);
     if (wv) wv.reload();
   }, [activeTabId]);
+
+  const openUrl = useCallback((url: string) => {
+    addTab(url);
+  }, [addTab]);
+
+  const executeCommand = useCallback((command: BrowserShortcutCommand) => {
+    switch (command) {
+      case 'new-tab':
+        addTab();
+        return;
+      case 'close-tab':
+        if (activeTabId) closeTab(activeTabId);
+        return;
+      case 'select-previous-tab':
+        selectRelativeTab(-1);
+        return;
+      case 'select-next-tab':
+        selectRelativeTab(1);
+        return;
+      case 'select-tab-1':
+        selectTabByIndex(1);
+        return;
+      case 'select-tab-2':
+        selectTabByIndex(2);
+        return;
+      case 'select-tab-3':
+        selectTabByIndex(3);
+        return;
+      case 'select-tab-4':
+        selectTabByIndex(4);
+        return;
+      case 'select-tab-5':
+        selectTabByIndex(5);
+        return;
+      case 'select-tab-6':
+        selectTabByIndex(6);
+        return;
+      case 'select-tab-7':
+        selectTabByIndex(7);
+        return;
+      case 'select-tab-8':
+        selectTabByIndex(8);
+        return;
+      case 'select-tab-9':
+        if (tabs.length > 0) {
+          const lastTab = tabs[tabs.length - 1];
+          if (lastTab) setActiveTabId(lastTab.id);
+        }
+        return;
+      case 'reload':
+        reload();
+        return;
+      case 'go-back':
+        goBack();
+        return;
+      case 'go-forward':
+        goForward();
+        return;
+      case 'toggle-browser':
+        onClose();
+        return;
+      default:
+        return;
+    }
+  }, [activeTabId, addTab, closeTab, goBack, goForward, onClose, reload, selectRelativeTab, selectTabByIndex, tabs]);
+
+  useImperativeHandle(ref, () => ({
+    executeCommand,
+    openUrl,
+  }), [executeCommand, openUrl]);
 
   // -----------------------------------------------------------------------
   // Webview event binding
@@ -578,17 +681,6 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
   );
 
   const isEmpty = tabs.length === 0;
-
-  // -----------------------------------------------------------------------
-  // Listen for new-window URLs forwarded from main process via IPC
-  // -----------------------------------------------------------------------
-
-  useEffect(() => {
-    const unsubscribe = window.browserApi.onOpenUrl(({ url }) => {
-      addTab(url);
-    });
-    return unsubscribe;
-  }, [addTab]);
 
   // -----------------------------------------------------------------------
   // Render
@@ -925,6 +1017,8 @@ const BrowserPanel: React.FC<BrowserPanelProps> = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
-};
+});
+
+BrowserPanel.displayName = 'BrowserPanel';
 
 export default BrowserPanel;

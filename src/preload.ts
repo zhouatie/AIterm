@@ -284,7 +284,28 @@ contextBridge.exposeInMainWorld('tabStateApi', {
 
 export interface BrowserApi {
   onOpenUrl(callback: (data: { url: string }) => void): () => void;
+  onShortcutCommand(callback: (data: { command: BrowserShortcutCommand }) => void): () => void;
+  setOpenState(isOpen: boolean): void;
 }
+
+export type BrowserShortcutCommand =
+  | 'toggle-browser'
+  | 'new-tab'
+  | 'close-tab'
+  | 'select-previous-tab'
+  | 'select-next-tab'
+  | 'select-tab-1'
+  | 'select-tab-2'
+  | 'select-tab-3'
+  | 'select-tab-4'
+  | 'select-tab-5'
+  | 'select-tab-6'
+  | 'select-tab-7'
+  | 'select-tab-8'
+  | 'select-tab-9'
+  | 'reload'
+  | 'go-back'
+  | 'go-forward';
 
 contextBridge.exposeInMainWorld('browserApi', {
   onOpenUrl: (callback: (data: { url: string }) => void) => {
@@ -296,6 +317,19 @@ contextBridge.exposeInMainWorld('browserApi', {
     return () => {
       ipcRenderer.removeListener('browser:open-url', listener);
     };
+  },
+  onShortcutCommand: (callback: (data: { command: BrowserShortcutCommand }) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: { command: BrowserShortcutCommand },
+    ) => callback(data);
+    ipcRenderer.on('browser:shortcut', listener);
+    return () => {
+      ipcRenderer.removeListener('browser:shortcut', listener);
+    };
+  },
+  setOpenState: (isOpen: boolean) => {
+    ipcRenderer.send('browser:set-open-state', { isOpen });
   },
 } satisfies BrowserApi);
 

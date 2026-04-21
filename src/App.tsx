@@ -4,11 +4,11 @@ import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
 import LiveViewPanel from './components/LiveViewPanel';
-import BrowserPanel from './components/BrowserPanel';
+import BrowserPanel, { type BrowserPanelHandle } from './components/BrowserPanel';
 import GitDiffPanel from './components/GitDiffPanel';
 import NotePanel from './components/NotePanel';
 import SplitLayout from './components/SplitLayout';
-import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
+import { ShortcutProvider, useKeyboardShortcuts, eventToShortcut } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
 import {
   PanelManagerProvider,
@@ -40,7 +40,7 @@ import {
 } from './utils/note-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 import { startRecording, stopLiveRecording, forceCheckout } from './live-view-recorder';
-import type { TerminalSessionInfo } from './preload';
+import type { BrowserShortcutCommand, TerminalSessionInfo } from './preload';
 
 // --- Active Session Context ---
 // Shared between TerminalPanel (writer) and FilePreviewPanel (reader)
@@ -100,6 +100,24 @@ const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
 
 // Height of the dedicated title bar area (houses traffic lights + sidebar toggle)
 const TITLE_BAR_HEIGHT = 42;
+const BROWSER_CONTEXT_SHORTCUTS = new Map<string, BrowserShortcutCommand>([
+  ['Meta+T', 'new-tab'],
+  ['Meta+W', 'close-tab'],
+  ['Meta+Shift+[', 'select-previous-tab'],
+  ['Meta+Shift+]', 'select-next-tab'],
+  ['Meta+1', 'select-tab-1'],
+  ['Meta+2', 'select-tab-2'],
+  ['Meta+3', 'select-tab-3'],
+  ['Meta+4', 'select-tab-4'],
+  ['Meta+5', 'select-tab-5'],
+  ['Meta+6', 'select-tab-6'],
+  ['Meta+7', 'select-tab-7'],
+  ['Meta+8', 'select-tab-8'],
+  ['Meta+9', 'select-tab-9'],
+  ['Meta+R', 'reload'],
+  ['Meta+[', 'go-back'],
+  ['Meta+]', 'go-forward'],
+]);
 
 const toggleButtonStyle = {
   display: 'flex',
@@ -178,6 +196,7 @@ const AppContent: React.FC = () => {
   // Overlay panel state — browser, git diff, and notes are mutually exclusive
   type OverlayPanel = 'none' | 'browser' | 'git-diff' | 'notes';
   const [activeOverlay, setActiveOverlay] = useState<OverlayPanel>('none');
+  const browserPanelRef = useRef<BrowserPanelHandle | null>(null);
 
   // Track the active session's git info for icon state
   const [activeSessionInfo, setActiveSessionInfo] = useState<TerminalSessionInfo | null>(null);
@@ -297,11 +316,79 @@ const AppContent: React.FC = () => {
     setActiveOverlay((prev) => (prev === 'browser' ? 'none' : 'browser'));
   }, []);
 
+  const dispatchBrowserShortcut = useCallback((command: BrowserShortcutCommand) => {
+    if (command === 'toggle-browser') {
+      toggleBrowser();
+      return;
+    }
+
+    if (activeOverlay !== 'browser') return;
+    browserPanelRef.current?.executeCommand(command);
+  }, [activeOverlay, toggleBrowser]);
+
   useEffect(() => {
     return registerAction('toggle-browser', () => {
       toggleBrowser();
     });
   }, [registerAction, toggleBrowser]);
+
+  useEffect(() => {
+    const handleBrowserShortcut = (event: KeyboardEvent) => {
+      const shortcut = eventToShortcut(event);
+      if (!shortcut) return;
+
+      if (shortcut === 'Meta+L') {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleBrowser();
+        return;
+      }
+
+      if (activeOverlay !== 'browser') return;
+
+      const command = BROWSER_CONTEXT_SHORTCUTS.get(shortcut);
+      if (!command) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      dispatchBrowserShortcut(command);
+    };
+
+    window.addEventListener('keydown', handleBrowserShortcut, true);
+    return () => {
+      window.removeEventListener('keydown', handleBrowserShortcut, true);
+    };
+  }, [activeOverlay, dispatchBrowserShortcut, toggleBrowser]);
+
+  useEffect(() => {
+    window.browserApi.setOpenState(activeOverlay === 'browser');
+
+    if (activeOverlay !== 'browser') {
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement) {
+        activeElement.blur();
+      }
+    }
+
+    return () => {
+      window.browserApi.setOpenState(false);
+    };
+  }, [activeOverlay]);
+
+  useEffect(() => {
+    const unsubscribeOpenUrl = window.browserApi.onOpenUrl(({ url }) => {
+      setActiveOverlay('browser');
+      browserPanelRef.current?.openUrl(url);
+    });
+    const unsubscribeShortcut = window.browserApi.onShortcutCommand(({ command }) => {
+      dispatchBrowserShortcut(command);
+    });
+
+    return () => {
+      unsubscribeOpenUrl();
+      unsubscribeShortcut();
+    };
+  }, [dispatchBrowserShortcut]);
 
   const toggleGitDiff = useCallback(() => {
     if (!activeSessionInfoRef.current?.isGitRepo) return;
@@ -515,6 +602,7 @@ const AppContent: React.FC = () => {
             leftCollapsed={!panelVisible}
           />
           <BrowserPanel
+            ref={browserPanelRef}
             isOpen={activeOverlay === 'browser'}
             onClose={() => setActiveOverlay('none')}
           />

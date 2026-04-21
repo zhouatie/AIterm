@@ -5,6 +5,7 @@ import type {
   TabStateApi,
   LiveViewApi,
   BrowserApi,
+  BrowserShortcutCommand,
   GitApi,
   TerminalAgentStatus,
   TerminalAgentStatusCleared,
@@ -13,6 +14,7 @@ import type {
 export type {
   TerminalAgentStatus,
   TerminalAgentStatusCleared,
+  BrowserShortcutCommand,
 };
 
 declare global {

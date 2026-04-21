@@ -171,6 +171,27 @@ async function confirmCloseWindow(window: BrowserWindow): Promise<boolean> {
   });
   return result.response === TERMINAL_CLOSE_CONFIRM_BUTTON_INDEX;
 }
+let browserPanelOpen = false;
+const attentionSessionIds = new Set<string>();
+
+type BrowserShortcutCommand =
+  | 'toggle-browser'
+  | 'new-tab'
+  | 'close-tab'
+  | 'select-previous-tab'
+  | 'select-next-tab'
+  | 'select-tab-1'
+  | 'select-tab-2'
+  | 'select-tab-3'
+  | 'select-tab-4'
+  | 'select-tab-5'
+  | 'select-tab-6'
+  | 'select-tab-7'
+  | 'select-tab-8'
+  | 'select-tab-9'
+  | 'reload'
+  | 'go-back'
+  | 'go-forward';
 
 function getAttentionNotificationEnv(): PtyNotificationEnv | undefined {
   if (!attentionNotifyUrl || !attentionNotifyToken) return undefined;
@@ -352,6 +373,49 @@ function writeHttpResponse(response: http.ServerResponse, statusCode: number, bo
   response.statusCode = statusCode;
   response.setHeader('content-type', 'text/plain; charset=utf-8');
   response.end(body);
+}
+
+function normalizeBrowserShortcutKey(key: string): string | null {
+  if (!key) return null;
+  if (key === '{') return '[';
+  if (key === '}') return ']';
+  if (key.length === 1) return key.toUpperCase();
+  return null;
+}
+
+function getBrowserShortcutCommand(input: Electron.Input): BrowserShortcutCommand | null {
+  if (input.type !== 'keyDown') return null;
+  if (!input.meta || input.control || input.alt) return null;
+
+  const primaryKey = normalizeBrowserShortcutKey(input.key);
+  if (!primaryKey || primaryKey === 'META' || primaryKey === 'SHIFT' || primaryKey === 'ALT') {
+    return null;
+  }
+
+  const parts = ['Meta'];
+  if (input.shift) parts.push('Shift');
+  parts.push(primaryKey);
+  const shortcut = parts.join('+');
+
+  if (shortcut === 'Meta+L') return 'toggle-browser';
+  if (shortcut === 'Meta+T') return 'new-tab';
+  if (shortcut === 'Meta+W') return 'close-tab';
+  if (shortcut === 'Meta+Shift+[') return 'select-previous-tab';
+  if (shortcut === 'Meta+Shift+]') return 'select-next-tab';
+  if (shortcut === 'Meta+1') return 'select-tab-1';
+  if (shortcut === 'Meta+2') return 'select-tab-2';
+  if (shortcut === 'Meta+3') return 'select-tab-3';
+  if (shortcut === 'Meta+4') return 'select-tab-4';
+  if (shortcut === 'Meta+5') return 'select-tab-5';
+  if (shortcut === 'Meta+6') return 'select-tab-6';
+  if (shortcut === 'Meta+7') return 'select-tab-7';
+  if (shortcut === 'Meta+8') return 'select-tab-8';
+  if (shortcut === 'Meta+9') return 'select-tab-9';
+  if (shortcut === 'Meta+R') return 'reload';
+  if (shortcut === 'Meta+[') return 'go-back';
+  if (shortcut === 'Meta+]') return 'go-forward';
+
+  return null;
 }
 
 function readRequestBody(request: http.IncomingMessage): Promise<string> {
@@ -1662,6 +1726,9 @@ ipcMain.handle('tab-state:load', () => {
 ipcMain.handle('live-view:start', () => startLiveViewServer());
 
 ipcMain.on('live-view:stop', () => stopLiveViewServer());
+ipcMain.on('browser:set-open-state', (_event, { isOpen }: { isOpen: boolean }) => {
+  browserPanelOpen = isOpen;
+});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ipcMain.on('rrweb:event', (_event, rrwebEvent: any) => broadcastEvent(rrwebEvent));
@@ -1671,6 +1738,18 @@ ipcMain.on('rrweb:event', (_event, rrwebEvent: any) => broadcastEvent(rrwebEvent
 // renderer-side 'new-window' event on <webview>.
 app.on('web-contents-created', (_event, contents) => {
   if (contents.getType() === 'webview') {
+    contents.on('before-input-event', (event, input) => {
+      if (!browserPanelOpen) return;
+
+      const command = getBrowserShortcutCommand(input);
+      if (!command) return;
+
+      event.preventDefault();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('browser:shortcut', { command });
+      }
+    });
+
     contents.setWindowOpenHandler(({ url }) => {
       // Only intercept webviews belonging to the browser panel (persist:browser partition)
       const partition = contents.session?.storagePath;
