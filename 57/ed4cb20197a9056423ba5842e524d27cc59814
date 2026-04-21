@@ -1,0 +1,29 @@
+src/App.tsx
+  32aa0907caf91050 16,19,139,327-331,333-334,557-558
+src/contexts/terminal-ui.ts
+  32aa0907caf91050 1-9
+src/main.ts
+  32aa0907caf91050 54,155,228,234-251,272,279,291,296-301,303-305,435
+src/components/TerminalPanel.tsx
+  32aa0907caf91050 24,390,835-846,849,852
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "57ed4cb20197a9056423ba5842e524d27cc59814",
+  "prompts": {
+    "32aa0907caf91050": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dae2d-5fc3-7c33-ba91-f28678f34664",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 71,
+      "total_deletions": 5,
+      "accepted_lines": 71,
+      "overriden_lines": 0
+    }
+  }
+}
