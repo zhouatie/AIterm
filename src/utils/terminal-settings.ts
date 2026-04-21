@@ -23,7 +23,7 @@ export function saveTerminalStartDirectory(value: string): void {
 
 export function readTerminalRendererPreferWebgl(): boolean {
   const stored = localStorage.getItem(TERMINAL_RENDERER_PREFER_WEBGL_KEY);
-  if (stored === null) return true;
+  if (stored === null) return false;
   return stored !== 'false';
 }
 

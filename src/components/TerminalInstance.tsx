@@ -259,7 +259,7 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
       terminal.loadAddon(serializeAddon);
       serializeAddonRef.current = serializeAddon;
 
-      // --- Renderer: WebGL → Canvas → DOM fallback chain ---
+      // --- Renderer: default Canvas → DOM, explicit opt-in WebGL → Canvas → DOM ---
       let activeRendererType: RendererType = 'dom';
 
       if (initialPreferWebglRendererRef.current) {
@@ -277,7 +277,7 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
           }
         }
       } else {
-        // When WebGL is not preferred, try Canvas first, then fall back to DOM
+        // Default path: prefer Canvas, then fall back to DOM.
         try {
           terminal.loadAddon(new CanvasAddon());
           activeRendererType = 'canvas';

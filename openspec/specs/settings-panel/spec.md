@@ -84,16 +84,17 @@
 - **THEN** 文件树 SHALL 保持与原有版本完全一致的展示行为
 
 ### Requirement: 设置面板提供终端 renderer 配置区
-设置面板 SHALL 提供终端 renderer 配置区，用于展示和保存“是否优先尝试 WebGL renderer”的当前偏好。
+设置面板 SHALL 提供终端 renderer 配置区，用于展示和保存“是否优先尝试 WebGL renderer”的当前偏好，并明确告知 WebGL 存在页面乱码的已知问题。
 
 #### Scenario: 展示 renderer 配置项
 - **WHEN** 用户打开设置面板
 - **THEN** 系统 SHALL 展示终端 renderer 配置项
 - **AND** 该配置项 SHALL 明确表达当前是否优先尝试 WebGL renderer
+- **AND** 配置项附近 SHALL 展示 WebGL 存在页面乱码 bug 的说明
 
 #### Scenario: 展示默认值
 - **WHEN** 用户首次打开设置面板且不存在已保存的 terminal renderer 偏好
-- **THEN** 系统 SHALL 将“优先尝试 WebGL renderer”展示为开启状态
+- **THEN** 系统 SHALL 将“优先尝试 WebGL renderer”展示为关闭状态
 
 #### Scenario: 保存 renderer 偏好
 - **WHEN** 用户修改 terminal renderer 配置并点击保存

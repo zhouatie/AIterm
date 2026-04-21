@@ -598,7 +598,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     Terminal Renderer
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-                    默认优先尝试 WebGL renderer；如果关闭，将使用 Canvas renderer（支持内联图片显示）。
+                    默认使用 Canvas renderer（支持内联图片显示）。WebGL 有已知 bug，可能导致页面乱码；仅在你明确需要时再开启。
                   </div>
                 </div>
                 <button
@@ -625,7 +625,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     fontWeight: 600,
                   }}
                 >
-                  <span>{draftTerminalRendererPreferWebgl ? '优先尝试 WebGL renderer' : '使用 Canvas renderer（支持内联图片）'}</span>
+                  <span>{draftTerminalRendererPreferWebgl ? '优先尝试 WebGL renderer' : '默认使用 Canvas renderer'}</span>
                   <span
                     style={{
                       display: 'inline-flex',

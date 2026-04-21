@@ -76,7 +76,7 @@ PTY 进程的 stdout 输出 SHALL 通过按 session 路由的终端输出链路�
 - **THEN** 系统 SHALL 通知渲染进程会话已结束
 
 ### Requirement: xterm.js 终端 UI
-渲染进程 SHALL 使用 xterm.js 提供终端 UI，支持基本的终端交互体验。每个终端实例 SHALL 作为独立的可实例化组件存在，支持在同一面板内并行存在多个实例。系统 SHALL 根据终端活跃状态和 renderer 策略减少后台 UI 开销，并在可用时尝试启用 WebGL renderer。
+渲染进程 SHALL 使用 xterm.js 提供终端 UI，支持基本的终端交互体验。每个终端实例 SHALL 作为独立的可实例化组件存在，支持在同一面板内并行存在多个实例。系统 SHALL 根据终端活跃状态和 renderer 策略减少后台 UI 开销；在用户显式允许时系统 SHALL 尝试启用 WebGL renderer，默认路径 SHALL 优先使用 Canvas renderer。
 
 #### Scenario: 终端面板渲染
 - **WHEN** 一个终端实例挂载到 DOM
@@ -126,6 +126,11 @@ PTY 进程的 stdout 输出 SHALL 通过按 session 路由的终端输出链路�
 - **WHEN** 当前主题模式为浅色
 - **THEN** 终端 SHALL 使用浅色背景、深色前景文字及适配浅色模式的 ANSI 颜色方案
 
+#### Scenario: 默认使用 Canvas renderer
+- **WHEN** 终端 renderer 偏好不存在或被显式关闭
+- **THEN** 系统 SHALL 先尝试为终端实例加载 Canvas renderer
+- **AND** Canvas renderer 不可用时 SHALL 使用默认 DOM renderer
+
 #### Scenario: 启用 WebGL renderer
 - **WHEN** 终端 renderer 偏好允许优先使用 WebGL 且当前环境支持 WebGL renderer 初始化
 - **THEN** 系统 SHALL 为终端实例尝试启用 WebGL renderer
@@ -135,11 +140,6 @@ PTY 进程的 stdout 输出 SHALL 通过按 session 路由的终端输出链路�
 - **THEN** 系统 SHALL 尝试加载 Canvas renderer 作为回退
 - **AND** Canvas renderer 加载失败时 SHALL 进一步回退到默认 DOM renderer
 - **AND** 终端会话 SHALL 保持可用，不得因 renderer 初始化失败而中断
-
-#### Scenario: 显式关闭 WebGL renderer
-- **WHEN** 终端 renderer 偏好被显式关闭
-- **THEN** 系统 SHALL 尝试使用 Canvas renderer
-- **AND** Canvas renderer 不可用时 SHALL 使用默认 DOM renderer
 
 #### Scenario: Addon 统一加载
 - **WHEN** 终端实例初始化时
