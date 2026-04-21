@@ -21,6 +21,7 @@ import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './Contex
 import TerminalInstance from './TerminalInstance';
 import type { TerminalInstanceHandle } from './TerminalInstance';
 import TerminalSearchBar from './TerminalSearchBar';
+import { useTerminalUi } from '../contexts/terminal-ui';
 
 interface WorkspaceNode {
   id: string;
@@ -386,6 +387,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   preferWebglRenderer = true,
   onActiveSessionChange,
 }) => {
+  const revealTerminalUi = useTerminalUi();
   const { bindings, registerAction } = useKeyboardShortcuts();
   const workspaceCounterRef = useRef(1);
   const initializedRef = useRef(false);
@@ -830,13 +832,24 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     setActiveSessionId(sessionId);
   }, [clearSessionAgentStatus]);
 
+  const handleActivateSessionFromNotification = useCallback((sessionId: string) => {
+    if (!findWorkspaceBySessionId(workspacesRef.current, sessionId)) return;
+
+    revealTerminalUi();
+    setSidebarCollapsed(false);
+    handleSelectSession(sessionId);
+
+    requestAnimationFrame(() => {
+      terminalInstanceRefs.current.get(sessionId)?.getTerminal()?.focus();
+    });
+  }, [handleSelectSession, revealTerminalUi]);
+
   useEffect(() => {
     const unsubscribe = window.terminalApi.onActivateSession(({ id }) => {
-      setSidebarCollapsed(false);
-      handleSelectSession(id);
+      handleActivateSessionFromNotification(id);
     });
     return unsubscribe;
-  }, [handleSelectSession]);
+  }, [handleActivateSessionFromNotification]);
 
   const selectRelativeTerminalTab = useCallback((direction: -1 | 1) => {
     const sessionIds = getOrderedSessionIds(workspacesRef.current);

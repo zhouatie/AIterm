@@ -145,6 +145,7 @@
 #### Scenario: 点击系统通知激活对应 terminal session
 - **WHEN** 用户点击系统通知
 - **THEN** 系统 SHALL 切换到触发该通知的 terminal session tab
+- **THEN** 系统 SHALL 让该 terminal session 对应的终端内容显示在 terminal 面板中
 - **THEN** 该 terminal session 的 `needs_user`、`completed` 或 `error` 状态 SHALL 被清除
 - **THEN** 其他 terminal session 的 agent status SHALL 保持不变
 

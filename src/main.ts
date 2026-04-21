@@ -51,6 +51,7 @@ let attentionServer: http.Server | null = null;
 let attentionNotifyUrl = '';
 let attentionNotifyToken = '';
 const agentStatusBySessionId = new Map<string, TerminalAgentStatus>();
+const agentNotificationsBySessionId = new Map<string, Notification>();
 const manualInterruptBySessionId = new Map<string, number>();
 const TERMINAL_OUTPUT_FLUSH_MS = 16;
 const TERMINAL_CLOSE_CONFIRM_BUTTON_INDEX = 1;
@@ -151,6 +152,7 @@ function clearAllTerminalStreamStates(): void {
 
 function disposeAllTerminalSessions(): void {
   agentStatusBySessionId.clear();
+  clearAllAgentNotifications();
   manualInterruptBySessionId.clear();
   clearAllTerminalStreamStates();
   disposeAllSessions();
@@ -223,8 +225,27 @@ function clearTerminalAgentStatus(
   if (states && !states.includes(current.state)) return;
 
   agentStatusBySessionId.delete(id);
+  clearAgentNotification(id);
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('terminal:agentStatusCleared', { id });
+  }
+}
+
+function clearAgentNotification(id: string): void {
+  const notification = agentNotificationsBySessionId.get(id);
+  if (!notification) return;
+
+  agentNotificationsBySessionId.delete(id);
+  try {
+    notification.close();
+  } catch {
+    // Ignore notification close failures.
+  }
+}
+
+function clearAllAgentNotifications(): void {
+  for (const id of agentNotificationsBySessionId.keys()) {
+    clearAgentNotification(id);
   }
 }
 
@@ -248,12 +269,14 @@ function markManualTerminalInterrupt(id: string): void {
 function sendTerminalAgentStatus(status: TerminalAgentStatus): void {
   if (status.state === 'running') {
     manualInterruptBySessionId.delete(status.id);
+    clearAgentNotification(status.id);
   } else if (hasRecentManualInterrupt(status.id)) {
     return;
   }
 
   if (status.state === 'idle') {
     agentStatusBySessionId.delete(status.id);
+    clearAgentNotification(status.id);
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('terminal:agentStatusCleared', { id: status.id });
     }
@@ -265,11 +288,21 @@ function sendTerminalAgentStatus(status: TerminalAgentStatus): void {
   if (shouldShowAgentStatusNotification(status.state)) {
     try {
       if (Notification.isSupported()) {
+        clearAgentNotification(status.id);
         const notification = new Notification({
           title: getAgentStatusNotificationTitle(status),
           body: status.message || '请回到 GUI 终端继续处理。',
         });
+        agentNotificationsBySessionId.set(status.id, notification);
+        notification.on('close', () => {
+          if (agentNotificationsBySessionId.get(status.id) === notification) {
+            agentNotificationsBySessionId.delete(status.id);
+          }
+        });
         notification.on('click', () => {
+          if (agentNotificationsBySessionId.get(status.id) === notification) {
+            agentNotificationsBySessionId.delete(status.id);
+          }
           if (mainWindow && !mainWindow.isDestroyed()) {
             if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
@@ -399,6 +432,7 @@ function stopAttentionServer(): void {
   attentionNotifyUrl = '';
   attentionNotifyToken = '';
   agentStatusBySessionId.clear();
+  clearAllAgentNotifications();
   manualInterruptBySessionId.clear();
 }
 

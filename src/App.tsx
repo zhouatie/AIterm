@@ -13,8 +13,10 @@ import { useTheme } from './ThemeContext';
 import {
   PanelManagerProvider,
   PanelContainer,
+  usePanelManager,
 } from './components/PanelManager';
 import type { PanelDefinition } from './components/PanelManager';
+import { TerminalUiContext } from './contexts/terminal-ui';
 import {
   readSpecDirectoryNames,
   saveSpecDirectoryNames,
@@ -134,6 +136,7 @@ function resetChromeButtonHover(target: HTMLButtonElement) {
 
 const AppContent: React.FC = () => {
   const { activeSessionId } = useActiveSession();
+  const { switchPanel } = usePanelManager();
   const { mode, cycleTheme } = useTheme();
   const {
     bindings,
@@ -321,8 +324,14 @@ const AppContent: React.FC = () => {
     });
   }, [registerAction, toggleNotes]);
 
+  const revealTerminalUi = useCallback(() => {
+    switchPanel(TERMINAL_PANEL_ID);
+    setActiveOverlay('none');
+  }, [switchPanel]);
+
   return (
-    <>
+    <TerminalUiContext.Provider value={revealTerminalUi}>
+      <>
       <div
         style={{
           display: 'flex',
@@ -545,7 +554,8 @@ const AppContent: React.FC = () => {
         onClose={() => setIsLiveViewOpen(false)}
         onActiveChange={setLiveViewActive}
       />
-    </>
+      </>
+    </TerminalUiContext.Provider>
   );
 };
 
