@@ -1,0 +1,31 @@
+src/global.d.ts
+  c6929855523b6921 8,17
+src/main.ts
+  c6929855523b6921 50,53-71,154-196,1259-1261,1271-1282
+src/preload.ts
+  c6929855523b6921 231-232,235-253,265-276
+src/App.tsx
+  c6929855523b6921 7,10,30,85-102,176,274-283,290-347,516
+src/components/BrowserPanel.tsx
+  c6929855523b6921 1-9,19,45-49,312,417-435,520-589,1020-1022
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "5bbf8a480a0fbda7281aa566c42adeaf82013a7d",
+  "prompts": {
+    "c6929855523b6921": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dae64-1286-7c31-b8ea-13e22657a8ce",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 313,
+      "total_deletions": 17,
+      "accepted_lines": 313,
+      "overriden_lines": 0
+    }
+  }
+}
