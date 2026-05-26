@@ -592,8 +592,8 @@ const createWindow = () => {
 // terminal:create — create a PTY session and return the session ID
 ipcMain.handle(
   'terminal:create',
-  (_event, { cols, rows, cwd }: { cols: number; rows: number; cwd?: string }) => {
-    const session = createSession(cols, rows, cwd, getAttentionNotificationEnv());
+  async (_event, { cols, rows, cwd }: { cols: number; rows: number; cwd?: string }) => {
+    const session = await createSession(cols, rows, cwd, getAttentionNotificationEnv());
     ensureTerminalStreamState(session.id);
 
     // Push PTY stdout to renderer

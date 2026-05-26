@@ -4,6 +4,8 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
+const LOGIN_SHELL_ENV_TIMEOUT_MS = 3000;
+const LOGIN_SHELL_ENV_SENTINEL = '\x1eAITERM_ENV_START\x1e\x00';
 
 export interface TerminalSessionInfo {
   id: string;
@@ -28,24 +30,85 @@ export interface PtyNotificationEnv {
 
 const sessions = new Map<string, PtySession>();
 const nonGitPathInfoCache = new Map<string, Omit<TerminalSessionInfo, 'id'>>();
+let loginShellEnvPromise: Promise<Record<string, string>> | null = null;
 
 function getDefaultShell(): string {
   return process.env.SHELL || '/bin/zsh';
 }
 
-function getPtyEnv(
-  shell: string,
-  sessionId: string,
-  notificationEnv?: PtyNotificationEnv,
-): Record<string, string> {
-  const env = Object.fromEntries(
+function getStringProcessEnv(): Record<string, string> {
+  return Object.fromEntries(
     Object.entries(process.env).filter((entry): entry is [string, string] => (
       typeof entry[1] === 'string'
     )),
   );
+}
+
+function parseNullDelimitedEnv(output: string): Record<string, string> {
+  const sentinelIndex = output.indexOf(LOGIN_SHELL_ENV_SENTINEL);
+  if (sentinelIndex === -1) return {};
+
+  const envOutput = output.slice(sentinelIndex + LOGIN_SHELL_ENV_SENTINEL.length);
+  const env: Record<string, string> = {};
+  for (const entry of envOutput.split('\x00')) {
+    if (!entry) continue;
+
+    const equalsIndex = entry.indexOf('=');
+    if (equalsIndex <= 0) continue;
+
+    const key = entry.slice(0, equalsIndex);
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
+
+    env[key] = entry.slice(equalsIndex + 1);
+  }
+  return env;
+}
+
+function getShellBasename(shell: string): string {
+  const parts = shell.split('/');
+  return parts[parts.length - 1] || 'zsh';
+}
+
+async function resolveLoginShellEnv(shell: string): Promise<Record<string, string>> {
+  if (process.platform !== 'darwin') return {};
+
+  try {
+    const { stdout } = await execFileAsync(
+      shell,
+      ['-lc', `printf '\\036AITERM_ENV_START\\036\\0'; command env -0`],
+      {
+        argv0: `-${getShellBasename(shell)}`,
+        env: getStringProcessEnv(),
+        timeout: LOGIN_SHELL_ENV_TIMEOUT_MS,
+        maxBuffer: 1024 * 1024,
+      },
+    );
+    return parseNullDelimitedEnv(stdout);
+  } catch (error) {
+    console.warn('Failed to resolve login shell environment for PTY:', error);
+    return {};
+  }
+}
+
+async function getLoginShellEnv(shell: string): Promise<Record<string, string>> {
+  if (process.platform !== 'darwin') return {};
+  if (!loginShellEnvPromise) {
+    loginShellEnvPromise = resolveLoginShellEnv(shell);
+  }
+  return loginShellEnvPromise;
+}
+
+async function getPtyEnv(
+  shell: string,
+  sessionId: string,
+  notificationEnv?: PtyNotificationEnv,
+): Promise<Record<string, string>> {
+  const env = getStringProcessEnv();
+  const loginShellEnv = await getLoginShellEnv(shell);
 
   return {
     ...env,
+    ...loginShellEnv,
     SHELL: shell,
     TERM: 'xterm-256color',
     COLORTERM: 'truecolor',
@@ -136,22 +199,23 @@ async function resolveSessionInfo(id: string): Promise<TerminalSessionInfo | nul
   };
 }
 
-export function createSession(
+export async function createSession(
   cols: number,
   rows: number,
   cwd?: string,
   notificationEnv?: PtyNotificationEnv,
-): PtySession {
+): Promise<PtySession> {
   const id = randomUUID();
   const shell = getDefaultShell();
   const initialCwd = cwd || process.env.HOME || process.cwd();
+  const env = await getPtyEnv(shell, id, notificationEnv);
 
   const ptyProcess = pty.spawn(shell, [], {
     name: 'xterm-256color',
     cols,
     rows,
     cwd: initialCwd,
-    env: getPtyEnv(shell, id, notificationEnv),
+    env,
   });
 
   const session: PtySession = {
