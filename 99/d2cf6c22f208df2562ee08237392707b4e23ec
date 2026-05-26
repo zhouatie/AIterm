@@ -1,0 +1,103 @@
+src/pty-manager.ts
+  a4e2f743b2b00290 7-8,33,39-40,45-107,111,202,207,211,218
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/proposal.md
+  a4e2f743b2b00290 1-26
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/tasks.md
+  a4e2f743b2b00290 1-17
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/specs/embedded-terminal/spec.md
+  a4e2f743b2b00290 1-27
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/.openspec.yaml
+  a4e2f743b2b00290 1-2
+src/main.ts
+  a4e2f743b2b00290 595-596
+openspec/specs/embedded-terminal/spec.md
+  a4e2f743b2b00290 7,17-30
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/design.md
+  a4e2f743b2b00290 1-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.8",
+  "base_commit_sha": "1437c31f1dc8a0d8ac9bb410e5c52eb578c82c6d",
+  "prompts": {
+    "355a72bde8e96433": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019db529-64d0-7211-8c62-e74837195480",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1292,
+      "total_deletions": 25,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "a4e2f743b2b00290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e61ff-e028-7392-b23d-90c435209598",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 404,
+      "total_deletions": 21,
+      "accepted_lines": 243,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/restore-login-shell-env-for-pty/design.md": {
+          "additions": 80
+        },
+        "src/main.ts": {
+          "additions": 2,
+          "deletions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/restore-login-shell-env-for-pty/proposal.md": {
+          "additions": 26
+        },
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/specs/embedded-terminal/spec.md": {
+          "additions": 27,
+          "accepted_lines": 27
+        },
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/design.md": {
+          "additions": 80,
+          "accepted_lines": 80
+        },
+        "openspec/specs/embedded-terminal/spec.md": {
+          "additions": 16,
+          "deletions": 1,
+          "accepted_lines": 16
+        },
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/proposal.md": {
+          "additions": 26,
+          "accepted_lines": 26
+        },
+        "openspec/changes/restore-login-shell-env-for-pty/tasks.md": {
+          "additions": 26,
+          "deletions": 9
+        },
+        "openspec/changes/restore-login-shell-env-for-pty/specs/embedded-terminal/spec.md": {
+          "additions": 27
+        },
+        "openspec/changes/restore-login-shell-env-for-pty/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/tasks.md": {
+          "additions": 17,
+          "accepted_lines": 17
+        },
+        "src/pty-manager.ts": {
+          "additions": 73,
+          "deletions": 9,
+          "accepted_lines": 73
+        }
+      }
+    }
+  }
+}
