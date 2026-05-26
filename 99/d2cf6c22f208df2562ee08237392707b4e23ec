@@ -1,36 +1,218 @@
-src/pty-manager.ts
-  a4e2f743b2b00290 7-8,33,39-40,45-107,111,202,207,211,218
-openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/proposal.md
-  a4e2f743b2b00290 1-26
-openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/tasks.md
-  a4e2f743b2b00290 1-17
-openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/specs/embedded-terminal/spec.md
-  a4e2f743b2b00290 1-27
-openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/.openspec.yaml
-  a4e2f743b2b00290 1-2
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/design.md
+  a4e2f743b2b00290 1-80
 src/main.ts
   a4e2f743b2b00290 595-596
 openspec/specs/embedded-terminal/spec.md
   a4e2f743b2b00290 7,17-30
-openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/design.md
-  a4e2f743b2b00290 1-80
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/proposal.md
+  a4e2f743b2b00290 1-26
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/specs/embedded-terminal/spec.md
+  a4e2f743b2b00290 1-27
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/tasks.md
+  a4e2f743b2b00290 1-17
+openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/.openspec.yaml
+  a4e2f743b2b00290 1-2
+src/pty-manager.ts
+  a4e2f743b2b00290 7-8,33,39-40,45-107,111,202,207,211,218
 ---
 {
   "schema_version": "authorship/3.0.0",
   "git_ai_version": "1.2.8-ntes.8",
-  "base_commit_sha": "1437c31f1dc8a0d8ac9bb410e5c52eb578c82c6d",
+  "base_commit_sha": "99d2cf6c22f208df2562ee08237392707b4e23ec",
   "prompts": {
-    "355a72bde8e96433": {
+    "05c35b5c62ce02e3": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26c159e40ffeA5FkAz9YiDphpB",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 506,
+      "total_deletions": 146,
+      "accepted_lines": 506,
+      "overriden_lines": 0
+    },
+    "2d588752ad34bf6e": {
       "agent_id": {
         "tool": "codex",
-        "id": "019db529-64d0-7211-8c62-e74837195480",
+        "id": "019db056-d598-7661-815b-37aa8fec3378",
         "model": "gpt-5.4"
       },
       "human_author": "zhouatie",
       "messages": [],
-      "total_additions": 1292,
-      "total_deletions": 25,
-      "accepted_lines": 0,
+      "total_additions": 14,
+      "total_deletions": 13,
+      "accepted_lines": 226,
+      "overriden_lines": 0
+    },
+    "32aa0907caf91050": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dae2d-5fc3-7c33-ba91-f28678f34664",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 71,
+      "total_deletions": 5,
+      "accepted_lines": 71,
+      "overriden_lines": 0
+    },
+    "4a302fdc82a261d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27454b038ffe04PemalnNeGBSX",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 439,
+      "total_deletions": 37,
+      "accepted_lines": 267,
+      "overriden_lines": 0
+    },
+    "4ea44e5c435dadd4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27edc069effe74tGu1AnMl86bT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    },
+    "56183c44e3425a6f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28014c8e6ffe0t5hmw9Ah0LxBf",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 179,
+      "total_deletions": 8,
+      "accepted_lines": 278,
+      "overriden_lines": 0
+    },
+    "5f9465f493023ab6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26ecfd9e8ffepNXeFjFWjoypGZ",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1134,
+      "total_deletions": 119,
+      "accepted_lines": 746,
+      "overriden_lines": 0
+    },
+    "5fcfed45dd6815b5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_276217e73ffeVz8fHuPL9rrMgv",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 708,
+      "total_deletions": 149,
+      "accepted_lines": 285,
+      "overriden_lines": 0
+    },
+    "63d27c9fd748bd51": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27dfc37a2ffeuOEwgR90A6JaKL",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 70,
+      "total_deletions": 34,
+      "accepted_lines": 58,
+      "overriden_lines": 0
+    },
+    "6a74582189e2f687": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27348d55bffeUApHqk0GQ3QIl5",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 269,
+      "total_deletions": 23,
+      "accepted_lines": 97,
+      "overriden_lines": 0
+    },
+    "7311ca3fd5bee82a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e97da08ffeRfBCvmPl11H70l",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 533,
+      "total_deletions": 18,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "847a223c4a651af2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2759913b3ffevsZZRM6c2O6sdW",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 64924,
+      "total_deletions": 505,
+      "accepted_lines": 1581,
+      "overriden_lines": 10
+    },
+    "86838cad221a30b2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26444f48bffent9sHrs1JdaliV",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1993,
+      "total_deletions": 208,
+      "accepted_lines": 1233,
+      "overriden_lines": 0
+    },
+    "98b8c5357921c011": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27fd5fe49ffer6i7EZOJEE2pGz",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 165,
+      "total_deletions": 0,
+      "accepted_lines": 165,
+      "overriden_lines": 0
+    },
+    "9f795e45660c27ad": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8685-91b5-7331-ac94-6bfe7d4044ea",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 1,
+      "accepted_lines": 25,
       "overriden_lines": 0
     },
     "a4e2f743b2b00290": {
@@ -46,8 +228,33 @@ openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/design.md
       "accepted_lines": 243,
       "overriden_lines": 0,
       "per_file_stats": {
+        "openspec/specs/embedded-terminal/spec.md": {
+          "additions": 16,
+          "deletions": 1,
+          "accepted_lines": 16
+        },
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/design.md": {
+          "additions": 80,
+          "accepted_lines": 80
+        },
+        "openspec/changes/restore-login-shell-env-for-pty/specs/embedded-terminal/spec.md": {
+          "additions": 27
+        },
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/tasks.md": {
+          "additions": 17,
+          "accepted_lines": 17
+        },
+        "src/pty-manager.ts": {
+          "additions": 73,
+          "deletions": 9,
+          "accepted_lines": 73
+        },
         "openspec/changes/restore-login-shell-env-for-pty/design.md": {
           "additions": 80
+        },
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/proposal.md": {
+          "additions": 26,
+          "accepted_lines": 26
         },
         "src/main.ts": {
           "additions": 2,
@@ -61,43 +268,148 @@ openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/design.md
           "additions": 27,
           "accepted_lines": 27
         },
-        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/.openspec.yaml": {
-          "additions": 2,
-          "accepted_lines": 2
-        },
-        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/design.md": {
-          "additions": 80,
-          "accepted_lines": 80
-        },
-        "openspec/specs/embedded-terminal/spec.md": {
-          "additions": 16,
-          "deletions": 1,
-          "accepted_lines": 16
-        },
-        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/proposal.md": {
-          "additions": 26,
-          "accepted_lines": 26
-        },
         "openspec/changes/restore-login-shell-env-for-pty/tasks.md": {
           "additions": 26,
           "deletions": 9
         },
-        "openspec/changes/restore-login-shell-env-for-pty/specs/embedded-terminal/spec.md": {
-          "additions": 27
+        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
         },
         "openspec/changes/restore-login-shell-env-for-pty/.openspec.yaml": {
           "additions": 2
-        },
-        "openspec/changes/archive/2026-05-26-restore-login-shell-env-for-pty/tasks.md": {
-          "additions": 17,
-          "accepted_lines": 17
-        },
-        "src/pty-manager.ts": {
-          "additions": 73,
-          "deletions": 9,
-          "accepted_lines": 73
         }
       }
+    },
+    "a87e82358b024322": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2641a404bffee2pr7Tis1QyT4p",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1089,
+      "overriden_lines": 0
+    },
+    "bfb58b8ce6c206b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8565-6ca6-7701-ba59-61c9bc4d0e81",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1090,
+      "total_deletions": 273,
+      "accepted_lines": 12,
+      "overriden_lines": 0
+    },
+    "c31651804d2f7b60": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9e2b-4877-7d80-b643-ff5e8a4305f3",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 518,
+      "total_deletions": 158,
+      "accepted_lines": 463,
+      "overriden_lines": 0
+    },
+    "c6929855523b6921": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dae64-1286-7c31-b8ea-13e22657a8ce",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 313,
+      "total_deletions": 17,
+      "accepted_lines": 311,
+      "overriden_lines": 0
+    },
+    "cebd22d1e180559b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8482-72c3-7ef2-a0c6-98fc2a12d1c1",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1482,
+      "total_deletions": 542,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "d0e687716fcd1d8c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e76e893ffeG3nY7d97JEZBsy",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 693,
+      "total_deletions": 67,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "d4ced81edec47110": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27dc44c62ffeIzOpSiL6w3GsKc",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 0,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    },
+    "ea2c2ce75c469966": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ebde593ffefKZHCLt0Qkfnbi",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    },
+    "eddd1b8838fd2358": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e362189ffeKH3g9rlq7E86ej",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 135,
+      "total_deletions": 1,
+      "accepted_lines": 135,
+      "overriden_lines": 0
+    },
+    "f5cfc2a515196199": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8716-73dd-73d1-8e59-2da1fc7c3137",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 301,
+      "total_deletions": 12,
+      "accepted_lines": 301,
+      "overriden_lines": 0
     }
   }
 }
