@@ -1,7 +1,7 @@
 # Capability: settings-panel
 
 ## Purpose
-应用内设置面板，负责统一承载基础配置入口，包括快捷键配置、spec 目录配置、隐藏文件夹配置以及笔记 Vault 管理入口。
+应用内设置面板，负责统一承载基础配置入口，包括快捷键配置、spec 目录配置、隐藏文件夹配置以及终端 renderer 配置。
 
 ## Requirements
 ### Requirement: 设置面板打开与关闭
@@ -20,11 +20,12 @@
 - **THEN** 系统 SHALL 关闭设置面板并返回主工作界面
 
 ### Requirement: 设置面板提供快捷键配置区
-设置面板 SHALL 提供本次支持的快捷键配置区，用于展示和编辑可配置动作的当前绑定值。
+设置面板 SHALL 提供当前支持的快捷键配置区，用于展示和编辑可配置动作的当前绑定值；该配置区 SHALL NOT 展示已移除的浏览器、Git Diff 或笔记动作。
 
 #### Scenario: 展示可配置动作
 - **WHEN** 用户打开设置面板
-- **THEN** 系统 SHALL 展示文件树展示/收起、terminal tab 侧边栏展示/收起、浏览器面板展示/收起、文件预览内容查找、新增 workspace、当前激活 workspace 下新增 terminal tab、重命名当前 workspace、重命名当前二级 terminal tab、关闭当前二级 terminal tab、关闭当前 workspace、上一个 terminal tab、下一个 terminal tab、跳转到第 1 个至第 9 个 terminal tab 这些动作的快捷键配置项
+- **THEN** 系统 SHALL 展示文件树展示/收起、terminal tab 侧边栏展示/收起、文件预览内容查找、新增 workspace、当前激活 workspace 下新增 terminal tab、重命名当前 workspace、重命名当前二级 terminal tab、关闭当前二级 terminal tab、关闭当前 workspace、上一个 terminal tab、下一个 terminal tab、跳转到第 1 个至第 9 个 terminal tab 这些动作的快捷键配置项
+- **THEN** 系统 SHALL NOT 展示浏览器面板展示/收起、Git Diff 面板展示/收起或笔记面板展示/收起的快捷键配置项
 
 #### Scenario: 展示当前生效值
 - **WHEN** 设置面板渲染快捷键配置项
@@ -103,22 +104,3 @@
 #### Scenario: 保存后影响后续终端初始化
 - **WHEN** 用户已保存 terminal renderer 偏好
 - **THEN** 之后新建或重新初始化的终端实例 SHALL 使用该偏好决定是否尝试启用 WebGL renderer
-
-### Requirement: 笔记目录配置
-设置面板 SHALL 将原有的单笔记目录输入框升级为 Vault 管理入口，允许用户维护多个 Vault 并指定当前激活项。
-
-#### Scenario: 展示 Vault 管理区
-- **WHEN** 用户打开设置面板
-- **THEN** 系统 SHALL 展示已保存 Vault 列表
-- **THEN** 每个 Vault 项 SHALL 展示显示名称与根路径
-- **THEN** 系统 SHALL 明确标记当前激活 Vault
-
-#### Scenario: 新增 Vault
-- **WHEN** 用户输入一个新的 Vault 根路径并点击保存
-- **THEN** 系统 SHALL 校验该路径为绝对路径且可访问
-- **THEN** 校验通过后，系统 SHALL 将其加入 Vault 列表
-
-#### Scenario: 切换当前激活 Vault
-- **WHEN** 用户在设置面板中将某个已保存 Vault 设为当前激活项并保存
-- **THEN** 系统 SHALL 持久化新的当前激活 Vault
-- **THEN** 笔记面板 SHALL 使用该 Vault 重新加载笔记树

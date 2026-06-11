@@ -4,7 +4,7 @@
 应用级快捷键系统，负责默认快捷键定义、用户自定义绑定持久化以及保存前的配置校验。
 ## Requirements
 ### Requirement: 默认快捷键定义
-系统 SHALL 为首批支持的应用动作提供默认快捷键绑定。
+系统 SHALL 为当前支持的应用动作提供默认快捷键绑定，且默认绑定中 SHALL NOT 包含已移除的浏览器、Git Diff 或笔记动作。
 
 #### Scenario: 首次加载默认绑定
 - **WHEN** 用户首次打开应用，且本地尚无快捷键配置
@@ -27,10 +27,8 @@
 - **THEN** 跳转到第 7 个 terminal tab SHALL 默认绑定为 `Command + 7`
 - **THEN** 跳转到第 8 个 terminal tab SHALL 默认绑定为 `Command + 8`
 - **THEN** 跳转到最后一个 terminal tab SHALL 默认绑定为 `Command + 9`
-- **THEN** 浏览器面板展示/收起 SHALL 默认绑定为 `Command + L`
 - **THEN** 文件预览内容查找 SHALL 默认绑定为 `Command + F`
-- **THEN** Git Diff 面板展示/收起 SHALL 默认绑定为 `Command + G`
-- **THEN** 笔记面板展示/收起 SHALL 默认绑定为 `Command + O`
+- **THEN** 浏览器面板展示/收起、Git Diff 面板展示/收起、笔记面板展示/收起 SHALL NOT 出现在默认绑定中
 
 ### Requirement: 快捷键配置持久化
 系统 SHALL 支持保存用户自定义快捷键，并在后续启动时恢复。
@@ -74,33 +72,13 @@
 - **THEN** 按下任意快捷键组合
 - **THEN** 系统 SHALL 不触发全局面板快捷键，避免干扰用户输入
 
-### Requirement: 浏览器上下文快捷键分发
-系统 SHALL 在不改变现有用户可配置应用级快捷键绑定的前提下，为浏览器面板提供固定的上下文快捷键优先级。当浏览器面板打开时，浏览器相关冲突快捷键 SHALL 优先由浏览器处理；当浏览器面板关闭时，这些快捷键 SHALL 恢复为现有工作台行为。
+### Requirement: 已移除动作的旧绑定忽略
+系统 SHALL 在读取旧快捷键配置时忽略已移除的动作绑定，避免旧 localStorage 中的浏览器、Git Diff 或笔记快捷键影响当前工作台。
 
-#### Scenario: 浏览器打开时冲突快捷键优先由浏览器处理
-- **WHEN** 浏览器面板处于打开状态，且用户按下 `Cmd+T`、`Cmd+W`、`Cmd+Shift+[`、`Cmd+Shift+]`、`Cmd+1..9`
-- **THEN** 系统 SHALL 优先触发浏览器对应动作
-- **THEN** 系统 SHALL NOT 同时触发 terminal 或 workspace 的同名快捷键动作
-
-#### Scenario: 浏览器关闭时冲突快捷键恢复为工作台行为
-- **WHEN** 浏览器面板处于关闭状态，且用户按下 `Cmd+T`、`Cmd+W`、`Cmd+Shift+[`、`Cmd+Shift+]`、`Cmd+1..9`
-- **THEN** 系统 SHALL 按当前应用级快捷键绑定触发既有 terminal / workspace 动作
-
-#### Scenario: 地址栏输入时保留浏览器开关键
-- **WHEN** 浏览器面板已打开，且焦点位于地址栏输入框
-- **THEN** 用户按下 `Cmd+L`
-- **THEN** 系统 SHALL 切换浏览器面板显示状态
-- **THEN** 系统 SHALL NOT 将该按键交给地址栏输入处理
-
-#### Scenario: 网页内容获焦时保留浏览器开关键
-- **WHEN** 浏览器面板已打开，且焦点位于当前网页 `webview`
-- **THEN** 用户按下 `Cmd+L`
-- **THEN** 系统 SHALL 切换浏览器面板显示状态
-
-#### Scenario: 浏览器打开时前进后退与刷新由浏览器处理
-- **WHEN** 浏览器面板处于打开状态，且用户按下 `Cmd+R`、`Cmd+[` 或 `Cmd+]`
-- **THEN** 系统 SHALL 将对应按键分发给浏览器当前活跃标签页
-- **THEN** 系统 SHALL NOT 将这些按键分发为 terminal 或其他工作台动作
+#### Scenario: 加载包含已移除动作的旧配置
+- **WHEN** 本地快捷键配置仍包含 `toggle-browser`、`toggle-git-diff` 或 `toggle-notes`
+- **THEN** 系统 SHALL 忽略这些已移除动作
+- **THEN** 系统 SHALL 继续加载当前仍支持的快捷键动作
 
 ### Requirement: 文件预览查找快捷键触发
 系统 SHALL 支持通过应用级快捷键触发右侧文件预览内容查找，并保持与输入焦点、终端焦点及现有快捷键体系一致。
@@ -121,24 +99,3 @@
 - **WHEN** 文件预览查找框已经聚焦，且用户继续输入文本
 - **THEN** 系统 SHALL 将按键输入交给查找框本身
 - **THEN** 系统 SHALL 不重复触发应用级文件预览查找动作
-
-### Requirement: 笔记面板保留开关键分发
-系统 SHALL 对笔记面板展示/收起动作的当前快捷键绑定提供保留开关键优先级。默认绑定为 `Command + O`；若用户修改了该动作的快捷键，保留开关键行为 SHALL 跟随新的绑定值，而不是固定停留在默认值。
-
-#### Scenario: 笔记编辑器获焦时保留当前绑定
-- **WHEN** 笔记面板已打开，且焦点位于笔记编辑器的可编辑区域
-- **THEN** 用户按下当前绑定的笔记面板展示/收起快捷键
-- **THEN** 系统 SHALL 触发笔记面板显示状态切换
-- **THEN** 系统 SHALL NOT 将该按键继续分发给编辑器内容输入
-
-#### Scenario: 笔记搜索输入时保留当前绑定
-- **WHEN** 笔记面板已打开，且焦点位于笔记面板搜索输入框
-- **THEN** 用户按下当前绑定的笔记面板展示/收起快捷键
-- **THEN** 系统 SHALL 触发笔记面板显示状态切换
-- **THEN** 系统 SHALL NOT 将该按键继续分发给搜索输入框
-
-#### Scenario: 自定义绑定后保留开关键跟随更新
-- **WHEN** 用户将笔记面板展示/收起动作的快捷键修改为新的组合并完成保存
-- **AND** 焦点位于笔记编辑器或笔记面板搜索输入框
-- **THEN** 用户按下新的快捷键组合时，系统 SHALL 触发笔记面板显示状态切换
-- **THEN** 系统 SHALL 不再要求默认 `Command + O` 才能在该输入态下切换笔记面板

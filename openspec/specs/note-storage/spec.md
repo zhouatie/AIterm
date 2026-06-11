@@ -1,38 +1,9 @@
 # Capability: note-storage
 
 ## Purpose
-笔记存储层，负责管理默认 Vault、多个自定义 Vault 的持久化状态，以及笔记文件所依赖的目录创建与重命名 IPC。
+文件存储 IPC 层，负责提供目录创建与文件/文件夹重命名能力。
 
 ## Requirements
-### Requirement: 默认笔记存储目录
-系统 SHALL 提供默认的笔记 Vault，位于 Electron userData 路径下的 `notes` 子目录，并在没有任何已保存 Vault 时作为初始激活项。
-
-#### Scenario: 使用默认 Vault
-- **WHEN** 用户未保存任何自定义 Vault
-- **THEN** 系统 SHALL 使用 `{userData}/notes/` 作为默认 Vault 根目录
-- **THEN** 该默认 Vault SHALL 成为当前激活 Vault
-
-#### Scenario: 默认 Vault 目录不存在时自动创建
-- **WHEN** 系统需要使用默认 Vault 且对应目录不存在
-- **THEN** 系统 SHALL 自动创建该目录（含必要的父目录）
-
-### Requirement: 自定义笔记存储目录
-系统 SHALL 允许用户保存多个自定义 Vault 根目录，而不是只维护一个笔记目录路径。
-
-#### Scenario: 保存自定义 Vault
-- **WHEN** 用户在设置面板中输入一个自定义 Vault 根路径并保存
-- **THEN** 系统 SHALL 将该路径持久化为一个新的 Vault 条目
-- **THEN** 该路径对应的目录若不存在，系统 SHALL 自动创建该目录（含必要的父目录）
-
-#### Scenario: 防止重复保存同一路径
-- **WHEN** 用户尝试保存一个已存在于 Vault 列表中的根路径
-- **THEN** 系统 SHALL 阻止重复保存
-
-#### Scenario: 从旧单目录配置迁移
-- **WHEN** 系统读取到旧的单笔记目录配置但尚未建立 Vault 列表
-- **THEN** 系统 SHALL 将该目录迁移为一个 Vault 条目
-- **THEN** 该迁移后的 Vault SHALL 成为当前激活 Vault
-
 ### Requirement: 目录创建 IPC
 主进程 SHALL 提供目录创建的 IPC 接口，供渲染进程调用。
 
@@ -40,13 +11,6 @@
 - **WHEN** 渲染进程通过 `fs:ensure-dir` IPC 请求创建目录
 - **THEN** 主进程 SHALL 递归创建目标目录（等同于 `mkdir -p`）
 - **THEN** 若目录已存在，SHALL 静默成功不报错
-
-### Requirement: 获取 userData 路径
-渲染进程 SHALL 能够获取 Electron 的 userData 路径，用于拼接默认笔记目录。
-
-#### Scenario: 获取 userData 路径
-- **WHEN** 渲染进程通过 IPC 请求 userData 路径
-- **THEN** 主进程 SHALL 返回 `app.getPath('userData')` 的值
 
 ### Requirement: 文件/文件夹重命名 IPC
 主进程 SHALL 提供文件和文件夹重命名的 IPC 接口，供渲染进程调用。

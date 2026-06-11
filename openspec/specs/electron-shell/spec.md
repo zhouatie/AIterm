@@ -21,7 +21,7 @@ Electron 主进程外壳，负责应用窗口管理、进程安全隔离、IPC �
 - **THEN** 窗口标题栏外观 SHALL 与当前主题模式一致（深色模式下使用深色标题栏，浅色模式下使用浅色标题栏）
 
 ### Requirement: 进程安全隔离
-主进程与渲染进程之间 SHALL 通过 contextBridge + preload 脚本进行安全通信，渲染进程 SHALL NOT 直接访问 Node.js API。
+主进程与渲染进程之间 SHALL 通过 contextBridge + preload 脚本进行安全通信，渲染进程 SHALL NOT 直接访问 Node.js API。主窗口 SHALL NOT 启用已移除浏览器功能所需的 `<webview>` 标签支持。
 
 #### Scenario: 渲染进程隔离
 - **WHEN** 渲染进程尝试访问 Node.js 模块（如 `require('fs')`）
@@ -31,9 +31,9 @@ Electron 主进程外壳，负责应用窗口管理、进程安全隔离、IPC �
 - **WHEN** 渲染进程需要与主进程通信
 - **THEN** SHALL 通过 preload 脚本在 `window` 上暴露的 API 进行，而非直接使用 ipcRenderer
 
-#### Scenario: webview 标签启用
+#### Scenario: webview 标签不启用
 - **WHEN** 主窗口创建时
-- **THEN** webPreferences SHALL 包含 `webviewTag: true`，以允许渲染进程使用 `<webview>` 标签嵌入网页内容
+- **THEN** webPreferences SHALL NOT 启用 `webviewTag`
 
 ### Requirement: IPC 通信通道
 主进程 SHALL 提供 IPC 通道供渲染进程调用终端相关操作。
@@ -131,31 +131,3 @@ preload 脚本 SHALL 通过 contextBridge 暴露主题相关方法。
 #### Scenario: 暴露 themeApi
 - **WHEN** 渲染进程加载完成
 - **THEN** `window.themeApi` SHALL 可用，包含 `setNativeTheme(mode)` 方法
-
-### Requirement: webview 新窗口请求拦截
-主进程 SHALL 拦截所有浏览器面板 webview 的新窗口请求，并通过 IPC 转发给渲染进程处理。
-
-#### Scenario: 拦截 webview guest 的新窗口请求
-- **WHEN** 类型为 `webview` 的 webContents 被创建且其 session partition 为 `persist:browser`
-- **THEN** 主进程 SHALL 对该 webContents 调用 `setWindowOpenHandler`
-- **THEN** handler SHALL 返回 `{ action: 'deny' }` 阻止新窗口创建
-
-#### Scenario: 通过 IPC 转发拦截的 URL
-- **WHEN** `setWindowOpenHandler` 拦截到新窗口请求
-- **THEN** 主进程 SHALL 通过 `mainWindow.webContents.send('browser:open-url', { url })` 将目标 URL 发送给渲染进程
-
-#### Scenario: 主窗口销毁时安全处理
-- **WHEN** `setWindowOpenHandler` 触发时主窗口已销毁或不存在
-- **THEN** 主进程 SHALL 不发送 IPC 消息且不抛出异常
-
-### Requirement: 浏览器 URL 打开 preload API
-preload 脚本 SHALL 通过 contextBridge 暴露 `browserApi` 对象，提供 `browser:open-url` 消息的监听方法。
-
-#### Scenario: 暴露 browserApi
-- **WHEN** 渲染进程加载完成
-- **THEN** `window.browserApi` SHALL 可用，包含 `onOpenUrl(callback)` 方法
-- **THEN** `onOpenUrl` SHALL 返回取消订阅函数
-
-#### Scenario: 接收打开 URL 消息
-- **WHEN** 主进程发送 `browser:open-url` 消息
-- **THEN** 已注册的 `onOpenUrl` 回调 SHALL 被调用，参数为 `{ url: string }`
