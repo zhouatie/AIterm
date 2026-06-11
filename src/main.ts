@@ -171,27 +171,7 @@ async function confirmCloseWindow(window: BrowserWindow): Promise<boolean> {
   });
   return result.response === TERMINAL_CLOSE_CONFIRM_BUTTON_INDEX;
 }
-let browserPanelOpen = false;
 const attentionSessionIds = new Set<string>();
-
-type BrowserShortcutCommand =
-  | 'toggle-browser'
-  | 'new-tab'
-  | 'close-tab'
-  | 'select-previous-tab'
-  | 'select-next-tab'
-  | 'select-tab-1'
-  | 'select-tab-2'
-  | 'select-tab-3'
-  | 'select-tab-4'
-  | 'select-tab-5'
-  | 'select-tab-6'
-  | 'select-tab-7'
-  | 'select-tab-8'
-  | 'select-tab-9'
-  | 'reload'
-  | 'go-back'
-  | 'go-forward';
 
 function getAttentionNotificationEnv(): PtyNotificationEnv | undefined {
   if (!attentionNotifyUrl || !attentionNotifyToken) return undefined;
@@ -375,49 +355,6 @@ function writeHttpResponse(response: http.ServerResponse, statusCode: number, bo
   response.end(body);
 }
 
-function normalizeBrowserShortcutKey(key: string): string | null {
-  if (!key) return null;
-  if (key === '{') return '[';
-  if (key === '}') return ']';
-  if (key.length === 1) return key.toUpperCase();
-  return null;
-}
-
-function getBrowserShortcutCommand(input: Electron.Input): BrowserShortcutCommand | null {
-  if (input.type !== 'keyDown') return null;
-  if (!input.meta || input.control || input.alt) return null;
-
-  const primaryKey = normalizeBrowserShortcutKey(input.key);
-  if (!primaryKey || primaryKey === 'META' || primaryKey === 'SHIFT' || primaryKey === 'ALT') {
-    return null;
-  }
-
-  const parts = ['Meta'];
-  if (input.shift) parts.push('Shift');
-  parts.push(primaryKey);
-  const shortcut = parts.join('+');
-
-  if (shortcut === 'Meta+L') return 'toggle-browser';
-  if (shortcut === 'Meta+T') return 'new-tab';
-  if (shortcut === 'Meta+W') return 'close-tab';
-  if (shortcut === 'Meta+Shift+[') return 'select-previous-tab';
-  if (shortcut === 'Meta+Shift+]') return 'select-next-tab';
-  if (shortcut === 'Meta+1') return 'select-tab-1';
-  if (shortcut === 'Meta+2') return 'select-tab-2';
-  if (shortcut === 'Meta+3') return 'select-tab-3';
-  if (shortcut === 'Meta+4') return 'select-tab-4';
-  if (shortcut === 'Meta+5') return 'select-tab-5';
-  if (shortcut === 'Meta+6') return 'select-tab-6';
-  if (shortcut === 'Meta+7') return 'select-tab-7';
-  if (shortcut === 'Meta+8') return 'select-tab-8';
-  if (shortcut === 'Meta+9') return 'select-tab-9';
-  if (shortcut === 'Meta+R') return 'reload';
-  if (shortcut === 'Meta+[') return 'go-back';
-  if (shortcut === 'Meta+]') return 'go-forward';
-
-  return null;
-}
-
 function readRequestBody(request: http.IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -512,7 +449,6 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      webviewTag: true,
     },
   });
   let allowNextClose = false;
@@ -1046,7 +982,6 @@ const HOME_ROOT_EXCLUDED_DIRS = [
   '.Trash',
   '.cache',
   '.npm',
-  '.pnpm-store',
   '.yarn',
   '.cargo',
   '.rustup',
@@ -1439,62 +1374,6 @@ ipcMain.handle('fs:ensure-dir', async (_event, { dirPath }: { dirPath: string })
   }
 });
 
-// fs:scan-notes — simple recursive scan for note directories.
-// Includes ALL files and directories (including empty dirs), skips only dotfiles.
-// No gitignore filtering, no empty-dir pruning.
-ipcMain.handle('fs:scan-notes', async (_event, { rootPath: dirPath }: { rootPath: string }) => {
-  async function scanDir(dp: string): Promise<ScanTreeNode[]> {
-    let rawEntries;
-    try {
-      rawEntries = await fs.promises.readdir(dp, { withFileTypes: true });
-    } catch {
-      return [];
-    }
-
-    const dirs: ScanTreeNode[] = [];
-    const files: ScanTreeNode[] = [];
-
-    for (const entry of rawEntries) {
-      if (entry.name.startsWith('.')) continue;
-      const entryPath = path.join(dp, entry.name);
-
-      try {
-        const stat = await fs.promises.stat(entryPath);
-        if (entry.isDirectory()) {
-          dirs.push({
-            name: entry.name,
-            path: entryPath,
-            isDirectory: true,
-            mtime: stat.mtimeMs,
-            children: await scanDir(entryPath),
-          });
-        } else if (entry.isFile()) {
-          files.push({
-            name: entry.name,
-            path: entryPath,
-            isDirectory: false,
-            mtime: stat.mtimeMs,
-          });
-        }
-      } catch {
-        // Skip entries that can't be stat'd
-      }
-    }
-
-    dirs.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
-    files.sort((a, b) => (b.mtime ?? 0) - (a.mtime ?? 0) || a.name.localeCompare(b.name));
-    return [...dirs, ...files];
-  }
-
-  try {
-    const resolved = path.resolve(dirPath);
-    const tree = await scanDir(resolved);
-    return { tree };
-  } catch (err) {
-    return { error: (err as Error).message };
-  }
-});
-
 // fs:delete-file — delete a file or directory (recursive for directories)
 ipcMain.handle('fs:delete-file', async (_event, { filePath }: { filePath: string }) => {
   try {
@@ -1532,11 +1411,6 @@ ipcMain.handle(
     }
   },
 );
-
-// app:get-user-data-path — return Electron userData directory
-ipcMain.handle('app:get-user-data-path', () => {
-  return { path: app.getPath('userData') };
-});
 
 // fs:show-in-folder — reveal a file/directory in the system file manager
 ipcMain.on('fs:show-in-folder', (_event, { filePath: targetPath }: { filePath: string }) => {
@@ -1599,87 +1473,6 @@ ipcMain.handle(
   },
 );
 
-// --- Git IPC Handlers ---
-
-// git:diff — return raw `git diff HEAD` output for a given directory
-ipcMain.handle('git:diff', async (_event, { cwd }: { cwd: string }) => {
-  try {
-    const resolved = path.resolve(cwd);
-    return await new Promise<{ diff: string } | { error: string }>((resolve) => {
-      execFile(
-        'git',
-        ['-C', resolved, 'diff', 'HEAD'],
-        { timeout: 10_000, maxBuffer: 10 * 1024 * 1024 },
-        (error, stdout) => {
-          if (error && !stdout) {
-            resolve({ error: error.message });
-          } else {
-            resolve({ diff: stdout ?? '' });
-          }
-        },
-      );
-    });
-  } catch (err) {
-    return { error: (err as Error).message };
-  }
-});
-
-// git:status-summary — return parsed `git status --porcelain` output
-ipcMain.handle('git:status-summary', async (_event, { cwd }: { cwd: string }) => {
-  try {
-    const resolved = path.resolve(cwd);
-    return await new Promise<{ summary: GitStatusSummary } | { error: string }>((resolve) => {
-      execFile(
-        'git',
-        ['-C', resolved, 'status', '--porcelain'],
-        { timeout: 5000 },
-        (error, stdout) => {
-          if (error && !stdout) {
-            resolve({ error: error.message });
-          } else {
-            const lines = (stdout ?? '').trim().split('\n').filter(Boolean);
-            let modified = 0;
-            let added = 0;
-            let deleted = 0;
-            let untracked = 0;
-            const files: Array<{ status: string; path: string }> = [];
-
-            for (const line of lines) {
-              const statusCode = line.substring(0, 2);
-              const filePath = line.substring(3);
-              files.push({ status: statusCode.trim(), path: filePath });
-
-              if (statusCode === '??') {
-                untracked++;
-              } else if (statusCode.includes('D')) {
-                deleted++;
-              } else if (statusCode.includes('A')) {
-                added++;
-              } else {
-                modified++;
-              }
-            }
-
-            resolve({
-              summary: { modified, added, deleted, untracked, files },
-            });
-          }
-        },
-      );
-    });
-  } catch (err) {
-    return { error: (err as Error).message };
-  }
-});
-
-interface GitStatusSummary {
-  modified: number;
-  added: number;
-  deleted: number;
-  untracked: number;
-  files: Array<{ status: string; path: string }>;
-}
-
 // --- App Lifecycle ---
 
 // theme:set — sync Electron native theme with renderer
@@ -1726,48 +1519,9 @@ ipcMain.handle('tab-state:load', () => {
 ipcMain.handle('live-view:start', () => startLiveViewServer());
 
 ipcMain.on('live-view:stop', () => stopLiveViewServer());
-ipcMain.on('browser:set-open-state', (_event, { isOpen }: { isOpen: boolean }) => {
-  browserPanelOpen = isOpen;
-});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ipcMain.on('rrweb:event', (_event, rrwebEvent: any) => broadcastEvent(rrwebEvent));
-
-// --- Intercept new-window requests from browser-panel webviews ---
-// Use the recommended setWindowOpenHandler API instead of the deprecated
-// renderer-side 'new-window' event on <webview>.
-app.on('web-contents-created', (_event, contents) => {
-  if (contents.getType() === 'webview') {
-    contents.on('before-input-event', (event, input) => {
-      if (!browserPanelOpen) return;
-
-      const command = getBrowserShortcutCommand(input);
-      if (!command) return;
-
-      event.preventDefault();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('browser:shortcut', { command });
-      }
-    });
-
-    contents.setWindowOpenHandler(({ url }) => {
-      // Only intercept webviews belonging to the browser panel (persist:browser partition)
-      const partition = contents.session?.storagePath;
-      // session.storagePath is only set for persist: partitions; for non-persist partitions
-      // it's undefined. We check via the partition property on the session.
-      // A simpler and reliable check: the browser panel webviews use 'persist:browser'.
-      // Electron exposes session via contents.session; we match by checking if this session
-      // is the same object as the one obtained via session.fromPartition('persist:browser').
-      // However, at this point the session module might not yet be imported.
-      // Instead, since all our webviews use persist:browser partition and there are no other
-      // webviews in the app, we can safely intercept all webview new-window requests.
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('browser:open-url', { url });
-      }
-      return { action: 'deny' };
-    });
-  }
-});
 
 app.on('ready', async () => {
   fdPath = detectFd();

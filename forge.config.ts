@@ -17,8 +17,7 @@ const config: ForgeConfig = {
       unpack: '**/node_modules/node-pty/**',
     },
     // The custom ignore function below already limits packaged files to the
-    // Vite output and runtime native/static modules. Electron Packager's prune
-    // walker does not resolve pnpm symlinked transitive dependencies correctly.
+    // Vite output and runtime native/static modules.
     prune: false,
     osxSign: {
       identity: '-',
@@ -53,9 +52,11 @@ const config: ForgeConfig = {
       if (!file) return false;
       // Include Vite build output
       if (file.startsWith('/.vite')) return false;
-      // Include node-pty native module (and let its subtree through)
       if (file === '/node_modules') return false;
+      // Include node-pty native module (and let its subtree through)
       if (file.startsWith('/node_modules/node-pty')) return false;
+      // node-pty's binding.gyp resolves this package during Electron rebuild.
+      if (file.startsWith('/node_modules/node-addon-api')) return false;
       // Include rrweb dist files — the live-view HTTP server reads
       // rrweb.min.js and rrweb.css from node_modules at runtime via fs.readFile()
       if (file.startsWith('/node_modules/rrweb')) return false;

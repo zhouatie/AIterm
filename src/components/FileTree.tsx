@@ -639,7 +639,7 @@ const FileTree: React.FC<FileTreeProps> = ({
 
         if (result.tree) {
           let nextNodes = toTreeNodes(result.tree);
-          let nextExpandedPaths = expandedPathsRef.current;
+          const nextExpandedPaths = expandedPathsRef.current;
 
           const expandedPathsByDepth = [...new Set(nextExpandedPaths)]
             .sort((a, b) => getPathDepth(a) - getPathDepth(b));

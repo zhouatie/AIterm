@@ -1,6 +1,6 @@
 import * as pty from 'node-pty';
 import { randomUUID } from 'node:crypto';
-import { execFile } from 'node:child_process';
+import { execFile, type ExecFileOptionsWithStringEncoding } from 'node:child_process';
 import { promisify } from 'node:util';
 import fs from 'node:fs';
 
@@ -113,15 +113,17 @@ async function resolveLoginShellEnv(shell: string): Promise<Record<string, strin
   if (process.platform !== 'darwin') return {};
 
   try {
+    const options: ExecFileOptionsWithStringEncoding & { argv0: string } = {
+      argv0: `-${getShellBasename(shell)}`,
+      encoding: 'utf8',
+      env: getStringProcessEnv(),
+      timeout: LOGIN_SHELL_ENV_TIMEOUT_MS,
+      maxBuffer: 1024 * 1024,
+    };
     const { stdout } = await execFileAsync(
       shell,
       ['-lc', `printf '\\036AITERM_ENV_START\\036\\0'; command env -0`],
-      {
-        argv0: `-${getShellBasename(shell)}`,
-        env: getStringProcessEnv(),
-        timeout: LOGIN_SHELL_ENV_TIMEOUT_MS,
-        maxBuffer: 1024 * 1024,
-      },
+      options,
     );
     return parseNullDelimitedEnv(stdout);
   } catch (error) {

@@ -4,9 +4,6 @@ import type {
   ThemeApi,
   TabStateApi,
   LiveViewApi,
-  BrowserApi,
-  BrowserShortcutCommand,
-  GitApi,
   TerminalAgentStatus,
   TerminalAgentStatusCleared,
 } from './preload';
@@ -14,7 +11,6 @@ import type {
 export type {
   TerminalAgentStatus,
   TerminalAgentStatusCleared,
-  BrowserShortcutCommand,
 };
 
 declare global {
@@ -24,7 +20,5 @@ declare global {
     themeApi: ThemeApi;
     tabStateApi: TabStateApi;
     liveViewApi: LiveViewApi;
-    browserApi: BrowserApi;
-    gitApi: GitApi;
   }
 }

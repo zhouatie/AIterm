@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-const noop = () => {};
+const noop: () => void = () => undefined;
 
 export const TerminalUiContext = createContext<() => void>(noop);
 

@@ -1,14 +1,11 @@
-import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from 'react';
-import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast, Globe, GitCompareArrows, NotebookPen } from 'lucide-react';
+import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
 import LiveViewPanel from './components/LiveViewPanel';
-import BrowserPanel, { type BrowserPanelHandle } from './components/BrowserPanel';
-import GitDiffPanel from './components/GitDiffPanel';
-import NotePanel from './components/NotePanel';
 import SplitLayout from './components/SplitLayout';
-import { ShortcutProvider, useKeyboardShortcuts, eventToShortcut } from './ShortcutContext';
+import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
 import {
   PanelManagerProvider,
@@ -31,16 +28,8 @@ import {
   readTerminalRendererPreferWebgl,
   saveTerminalRendererPreferWebgl,
 } from './utils/terminal-settings';
-import {
-  readNoteVaultSettings,
-  resolveNoteVaultSettings,
-  saveNoteVaultSettings,
-  NOTE_DIRECTORY_CHANGED_EVENT,
-  type NoteVaultSettings,
-} from './utils/note-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 import { startRecording, stopLiveRecording, forceCheckout } from './live-view-recorder';
-import type { BrowserShortcutCommand, TerminalSessionInfo } from './preload';
 
 // --- Active Session Context ---
 // Shared between TerminalPanel (writer) and FilePreviewPanel (reader)
@@ -51,7 +40,7 @@ interface ActiveSessionContextValue {
 
 const ActiveSessionContext = createContext<ActiveSessionContextValue>({
   activeSessionId: null,
-  setActiveSessionId: () => {},
+  setActiveSessionId: () => undefined,
 });
 
 export const useActiveSession = () => useContext(ActiveSessionContext);
@@ -100,24 +89,6 @@ const ICON_COLOR_ACTIVE = 'var(--color-icon-active)';
 
 // Height of the dedicated title bar area (houses traffic lights + sidebar toggle)
 const TITLE_BAR_HEIGHT = 42;
-const BROWSER_CONTEXT_SHORTCUTS = new Map<string, BrowserShortcutCommand>([
-  ['Meta+T', 'new-tab'],
-  ['Meta+W', 'close-tab'],
-  ['Meta+Shift+[', 'select-previous-tab'],
-  ['Meta+Shift+]', 'select-next-tab'],
-  ['Meta+1', 'select-tab-1'],
-  ['Meta+2', 'select-tab-2'],
-  ['Meta+3', 'select-tab-3'],
-  ['Meta+4', 'select-tab-4'],
-  ['Meta+5', 'select-tab-5'],
-  ['Meta+6', 'select-tab-6'],
-  ['Meta+7', 'select-tab-7'],
-  ['Meta+8', 'select-tab-8'],
-  ['Meta+9', 'select-tab-9'],
-  ['Meta+R', 'reload'],
-  ['Meta+[', 'go-back'],
-  ['Meta+]', 'go-forward'],
-]);
 
 const toggleButtonStyle = {
   display: 'flex',
@@ -184,7 +155,6 @@ const AppContent: React.FC = () => {
     readTerminalRendererPreferWebgl,
   );
   const [hiddenFolderNames, setHiddenFolderNamesState] = useState(getHiddenFolderNames);
-  const [noteVaultSettings, setNoteVaultSettingsState] = useState<NoteVaultSettings>(readNoteVaultSettings);
   const fileTreeToggleTitle = getIconButtonTooltip({
     label: panelVisible ? '收起文件树' : '展开文件树',
     bindings,
@@ -194,54 +164,6 @@ const AppContent: React.FC = () => {
   // Live View state
   const [isLiveViewOpen, setIsLiveViewOpen] = useState(false);
   const [liveViewActive, setLiveViewActive] = useState(false);
-
-  // Overlay panel state — browser, git diff, and notes are mutually exclusive
-  type OverlayPanel = 'none' | 'browser' | 'git-diff' | 'notes';
-  const [activeOverlay, setActiveOverlay] = useState<OverlayPanel>('none');
-  const browserPanelRef = useRef<BrowserPanelHandle | null>(null);
-
-  // Track the active session's git info for icon state
-  const [activeSessionInfo, setActiveSessionInfo] = useState<TerminalSessionInfo | null>(null);
-  const activeSessionInfoRef = useRef<TerminalSessionInfo | null>(null);
-
-  // Fetch session info when activeSessionId changes
-  useEffect(() => {
-    if (!activeSessionId) {
-      setActiveSessionInfo(null);
-      activeSessionInfoRef.current = null;
-      return;
-    }
-
-    let cancelled = false;
-    window.terminalApi.getSessionInfo(activeSessionId).then((info) => {
-      if (!cancelled) {
-        setActiveSessionInfo(info);
-        activeSessionInfoRef.current = info;
-      }
-    });
-
-    // Also listen for session info changes (e.g. cwd change within same session)
-    const unsubscribe = window.terminalApi.onSessionInfoChanged((info) => {
-      if (info.id === activeSessionId) {
-        setActiveSessionInfo(info);
-        activeSessionInfoRef.current = info;
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, [activeSessionId]);
-
-  // Auto-close git diff panel when switching to a non-git session
-  useEffect(() => {
-    if (activeOverlay === 'git-diff' && activeSessionInfo && !activeSessionInfo.isGitRepo) {
-      setActiveOverlay('none');
-    }
-  }, [activeOverlay, activeSessionInfo]);
-
-  const isGitRepo = activeSessionInfo?.isGitRepo ?? false;
 
   // Start/stop rrweb recording in sync with live view active state
   useEffect(() => {
@@ -291,147 +213,14 @@ const AppContent: React.FC = () => {
     setHiddenFolderNamesState(getHiddenFolderNames());
   }, []);
 
-  const handleSaveNoteVaultSettings = useCallback((value: NoteVaultSettings) => {
-    saveNoteVaultSettings(value);
-    setNoteVaultSettingsState(readNoteVaultSettings());
-  }, []);
-
-  useEffect(() => {
-    const refreshNoteVaultSettings = () => {
-      void resolveNoteVaultSettings().then((settings) => {
-        setNoteVaultSettingsState(settings);
-      });
-    };
-
-    refreshNoteVaultSettings();
-    window.addEventListener(NOTE_DIRECTORY_CHANGED_EVENT, refreshNoteVaultSettings);
-    return () => window.removeEventListener(NOTE_DIRECTORY_CHANGED_EVENT, refreshNoteVaultSettings);
-  }, []);
-
   useEffect(() => {
     return registerAction('toggle-file-tree', () => {
       togglePanel();
     });
   }, [registerAction, togglePanel]);
 
-  const toggleBrowser = useCallback(() => {
-    setActiveOverlay((prev) => (prev === 'browser' ? 'none' : 'browser'));
-  }, []);
-
-  const dispatchBrowserShortcut = useCallback((command: BrowserShortcutCommand) => {
-    if (command === 'toggle-browser') {
-      toggleBrowser();
-      return;
-    }
-
-    if (activeOverlay !== 'browser') return;
-    browserPanelRef.current?.executeCommand(command);
-  }, [activeOverlay, toggleBrowser]);
-
-  useEffect(() => {
-    return registerAction('toggle-browser', () => {
-      toggleBrowser();
-    });
-  }, [registerAction, toggleBrowser]);
-
-  useEffect(() => {
-    const handleBrowserShortcut = (event: KeyboardEvent) => {
-      const shortcut = eventToShortcut(event);
-      if (!shortcut) return;
-
-      if (shortcut === 'Meta+L') {
-        event.preventDefault();
-        event.stopPropagation();
-        toggleBrowser();
-        return;
-      }
-
-      if (activeOverlay !== 'browser') return;
-
-      const command = BROWSER_CONTEXT_SHORTCUTS.get(shortcut);
-      if (!command) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      dispatchBrowserShortcut(command);
-    };
-
-    window.addEventListener('keydown', handleBrowserShortcut, true);
-    return () => {
-      window.removeEventListener('keydown', handleBrowserShortcut, true);
-    };
-  }, [activeOverlay, dispatchBrowserShortcut, toggleBrowser]);
-
-  useEffect(() => {
-    window.browserApi.setOpenState(activeOverlay === 'browser');
-
-    if (activeOverlay !== 'browser') {
-      const activeElement = document.activeElement;
-      if (activeElement instanceof HTMLElement) {
-        activeElement.blur();
-      }
-    }
-
-    return () => {
-      window.browserApi.setOpenState(false);
-    };
-  }, [activeOverlay]);
-
-  useEffect(() => {
-    const unsubscribeOpenUrl = window.browserApi.onOpenUrl(({ url }) => {
-      setActiveOverlay('browser');
-      browserPanelRef.current?.openUrl(url);
-    });
-    const unsubscribeShortcut = window.browserApi.onShortcutCommand(({ command }) => {
-      dispatchBrowserShortcut(command);
-    });
-
-    return () => {
-      unsubscribeOpenUrl();
-      unsubscribeShortcut();
-    };
-  }, [dispatchBrowserShortcut]);
-
-  const toggleGitDiff = useCallback(() => {
-    if (!activeSessionInfoRef.current?.isGitRepo) return;
-    setActiveOverlay((prev) => (prev === 'git-diff' ? 'none' : 'git-diff'));
-  }, []);
-
-  useEffect(() => {
-    return registerAction('toggle-git-diff', () => {
-      toggleGitDiff();
-    });
-  }, [registerAction, toggleGitDiff]);
-
-  const toggleNotes = useCallback(() => {
-    setActiveOverlay((prev) => (prev === 'notes' ? 'none' : 'notes'));
-  }, []);
-
-  useEffect(() => {
-    return registerAction('toggle-notes', () => {
-      toggleNotes();
-    });
-  }, [registerAction, toggleNotes]);
-
-  useEffect(() => {
-    const handleNotesShortcut = (event: KeyboardEvent) => {
-      const shortcut = eventToShortcut(event);
-      if (!shortcut || shortcut !== bindings['toggle-notes']) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      toggleNotes();
-    };
-
-    window.addEventListener('keydown', handleNotesShortcut, true);
-    return () => {
-      window.removeEventListener('keydown', handleNotesShortcut, true);
-    };
-  }, [bindings, toggleNotes]);
-
   const revealTerminalUi = useCallback(() => {
     switchPanel(TERMINAL_PANEL_ID);
-    setActiveOverlay('none');
   }, [switchPanel]);
 
   return (
@@ -505,101 +294,6 @@ const AppContent: React.FC = () => {
             </button>
             {liveViewActive && <span className="live-dot" />}
           </div>
-
-          {/* Git Diff panel toggle */}
-          <button
-            onClick={isGitRepo ? toggleGitDiff : undefined}
-            title={
-              isGitRepo
-                ? getIconButtonTooltip({
-                    label: activeOverlay === 'git-diff' ? '关闭 Git Diff' : '打开 Git Diff',
-                    bindings,
-                    actionId: 'toggle-git-diff',
-                  })
-                : '当前目录不是 Git 仓库'
-            }
-            style={{
-              ...toggleButtonStyle,
-              marginLeft: 4,
-              ...(isGitRepo
-                ? activeOverlay === 'git-diff'
-                  ? {
-                      backgroundColor: 'var(--color-surface-content-elevated)',
-                      borderColor: 'var(--color-border-primary)',
-                      color: ICON_COLOR_ACTIVE,
-                      boxShadow: 'var(--color-shadow-soft)',
-                    }
-                  : {}
-                : {
-                    opacity: 0.35,
-                    cursor: 'not-allowed',
-                  }),
-            }}
-            onMouseEnter={(e) => {
-              if (isGitRepo) applyChromeButtonHover(e.currentTarget);
-            }}
-            onMouseLeave={(e) => {
-              if (isGitRepo && activeOverlay !== 'git-diff') resetChromeButtonHover(e.currentTarget);
-            }}
-          >
-            <GitCompareArrows size={16} />
-          </button>
-
-          {/* Browser panel toggle */}
-          <button
-            onClick={toggleBrowser}
-            title={getIconButtonTooltip({
-              label: activeOverlay === 'browser' ? '关闭浏览器' : '打开浏览器',
-              bindings,
-              actionId: 'toggle-browser',
-            })}
-            style={{
-              ...toggleButtonStyle,
-              marginLeft: 4,
-              ...(activeOverlay === 'browser'
-                ? {
-                    backgroundColor: 'var(--color-surface-content-elevated)',
-                    borderColor: 'var(--color-border-primary)',
-                    color: ICON_COLOR_ACTIVE,
-                    boxShadow: 'var(--color-shadow-soft)',
-                  }
-                : {}),
-            }}
-            onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
-            onMouseLeave={(e) => {
-              if (activeOverlay !== 'browser') resetChromeButtonHover(e.currentTarget);
-            }}
-          >
-            <Globe size={16} />
-          </button>
-
-          {/* Notes panel toggle */}
-          <button
-            onClick={toggleNotes}
-            title={getIconButtonTooltip({
-              label: activeOverlay === 'notes' ? '关闭笔记' : '打开笔记',
-              bindings,
-              actionId: 'toggle-notes',
-            })}
-            style={{
-              ...toggleButtonStyle,
-              marginLeft: 4,
-              ...(activeOverlay === 'notes'
-                ? {
-                    backgroundColor: 'var(--color-surface-content-elevated)',
-                    borderColor: 'var(--color-border-primary)',
-                    color: ICON_COLOR_ACTIVE,
-                    boxShadow: 'var(--color-shadow-soft)',
-                  }
-                : {}),
-            }}
-            onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
-            onMouseLeave={(e) => {
-              if (activeOverlay !== 'notes') resetChromeButtonHover(e.currentTarget);
-            }}
-          >
-            <NotebookPen size={16} />
-          </button>
         </div>
 
         <div
@@ -619,22 +313,6 @@ const AppContent: React.FC = () => {
             shadowSide="left"
             leftCollapsed={!panelVisible}
           />
-          <BrowserPanel
-            ref={browserPanelRef}
-            isOpen={activeOverlay === 'browser'}
-            onClose={() => setActiveOverlay('none')}
-          />
-          <GitDiffPanel
-            isOpen={activeOverlay === 'git-diff'}
-            onClose={() => setActiveOverlay('none')}
-            cwd={activeSessionInfo?.cwd ?? null}
-            branchName={activeSessionInfo?.branchName ?? null}
-            gitRoot={activeSessionInfo?.gitRoot ?? null}
-          />
-          <NotePanel
-            isOpen={activeOverlay === 'notes'}
-            onClose={() => setActiveOverlay('none')}
-          />
         </div>
       </div>
 
@@ -645,13 +323,11 @@ const AppContent: React.FC = () => {
         terminalStartDirectory={terminalStartDirectory}
         terminalRendererPreferWebgl={terminalRendererPreferWebgl}
         hiddenFolderNames={hiddenFolderNames}
-        noteVaultSettings={noteVaultSettings}
         onSave={saveBindings}
         onSaveSpecDirectoryNames={handleSaveSpecDirectoryNames}
         onSaveTerminalStartDirectory={handleSaveTerminalStartDirectory}
         onSaveTerminalRendererPreferWebgl={handleSaveTerminalRendererPreferWebgl}
         onSaveHiddenFolderNames={handleSaveHiddenFolderNames}
-        onSaveNoteVaultSettings={handleSaveNoteVaultSettings}
         onClose={closeSettings}
       />
 

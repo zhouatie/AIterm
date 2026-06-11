@@ -82,8 +82,6 @@ export interface FileApi {
   ensureDir(dirPath: string): Promise<{ success?: boolean; error?: string }>;
   deleteFile(filePath: string): Promise<{ success?: boolean; error?: string }>;
   rename(oldPath: string, newPath: string): Promise<{ success?: boolean; error?: string }>;
-  scanNotes(rootPath: string): Promise<{ tree?: ScanTreeNode[]; error?: string }>;
-  getUserDataPath(): Promise<{ path: string }>;
 }
 
 contextBridge.exposeInMainWorld('terminalApi', {
@@ -228,12 +226,6 @@ contextBridge.exposeInMainWorld('fileApi', {
 
   rename: (oldPath: string, newPath: string) =>
     ipcRenderer.invoke('fs:rename', { oldPath, newPath }),
-
-  scanNotes: (rootPath: string) =>
-    ipcRenderer.invoke('fs:scan-notes', { rootPath }),
-
-  getUserDataPath: () =>
-    ipcRenderer.invoke('app:get-user-data-path'),
 } satisfies FileApi);
 
 export interface ThemeApi {
@@ -281,75 +273,3 @@ contextBridge.exposeInMainWorld('tabStateApi', {
   load: () =>
     ipcRenderer.invoke('tab-state:load'),
 } satisfies TabStateApi);
-
-export interface BrowserApi {
-  onOpenUrl(callback: (data: { url: string }) => void): () => void;
-  onShortcutCommand(callback: (data: { command: BrowserShortcutCommand }) => void): () => void;
-  setOpenState(isOpen: boolean): void;
-}
-
-export type BrowserShortcutCommand =
-  | 'toggle-browser'
-  | 'new-tab'
-  | 'close-tab'
-  | 'select-previous-tab'
-  | 'select-next-tab'
-  | 'select-tab-1'
-  | 'select-tab-2'
-  | 'select-tab-3'
-  | 'select-tab-4'
-  | 'select-tab-5'
-  | 'select-tab-6'
-  | 'select-tab-7'
-  | 'select-tab-8'
-  | 'select-tab-9'
-  | 'reload'
-  | 'go-back'
-  | 'go-forward';
-
-contextBridge.exposeInMainWorld('browserApi', {
-  onOpenUrl: (callback: (data: { url: string }) => void) => {
-    const listener = (
-      _event: Electron.IpcRendererEvent,
-      data: { url: string },
-    ) => callback(data);
-    ipcRenderer.on('browser:open-url', listener);
-    return () => {
-      ipcRenderer.removeListener('browser:open-url', listener);
-    };
-  },
-  onShortcutCommand: (callback: (data: { command: BrowserShortcutCommand }) => void) => {
-    const listener = (
-      _event: Electron.IpcRendererEvent,
-      data: { command: BrowserShortcutCommand },
-    ) => callback(data);
-    ipcRenderer.on('browser:shortcut', listener);
-    return () => {
-      ipcRenderer.removeListener('browser:shortcut', listener);
-    };
-  },
-  setOpenState: (isOpen: boolean) => {
-    ipcRenderer.send('browser:set-open-state', { isOpen });
-  },
-} satisfies BrowserApi);
-
-export interface GitStatusSummary {
-  modified: number;
-  added: number;
-  deleted: number;
-  untracked: number;
-  files: Array<{ status: string; path: string }>;
-}
-
-export interface GitApi {
-  diff(cwd: string): Promise<{ diff?: string; error?: string }>;
-  statusSummary(cwd: string): Promise<{ summary?: GitStatusSummary; error?: string }>;
-}
-
-contextBridge.exposeInMainWorld('gitApi', {
-  diff: (cwd: string) =>
-    ipcRenderer.invoke('git:diff', { cwd }),
-
-  statusSummary: (cwd: string) =>
-    ipcRenderer.invoke('git:status-summary', { cwd }),
-} satisfies GitApi);
