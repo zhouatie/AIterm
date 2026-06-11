@@ -1,0 +1,236 @@
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/proposal.md
+  7fab35e0da7eba2f 1-40
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-autosave/spec.md
+  7fab35e0da7eba2f 1,4-5,8-9,12-13,16-17,20-21
+openspec/specs/note-storage/spec.md
+  a2d82a23fcf02259 4
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/browser-url-autocomplete/spec.md
+  7fab35e0da7eba2f 1,4-5,8-9,12-13,16-17,20-21
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-editor/spec.md
+  7fab35e0da7eba2f 1,4-5,8-9,12-13
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/.openspec.yaml
+  7fab35e0da7eba2f 1-2
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/design.md
+  7fab35e0da7eba2f 1-85
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-vault-switching/spec.md
+  7fab35e0da7eba2f 1,4-5,8-9
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/keyboard-shortcuts/spec.md
+  7fab35e0da7eba2f 1-48
+openspec/specs/keyboard-shortcuts/spec.md
+  a2d82a23fcf02259 7,31,75-76,78-81
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-storage/spec.md
+  7fab35e0da7eba2f 1-13
+openspec/specs/settings-panel/spec.md
+  a2d82a23fcf02259 4,23,27-28
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/tasks.md
+  7fab35e0da7eba2f 1-39
+openspec/specs/electron-shell/spec.md
+  a2d82a23fcf02259 24,34,36
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-panel/spec.md
+  7fab35e0da7eba2f 1,4-5,8-9,12-13,16-17,20-21,24-25,28-29,32-33,36-37,40-41,44-45,48-49,52-53,56-57,60-61
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-navigation/spec.md
+  7fab35e0da7eba2f 1,4-5
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/git-diff-panel/spec.md
+  7fab35e0da7eba2f 1,4-5,8-9,12-13,16-17,20-21,24-25
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/browser-panel/spec.md
+  7fab35e0da7eba2f 1,4-5,8-9,12-13,16-17,20-21,24-25,28-29,32-33,36-37,40-41
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/settings-panel/spec.md
+  7fab35e0da7eba2f 1-23
+openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/electron-shell/spec.md
+  7fab35e0da7eba2f 1-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "55a882b0204d65f7e3424190fee8a525ce2c018b",
+  "prompts": {
+    "7fab35e0da7eba2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb5b2-7d82-7b93-886b-bcccf6a371d7",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1204,
+      "total_deletions": 38,
+      "accepted_lines": 989,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-11-add-terminal-scroll-extremes/specs/embedded-terminal/spec.md": {
+          "additions": 56,
+          "accepted_lines": 56
+        },
+        "openspec/changes/add-terminal-scroll-extremes/proposal.md": {
+          "additions": 27
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 186,
+          "deletions": 4,
+          "accepted_lines": 185
+        },
+        "openspec/changes/add-terminal-scroll-extremes/specs/embedded-terminal/spec.md": {
+          "additions": 56
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-navigation/spec.md": {
+          "additions": 5,
+          "accepted_lines": 5
+        },
+        "openspec/changes/add-terminal-scroll-extremes/tasks.md": {
+          "additions": 54,
+          "deletions": 20
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-11-add-terminal-scroll-extremes/design.md": {
+          "additions": 75,
+          "accepted_lines": 75
+        },
+        "src/components/TerminalInstance.tsx": {
+          "additions": 84,
+          "deletions": 14,
+          "accepted_lines": 84
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/tasks.md": {
+          "additions": 39,
+          "accepted_lines": 39
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/electron-shell/spec.md": {
+          "additions": 26,
+          "accepted_lines": 26
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-autosave/spec.md": {
+          "additions": 21,
+          "accepted_lines": 21
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/design.md": {
+          "additions": 85,
+          "accepted_lines": 85
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/browser-url-autocomplete/spec.md": {
+          "additions": 21,
+          "accepted_lines": 21
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/settings-panel/spec.md": {
+          "additions": 23,
+          "accepted_lines": 23
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/git-diff-panel/spec.md": {
+          "additions": 25,
+          "accepted_lines": 25
+        },
+        "openspec/specs/embedded-terminal/spec.md": {
+          "additions": 54,
+          "accepted_lines": 54
+        },
+        "openspec/changes/add-terminal-scroll-extremes/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-11-add-terminal-scroll-extremes/tasks.md": {
+          "additions": 34,
+          "accepted_lines": 34
+        },
+        "openspec/changes/archive/2026-06-11-add-terminal-scroll-extremes/proposal.md": {
+          "additions": 27,
+          "accepted_lines": 27
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-editor/spec.md": {
+          "additions": 13,
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/keyboard-shortcuts/spec.md": {
+          "additions": 48,
+          "accepted_lines": 48
+        },
+        "openspec/changes/add-terminal-scroll-extremes/design.md": {
+          "additions": 75
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/browser-panel/spec.md": {
+          "additions": 41,
+          "accepted_lines": 41
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-vault-switching/spec.md": {
+          "additions": 9,
+          "accepted_lines": 9
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-panel/spec.md": {
+          "additions": 61,
+          "accepted_lines": 61
+        },
+        "openspec/changes/archive/2026-06-11-add-terminal-scroll-extremes/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-storage/spec.md": {
+          "additions": 13,
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/proposal.md": {
+          "additions": 40,
+          "accepted_lines": 40
+        }
+      }
+    },
+    "a2d82a23fcf02259": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb544-f864-7c62-96de-7266222fc71c",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 998,
+      "accepted_lines": 17,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/specs/electron-shell/spec.md": {
+          "additions": 3,
+          "deletions": 31,
+          "accepted_lines": 3
+        },
+        "openspec/specs/browser-panel/spec.md": {
+          "deletions": 212
+        },
+        "openspec/specs/keyboard-shortcuts/spec.md": {
+          "additions": 9,
+          "deletions": 52,
+          "accepted_lines": 9
+        },
+        "openspec/specs/note-vault-switching/spec.md": {
+          "deletions": 33
+        },
+        "openspec/specs/git-diff-panel/spec.md": {
+          "deletions": 89
+        },
+        "openspec/specs/note-autosave/spec.md": {
+          "deletions": 68
+        },
+        "openspec/specs/note-navigation/spec.md": {
+          "deletions": 23
+        },
+        "openspec/specs/note-panel/spec.md": {
+          "deletions": 277
+        },
+        "openspec/specs/browser-url-autocomplete/spec.md": {
+          "deletions": 101
+        },
+        "openspec/specs/settings-panel/spec.md": {
+          "additions": 4,
+          "deletions": 22,
+          "accepted_lines": 4
+        },
+        "openspec/specs/note-editor/spec.md": {
+          "deletions": 53
+        },
+        "openspec/specs/note-storage/spec.md": {
+          "additions": 1,
+          "deletions": 37,
+          "accepted_lines": 1
+        }
+      }
+    }
+  }
+}
