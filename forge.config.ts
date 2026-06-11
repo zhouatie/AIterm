@@ -16,6 +16,10 @@ const config: ForgeConfig = {
     asar: {
       unpack: '**/node_modules/node-pty/**',
     },
+    // The custom ignore function below already limits packaged files to the
+    // Vite output and runtime native/static modules. Electron Packager's prune
+    // walker does not resolve pnpm symlinked transitive dependencies correctly.
+    prune: false,
     osxSign: {
       identity: '-',
       identityValidation: false,

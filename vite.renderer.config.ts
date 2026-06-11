@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    preserveSymlinks: false,
+  },
   build: {
     // Electron apps load from local disk, not over network, so minification
     // provides no benefit. Disabling it avoids esbuild's known issue where

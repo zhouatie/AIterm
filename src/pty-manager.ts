@@ -2,6 +2,7 @@ import * as pty from 'node-pty';
 import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import fs from 'node:fs';
 
 const execFileAsync = promisify(execFile);
 const LOGIN_SHELL_ENV_TIMEOUT_MS = 3000;
@@ -34,6 +35,45 @@ let loginShellEnvPromise: Promise<Record<string, string>> | null = null;
 
 function getDefaultShell(): string {
   return process.env.SHELL || '/bin/zsh';
+}
+
+function getDefaultCwd(): string {
+  return process.env.HOME || process.cwd();
+}
+
+function decodeLsofEscapedPath(cwd: string): string {
+  if (!cwd.includes('\\x')) return cwd;
+
+  return cwd.replace(/(?:\\x[0-9A-Fa-f]{2})+/g, (sequence) => {
+    const hex = sequence.replace(/\\x/g, '');
+    return Buffer.from(hex, 'hex').toString('utf8');
+  });
+}
+
+async function isDirectory(cwd: string): Promise<boolean> {
+  try {
+    const stat = await fs.promises.stat(cwd);
+    return stat.isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+async function resolveInitialCwd(cwd?: string): Promise<string> {
+  const fallbackCwd = getDefaultCwd();
+  if (!cwd) return fallbackCwd;
+
+  const decodedCwd = decodeLsofEscapedPath(cwd);
+  const candidates = decodedCwd === cwd ? [cwd] : [cwd, decodedCwd];
+
+  for (const candidate of candidates) {
+    if (await isDirectory(candidate)) {
+      return candidate;
+    }
+  }
+
+  console.warn(`[pty-manager] Requested cwd does not exist, falling back to ${fallbackCwd}:`, cwd);
+  return fallbackCwd;
 }
 
 function getStringProcessEnv(): Record<string, string> {
@@ -207,16 +247,34 @@ export async function createSession(
 ): Promise<PtySession> {
   const id = randomUUID();
   const shell = getDefaultShell();
-  const initialCwd = cwd || process.env.HOME || process.cwd();
+  let initialCwd = await resolveInitialCwd(cwd);
   const env = await getPtyEnv(shell, id, notificationEnv);
 
-  const ptyProcess = pty.spawn(shell, [], {
-    name: 'xterm-256color',
-    cols,
-    rows,
-    cwd: initialCwd,
-    env,
-  });
+  let ptyProcess: pty.IPty;
+  try {
+    ptyProcess = pty.spawn(shell, [], {
+      name: 'xterm-256color',
+      cols,
+      rows,
+      cwd: initialCwd,
+      env,
+    });
+  } catch (error) {
+    const fallbackCwd = getDefaultCwd();
+    if (!cwd || initialCwd === fallbackCwd) {
+      throw error;
+    }
+
+    console.warn(`[pty-manager] Failed to spawn PTY in ${initialCwd}, retrying in ${fallbackCwd}:`, error);
+    initialCwd = fallbackCwd;
+    ptyProcess = pty.spawn(shell, [], {
+      name: 'xterm-256color',
+      cols,
+      rows,
+      cwd: initialCwd,
+      env,
+    });
+  }
 
   const session: PtySession = {
     id,
@@ -282,7 +340,12 @@ async function getProcessCwd(pid: number): Promise<string | null> {
       const lines = stdout.split('\n');
       for (let i = 0; i < lines.length; i++) {
         if (lines[i] === 'fcwd' && i + 1 < lines.length && lines[i + 1].startsWith('n')) {
-          return lines[i + 1].slice(1); // strip 'n' prefix
+          const rawCwd = lines[i + 1].slice(1); // strip 'n' prefix
+          const decodedCwd = decodeLsofEscapedPath(rawCwd);
+          if (decodedCwd !== rawCwd && !(await isDirectory(rawCwd)) && await isDirectory(decodedCwd)) {
+            return decodedCwd;
+          }
+          return rawCwd;
         }
       }
     } else if (process.platform === 'linux') {
