@@ -1,0 +1,30 @@
+src/pty-manager.ts
+  6863872dd5ffed6f 5,40-78,250,253-277,343-348
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "64c9c7643aadf27baf572b6d208bd3f30cdf8ef6",
+  "prompts": {
+    "6863872dd5ffed6f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb4ea-6265-71d2-8a7b-6a661f370e6d",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 10,
+      "accepted_lines": 72,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "src/pty-manager.ts": {
+          "additions": 73,
+          "deletions": 10,
+          "accepted_lines": 72
+        }
+      }
+    }
+  }
+}
