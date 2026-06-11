@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useCallback, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { WebglAddon } from '@xterm/addon-webgl';
@@ -67,6 +67,13 @@ function getXtermTheme(theme: 'light' | 'dark'): ITheme {
 // --- Renderer type tracking ---
 
 type RendererType = 'webgl' | 'canvas' | 'dom';
+
+export interface TerminalScrollState {
+  isNormalBuffer: boolean;
+  hasScrollback: boolean;
+  isAtTop: boolean;
+  isAtBottom: boolean;
+}
 
 /**
  * Custom fit that measures the **actual** scrollbar width instead of using
@@ -161,6 +168,20 @@ function getAllContentFromTerminal(terminal: Terminal): string {
   return lines.join('\n');
 }
 
+function getScrollStateFromTerminal(terminal: Terminal): TerminalScrollState {
+  const buffer = terminal.buffer.active;
+  const isNormalBuffer = buffer.type === 'normal';
+  const isAtTop = buffer.viewportY <= 0;
+  const isAtBottom = buffer.viewportY >= buffer.baseY;
+
+  return {
+    isNormalBuffer,
+    hasScrollback: isNormalBuffer && buffer.baseY > 0,
+    isAtTop,
+    isAtBottom,
+  };
+}
+
 // --- Public handle interface ---
 
 export interface TerminalInstanceHandle {
@@ -180,16 +201,23 @@ export interface TerminalInstanceHandle {
   getAllContent(): string;
   /** Get the selected text in the terminal */
   getSelection(): string;
+  /** Scroll the terminal viewport to the top of the retained scrollback */
+  scrollToTop(): void;
+  /** Scroll the terminal viewport to the bottom */
+  scrollToBottom(): void;
+  /** Read the current terminal scroll state */
+  getScrollState(): TerminalScrollState | null;
 }
 
 interface TerminalInstanceProps {
   sessionId: string;
   isActive: boolean;
   preferWebglRenderer: boolean;
+  onScrollStateChange?: (sessionId: string, state: TerminalScrollState) => void;
 }
 
 const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProps>(
-  ({ sessionId, isActive, preferWebglRenderer }, ref) => {
+  ({ sessionId, isActive, preferWebglRenderer, onScrollStateChange }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<Terminal | null>(null);
     const initializedRef = useRef(false);
@@ -198,7 +226,20 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
     const searchAddonRef = useRef<SearchAddon | null>(null);
     const serializeAddonRef = useRef<SerializeAddon | null>(null);
     const rendererTypeRef = useRef<RendererType>('dom');
+    const onScrollStateChangeRef = useRef(onScrollStateChange);
     const { theme } = useTheme();
+
+    useEffect(() => {
+      onScrollStateChangeRef.current = onScrollStateChange;
+    }, [onScrollStateChange]);
+
+    const emitScrollState = useCallback(() => {
+      if (!terminalRef.current) return;
+      onScrollStateChangeRef.current?.(
+        sessionId,
+        getScrollStateFromTerminal(terminalRef.current),
+      );
+    }, [sessionId]);
 
     // Expose methods via ref for parent components
     useImperativeHandle(ref, () => ({
@@ -221,6 +262,22 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
       getSelection: () => {
         if (!terminalRef.current) return '';
         return terminalRef.current.getSelection();
+      },
+      scrollToTop: () => {
+        if (!terminalRef.current) return;
+        terminalRef.current.scrollToTop();
+        terminalRef.current.focus();
+        emitScrollState();
+      },
+      scrollToBottom: () => {
+        if (!terminalRef.current) return;
+        terminalRef.current.scrollToBottom();
+        terminalRef.current.focus();
+        emitScrollState();
+      },
+      getScrollState: () => {
+        if (!terminalRef.current) return null;
+        return getScrollStateFromTerminal(terminalRef.current);
       },
     }));
 
@@ -312,6 +369,7 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
           const d = core._renderService?.dimensions;
           if (d && d.css.cell.width > 0 && d.css.cell.height > 0) {
             fitTerminal(terminalRef.current);
+            emitScrollState();
           } else if (++fitRetries < MAX_FIT_RETRIES) {
             scheduleInitialFit();
           }
@@ -320,14 +378,17 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
       scheduleInitialFit();
 
       // User input → PTY stdin
-      terminal.onData((data: string) => {
+      const dataDisposable = terminal.onData((data: string) => {
         window.terminalApi.input(sessionId, data);
       });
 
       // Sync terminal size to PTY when xterm resizes
-      terminal.onResize(({ cols, rows }: { cols: number; rows: number }) => {
+      const resizeDisposable = terminal.onResize(({ cols, rows }: { cols: number; rows: number }) => {
         window.terminalApi.resize(sessionId, cols, rows);
+        emitScrollState();
       });
+      const scrollDisposable = terminal.onScroll(() => emitScrollState());
+      const writeParsedDisposable = terminal.onWriteParsed(() => emitScrollState());
 
       // PTY exit → show message
       const removeExitListener = window.terminalApi.onExit(
@@ -341,11 +402,15 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
         activeCleanupRef.current?.();
         activeCleanupRef.current = null;
         removeExitListener();
+        dataDisposable.dispose();
+        resizeDisposable.dispose();
+        scrollDisposable.dispose();
+        writeParsedDisposable.dispose();
         searchAddonRef.current = null;
         serializeAddonRef.current = null;
         terminal.dispose();
       };
-    }, [sessionId]);
+    }, [emitScrollState, sessionId]);
 
     useEffect(() => {
       const terminal = terminalRef.current;
@@ -369,7 +434,7 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
 
       const resizeObserver = new ResizeObserver(handleResize);
       const removeOutputListener = window.terminalApi.onOutput(sessionId, (data: string) => {
-        terminal.write(data);
+        terminal.write(data, emitScrollState);
       });
 
       resizeObserver.observe(container);
@@ -384,15 +449,20 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
 
       void window.terminalApi.attachOutput(sessionId).then(({ bufferedData }) => {
         if (cancelled) return;
+        const finalizeAttach = () => {
+          requestAnimationFrame(() => {
+            if (terminalRef.current && !cancelled) {
+              fitTerminal(terminalRef.current);
+              terminalRef.current.focus();
+              emitScrollState();
+            }
+          });
+        };
         if (bufferedData) {
-          terminal.write(bufferedData);
+          terminal.write(bufferedData, finalizeAttach);
+        } else {
+          finalizeAttach();
         }
-        requestAnimationFrame(() => {
-          if (terminalRef.current && !cancelled) {
-            fitTerminal(terminalRef.current);
-            terminalRef.current.focus();
-          }
-        });
       });
 
       return () => {
@@ -400,7 +470,7 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
         activeCleanupRef.current?.();
         activeCleanupRef.current = null;
       };
-    }, [isActive, sessionId]);
+    }, [emitScrollState, isActive, sessionId]);
 
     // Dynamically update terminal colorscheme when theme changes
     useEffect(() => {

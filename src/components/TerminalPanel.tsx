@@ -2,6 +2,8 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   ChevronDown,
   ChevronRight,
+  ChevronsDown,
+  ChevronsUp,
   Folder,
   PanelLeftClose,
   PanelLeftOpen,
@@ -19,7 +21,7 @@ import {
 } from '../utils/tab-persistence';
 import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './ContextMenu';
 import TerminalInstance from './TerminalInstance';
-import type { TerminalInstanceHandle } from './TerminalInstance';
+import type { TerminalInstanceHandle, TerminalScrollState } from './TerminalInstance';
 import TerminalSearchBar from './TerminalSearchBar';
 import { useTerminalUi } from '../contexts/terminal-ui';
 
@@ -75,6 +77,7 @@ const SIDEBAR_HEADER_HEIGHT = 46;
 const SIDEBAR_FOOTER_HEIGHT = 48;
 const ROW_HEIGHT = 34;
 const SIDEBAR_TOGGLE_SIZE = 28;
+const TERMINAL_SCROLL_CONTROL_SIZE = 28;
 /** Duration (ms) for the sidebar collapse/expand animation. */
 const SIDEBAR_COLLAPSE_MS = 180;
 const COMPLETED_STATUS_AUTO_CLEAR_MS = 2400;
@@ -281,6 +284,18 @@ function getAgentStatusTooltip(status: TerminalAgentStatus | undefined): string 
   return `${agent} · ${label}\n${status.message}`;
 }
 
+function areTerminalScrollStatesEqual(
+  left: TerminalScrollState | null,
+  right: TerminalScrollState | null,
+): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  return left.isNormalBuffer === right.isNormalBuffer
+    && left.hasScrollback === right.hasScrollback
+    && left.isAtTop === right.isAtTop
+    && left.isAtBottom === right.isAtBottom;
+}
+
 function resolveHighestAgentStatus(
   statuses: Iterable<TerminalAgentStatus>,
 ): TerminalAgentStatus | undefined {
@@ -413,6 +428,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [isCmdHeld, setIsCmdHeld] = useState(false);
   const [searchBarVisible, setSearchBarVisible] = useState(false);
+  const [activeScrollState, setActiveScrollState] = useState<TerminalScrollState | null>(null);
   const terminalInstanceRefs = useRef<Map<string, TerminalInstanceHandle>>(new Map());
   const sidebarWidth = sidebarCollapsed ? 0 : SIDEBAR_WIDTH;
   const renameTargetKey = renameState
@@ -433,6 +449,61 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
   workspacesRef.current = workspaces;
   sessionNameOverridesRef.current = sessionNameOverrides;
+
+  const updateActiveScrollState = useCallback((nextState: TerminalScrollState | null) => {
+    setActiveScrollState((prevState) =>
+      areTerminalScrollStatesEqual(prevState, nextState) ? prevState : nextState,
+    );
+  }, []);
+
+  const refreshActiveTerminalScrollState = useCallback(() => {
+    if (!activeSessionId) {
+      updateActiveScrollState(null);
+      return;
+    }
+
+    updateActiveScrollState(
+      terminalInstanceRefs.current.get(activeSessionId)?.getScrollState() ?? null,
+    );
+  }, [activeSessionId, updateActiveScrollState]);
+
+  const handleTerminalScrollStateChange = useCallback((
+    sessionId: string,
+    nextState: TerminalScrollState,
+  ) => {
+    if (sessionId !== activeSessionId) return;
+    updateActiveScrollState(nextState);
+  }, [activeSessionId, updateActiveScrollState]);
+
+  const scrollActiveTerminal = useCallback((direction: 'top' | 'bottom'): boolean => {
+    if (!activeSessionId) return false;
+    const terminalHandle = terminalInstanceRefs.current.get(activeSessionId);
+    const scrollState = terminalHandle?.getScrollState();
+    if (!terminalHandle || !scrollState?.isNormalBuffer) return false;
+
+    if (!scrollState.hasScrollback) {
+      terminalHandle.getTerminal()?.focus();
+      updateActiveScrollState(scrollState);
+      return true;
+    }
+
+    if (direction === 'top') {
+      if (scrollState.isAtTop) {
+        updateActiveScrollState(scrollState);
+        return true;
+      }
+      terminalHandle.scrollToTop();
+    } else {
+      if (scrollState.isAtBottom) {
+        updateActiveScrollState(scrollState);
+        return true;
+      }
+      terminalHandle.scrollToBottom();
+    }
+
+    updateActiveScrollState(terminalHandle.getScrollState());
+    return true;
+  }, [activeSessionId, updateActiveScrollState]);
 
   const cancelCompletedStatusTimer = useCallback((sessionId: string) => {
     const timer = completedStatusTimersRef.current.get(sessionId);
@@ -669,7 +740,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     });
   }, [registerAction]);
 
-  // 按住 Command 时在 tab 旁边临时显示跳转序号 + Cmd+F 搜索
+  // 按住 Command 时在 tab 旁边临时显示跳转序号 + terminal-local shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Meta') setIsCmdHeld(true);
@@ -679,6 +750,21 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         event.preventDefault();
         event.stopPropagation();
         setSearchBarVisible((v) => !v);
+        return;
+      }
+
+      if (
+        event.metaKey
+        && !event.ctrlKey
+        && !event.altKey
+        && !event.shiftKey
+        && (event.key === 'ArrowUp' || event.key === 'ArrowDown')
+      ) {
+        if (!isTerminalKeyboardTarget(event.target)) return;
+        const didHandle = scrollActiveTerminal(event.key === 'ArrowUp' ? 'top' : 'bottom');
+        if (!didHandle) return;
+        event.preventDefault();
+        event.stopPropagation();
       }
     };
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -694,7 +780,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('blur', handleBlur);
     };
-  }, []);
+  }, [scrollActiveTerminal]);
 
   // Build the persisted state snapshot from current React state
   const buildPersistedState = useCallback((): PersistedTabState => ({
@@ -743,6 +829,12 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     if (!activeSessionId) return;
     onActiveSessionChange?.(activeSessionId);
   }, [activeSessionId, onActiveSessionChange]);
+
+  useEffect(() => {
+    updateActiveScrollState(null);
+    const frame = requestAnimationFrame(refreshActiveTerminalScrollState);
+    return () => cancelAnimationFrame(frame);
+  }, [refreshActiveTerminalScrollState, updateActiveScrollState]);
 
   useEffect(() => {
     const nextActiveSessionId = resolveActiveSessionId(workspaces, activeSessionId);
@@ -1281,6 +1373,12 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const sidebarToggleTitleWithStatus = aggregateAgentStatusTooltip
     ? `${sidebarToggleTitle}\n${aggregateAgentStatusTooltip}`
     : sidebarToggleTitle;
+  const showTerminalScrollControls = Boolean(
+    activeScrollState?.isNormalBuffer && activeScrollState.hasScrollback,
+  );
+  const isScrollToTopDisabled = !activeScrollState || activeScrollState.isAtTop;
+  const isScrollToBottomDisabled = !activeScrollState || activeScrollState.isAtBottom;
+  const scrollControlTop = searchBarVisible ? 50 : 12;
 
   return (
     <div
@@ -1910,8 +2008,92 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
               sessionId={session.id}
               isActive={session.id === activeSessionId}
               preferWebglRenderer={preferWebglRenderer}
+              onScrollStateChange={handleTerminalScrollStateChange}
             />
           )),
+        )}
+
+        {showTerminalScrollControls && (
+          <div
+            style={{
+              position: 'absolute',
+              top: scrollControlTop,
+              right: 16,
+              zIndex: 9,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 5,
+              padding: 4,
+              border: '1px solid var(--color-border-primary)',
+              borderRadius: 8,
+              backgroundColor: 'color-mix(in srgb, var(--color-surface-terminal) 84%, transparent)',
+              boxShadow: 'var(--color-shadow-soft)',
+              backdropFilter: 'blur(16px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(16px) saturate(160%)',
+              transition: 'top 0.16s ease, opacity 0.16s ease',
+            }}
+          >
+            <button
+              type="button"
+              aria-label="滚动到最上"
+              title="滚动到最上 (Command + ↑)"
+              disabled={isScrollToTopDisabled}
+              onClick={() => {
+                scrollActiveTerminal('top');
+              }}
+              style={{
+                width: TERMINAL_SCROLL_CONTROL_SIZE,
+                height: TERMINAL_SCROLL_CONTROL_SIZE,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid transparent',
+                borderRadius: 6,
+                backgroundColor: isScrollToTopDisabled
+                  ? 'transparent'
+                  : 'var(--color-surface-content-elevated)',
+                color: isScrollToTopDisabled
+                  ? 'var(--color-text-muted)'
+                  : 'var(--color-text-secondary)',
+                cursor: isScrollToTopDisabled ? 'default' : 'pointer',
+                opacity: isScrollToTopDisabled ? 0.42 : 0.92,
+                padding: 0,
+                transition: 'background-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
+              }}
+            >
+              <ChevronsUp size={16} />
+            </button>
+            <button
+              type="button"
+              aria-label="滚动到最下"
+              title="滚动到最下 (Command + ↓)"
+              disabled={isScrollToBottomDisabled}
+              onClick={() => {
+                scrollActiveTerminal('bottom');
+              }}
+              style={{
+                width: TERMINAL_SCROLL_CONTROL_SIZE,
+                height: TERMINAL_SCROLL_CONTROL_SIZE,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid transparent',
+                borderRadius: 6,
+                backgroundColor: isScrollToBottomDisabled
+                  ? 'transparent'
+                  : 'var(--color-surface-content-elevated)',
+                color: isScrollToBottomDisabled
+                  ? 'var(--color-text-muted)'
+                  : 'var(--color-text-secondary)',
+                cursor: isScrollToBottomDisabled ? 'default' : 'pointer',
+                opacity: isScrollToBottomDisabled ? 0.42 : 0.92,
+                padding: 0,
+                transition: 'background-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
+              }}
+            >
+              <ChevronsDown size={16} />
+            </button>
+          </div>
         )}
 
         {searchBarVisible && activeSessionId && (
