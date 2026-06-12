@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Shared AIterm notification CLI for Codex / Claude Code / OpenCode.
-// Codex requires `[features].codex_hooks = true` in config.toml for hooks to run.
+// Codex requires `[features].hooks = true` in config.toml for hooks to run.
 const args = parseArgs(process.argv.slice(2));
 const hookInput = await readHookInput();
 
