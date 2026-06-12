@@ -71,6 +71,13 @@ function getPreset(name) {
         state: 'running',
         message: 'Codex 正在执行。',
       };
+    case 'codex-needs-user':
+      return {
+        agent: 'codex',
+        event: 'PermissionRequest',
+        state: 'needs_user',
+        message: 'Codex 已暂停，等待你的确认。',
+      };
     case 'codex-stop':
       return {
         agent: 'codex',
@@ -158,6 +165,7 @@ function normalizeEvent(event, agent, input) {
 function inferState(agent, event, input) {
   if (agent === 'codex') {
     if (event === 'UserPromptSubmit') return 'running';
+    if (event === 'PermissionRequest') return 'needs_user';
     if (event === 'Stop') return 'completed';
     return '';
   }
@@ -229,5 +237,6 @@ function inferMessage(agent, event, input) {
   }
 
   if (event === 'UserPromptSubmit') return 'Codex 正在执行。';
+  if (event === 'PermissionRequest') return 'Codex 已暂停，等待你的确认。';
   return 'Codex 已完成当前回合。';
 }

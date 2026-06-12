@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ListTree } from 'lucide-react';
+import { ListTree, MessageSquare, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -9,6 +9,16 @@ import {
   clearPreviewFindHighlights,
   scrollPreviewFindMatchIntoView,
 } from '../utils/preview-find';
+import {
+  createMarkdownCommentAnchorFromSelection,
+  getMarkdownCommentMarkerPosition,
+  resolveMarkdownCommentRange,
+} from '../utils/markdown-comment-anchors';
+import type {
+  MarkdownCommentAnchor,
+  MarkdownCommentLocationStatus,
+  MarkdownPreviewComment,
+} from '../utils/markdown-comment-types';
 
 interface MarkdownPreviewProps {
   content: string | null;
@@ -18,6 +28,11 @@ interface MarkdownPreviewProps {
   searchQuery?: string;
   currentSearchIndex?: number;
   onSearchMatchCountChange?: (count: number) => void;
+  comments?: MarkdownPreviewComment[];
+  activeCommentId?: string | null;
+  onCommentAnchorCreate?: (anchor: MarkdownCommentAnchor) => void;
+  onCommentSelect?: (commentId: string) => void;
+  onCommentLocationChange?: (statuses: MarkdownCommentLocationStatus[]) => void;
 }
 
 interface MarkdownHeadingEntry {
@@ -27,7 +42,67 @@ interface MarkdownHeadingEntry {
   text: string;
 }
 
+interface MarkdownCommentMarker {
+  commentId: string;
+  top: number;
+  left: number;
+  active: boolean;
+}
+
+interface SelectionCommentAction {
+  anchor: MarkdownCommentAnchor;
+  top: number;
+  left: number;
+}
+
+interface CSSHighlightsRegistry {
+  set(name: string, highlight: object): void;
+  delete(name: string): void;
+}
+
+interface HighlightConstructor {
+  new (...ranges: Range[]): object;
+}
+
+type HighlightWindow = Window & {
+  Highlight: HighlightConstructor;
+};
+
+type HighlightCSS = typeof CSS & {
+  highlights: CSSHighlightsRegistry;
+};
+
 const HEADING_SELECTOR = 'h1, h2, h3, h4, h5, h6';
+const MARKDOWN_COMMENT_HIGHLIGHT_NAME = 'markdown-comment-highlight';
+const MARKDOWN_COMMENT_CURRENT_NAME = 'markdown-comment-current';
+
+function getHighlightConstructor(): HighlightConstructor {
+  return (window as HighlightWindow).Highlight;
+}
+
+function getHighlightRegistry(): CSSHighlightsRegistry {
+  return (CSS as HighlightCSS).highlights;
+}
+
+function clearMarkdownCommentHighlights() {
+  const registry = getHighlightRegistry();
+  registry.delete(MARKDOWN_COMMENT_HIGHLIGHT_NAME);
+  registry.delete(MARKDOWN_COMMENT_CURRENT_NAME);
+}
+
+function applyMarkdownCommentHighlights(ranges: Range[], currentRange: Range | null) {
+  clearMarkdownCommentHighlights();
+  if (ranges.length === 0 && !currentRange) return;
+
+  const Highlight = getHighlightConstructor();
+  const registry = getHighlightRegistry();
+  if (ranges.length > 0) {
+    registry.set(MARKDOWN_COMMENT_HIGHLIGHT_NAME, new Highlight(...ranges));
+  }
+  if (currentRange) {
+    registry.set(MARKDOWN_COMMENT_CURRENT_NAME, new Highlight(currentRange));
+  }
+}
 
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   content,
@@ -37,11 +112,19 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   searchQuery = '',
   currentSearchIndex = 0,
   onSearchMatchCountChange,
+  comments = [],
+  activeCommentId = null,
+  onCommentAnchorCreate,
+  onCommentSelect,
+  onCommentLocationChange,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const headingElementsRef = useRef<Map<string, HTMLHeadingElement>>(new Map());
   const [headings, setHeadings] = useState<MarkdownHeadingEntry[]>([]);
   const [outlineExpanded, setOutlineExpanded] = useState(false);
+  const [commentMarkers, setCommentMarkers] = useState<MarkdownCommentMarker[]>([]);
+  const [selectionCommentAction, setSelectionCommentAction] = useState<SelectionCommentAction | null>(null);
+  const [commentLayoutVersion, setCommentLayoutVersion] = useState(0);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -66,11 +149,11 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
     const nextHeadingMap = new Map<string, HTMLHeadingElement>();
     const nextHeadings = nextHeadingElements.reduce<MarkdownHeadingEntry[]>(
       (items, element, index) => {
-        const text = element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+        const text = element.textContent?.replace(/s+/g, ' ').trim() ?? '';
         if (!text) return items;
 
         const level = Number(element.tagName.slice(1));
-        const id = `markdown-heading-${index}`;
+        const id = 'markdown-heading-' + index;
         element.dataset.previewHeadingId = id;
         nextHeadingMap.set(id, element);
         items.push({ id, index, level, text });
@@ -105,6 +188,90 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
       clearPreviewFindHighlights();
     };
   }, [content, currentSearchIndex, onSearchMatchCountChange, searchQuery]);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const markdownRoot = container?.querySelector<HTMLElement>('.markdown-body');
+    if (!container || !markdownRoot || !content || !filePath || comments.length === 0) {
+      clearMarkdownCommentHighlights();
+      setCommentMarkers([]);
+      onCommentLocationChange?.(comments.map((comment) => ({ commentId: comment.id, located: false })));
+      return;
+    }
+
+    const ranges: Range[] = [];
+    let currentRange: Range | null = null;
+    const markers: MarkdownCommentMarker[] = [];
+    const statuses: MarkdownCommentLocationStatus[] = [];
+
+    for (const comment of comments) {
+      const resolved = resolveMarkdownCommentRange(markdownRoot, comment);
+      statuses.push({ commentId: comment.id, located: resolved.located });
+      if (!resolved.range) continue;
+
+      ranges.push(resolved.range);
+      if (comment.id === activeCommentId) currentRange = resolved.range;
+      const markerPosition = getMarkdownCommentMarkerPosition(container, resolved.range);
+      if (markerPosition) {
+        markers.push({
+          commentId: comment.id,
+          top: markerPosition.top,
+          left: markerPosition.left,
+          active: comment.id === activeCommentId,
+        });
+      }
+    }
+
+    applyMarkdownCommentHighlights(ranges, currentRange);
+    setCommentMarkers(markers);
+    onCommentLocationChange?.(statuses);
+
+    return () => {
+      clearMarkdownCommentHighlights();
+    };
+  }, [activeCommentId, commentLayoutVersion, comments, content, filePath, onCommentLocationChange]);
+
+  useEffect(() => {
+    const handleResize = () => setCommentLayoutVersion((version) => version + 1);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const updateSelectionCommentAction = useCallback(() => {
+    const container = containerRef.current;
+    const markdownRoot = container?.querySelector<HTMLElement>('.markdown-body');
+    if (!container || !markdownRoot || !onCommentAnchorCreate) {
+      setSelectionCommentAction(null);
+      return;
+    }
+
+    const selection = window.getSelection();
+    const anchor = createMarkdownCommentAnchorFromSelection(markdownRoot, selection);
+    if (!anchor || !selection || selection.rangeCount === 0) {
+      setSelectionCommentAction(null);
+      return;
+    }
+
+    const range = selection.getRangeAt(0).cloneRange();
+    const markerPosition = getMarkdownCommentMarkerPosition(container, range);
+    if (!markerPosition) {
+      setSelectionCommentAction(null);
+      return;
+    }
+
+    setSelectionCommentAction({
+      anchor,
+      top: markerPosition.top,
+      left: markerPosition.left,
+    });
+  }, [onCommentAnchorCreate]);
+
+  const handleCreateCommentFromSelection = useCallback(() => {
+    if (!selectionCommentAction) return;
+    onCommentAnchorCreate?.(selectionCommentAction.anchor);
+    setSelectionCommentAction(null);
+    window.getSelection()?.removeAllRanges();
+  }, [onCommentAnchorCreate, selectionCommentAction]);
 
   const scrollToHeading = useCallback((headingId: string) => {
     const container = containerRef.current;
@@ -180,7 +347,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
                 type="button"
                 className="markdown-heading-outline-item"
                 title={heading.text}
-                aria-label={`跳转到第 ${heading.index + 1} 个标题：${heading.text}`}
+                aria-label={'跳转到第 ' + (heading.index + 1) + ' 个标题：' + heading.text}
                 tabIndex={outlineExpanded ? 0 : -1}
                 style={{
                   paddingLeft: 10 + ((heading.level - 1) * 12),
@@ -196,10 +363,14 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
       )}
       <div
         ref={containerRef}
+        onMouseUp={() => window.setTimeout(updateSelectionCommentAction, 0)}
+        onKeyUp={updateSelectionCommentAction}
+        onScroll={() => setSelectionCommentAction(null)}
         style={{
           height: '100%',
           overflowY: 'auto',
           padding: '16px 24px',
+          position: 'relative',
         }}
       >
         <div className="markdown-body">
@@ -235,6 +406,36 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
             {content}
           </ReactMarkdown>
         </div>
+        {commentMarkers.map((marker) => (
+          <button
+            key={marker.commentId}
+            type="button"
+            className={'markdown-comment-marker' + (marker.active ? ' active' : '')}
+            aria-label="查看评论"
+            title="查看评论"
+            style={{ top: marker.top, left: marker.left }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setSelectionCommentAction(null);
+              onCommentSelect?.(marker.commentId);
+            }}
+          >
+            <MessageSquare size={13} />
+          </button>
+        ))}
+        {selectionCommentAction && (
+          <button
+            type="button"
+            className="markdown-comment-add-button"
+            aria-label="添加评论"
+            title="添加评论"
+            style={{ top: selectionCommentAction.top, left: selectionCommentAction.left }}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={handleCreateCommentFromSelection}
+          >
+            <Plus size={14} />
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 # Codex Hook Notifications
 
-这份文档给 AI 或维护者使用，用来把下载后的 AIterm 仓库接入 Codex hooks。完成后，在 AIterm 内置终端中运行 Codex 时，Codex 回合开始和结束会通过 AIterm 的本地通知入口更新 terminal tab 状态，并在完成时触发系统通知。
+这份文档给 AI 或维护者使用，用来把下载后的 AIterm 仓库接入 Codex hooks。完成后，在 AIterm 内置终端中运行 Codex 时，Codex 回合开始、等待用户确认和结束会通过 AIterm 的本地通知入口更新 terminal tab 状态，并在等待确认或完成时触发系统通知。
 
 ## AI 安装任务
 
@@ -29,6 +29,13 @@ type = "command"
 command = "/absolute/path/to/AIterm/scripts/aiterm-notify.mjs --preset codex-running || true"
 timeout = 10
 
+[[hooks.PermissionRequest]]
+
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = "/absolute/path/to/AIterm/scripts/aiterm-notify.mjs --preset codex-needs-user || true"
+timeout = 10
+
 [[hooks.Stop]]
 
 [[hooks.Stop.hooks]]
@@ -37,11 +44,12 @@ command = "/absolute/path/to/AIterm/scripts/aiterm-notify.mjs --preset codex-sto
 timeout = 10
 ```
 
-如果 `config.toml` 已有 `[features]`，只需要在其中补充或更新 `hooks = true`。如果已有 `[[hooks.UserPromptSubmit]]` 或 `[[hooks.Stop]]`，不要删除原条目，只在对应事件下追加新的 `[[...hooks]]` 项。
+如果 `config.toml` 已有 `[features]`，只需要在其中补充或更新 `hooks = true`。如果已有 `[[hooks.UserPromptSubmit]]`、`[[hooks.PermissionRequest]]` 或 `[[hooks.Stop]]`，不要删除原条目，只在对应事件下追加新的 `[[...hooks]]` 项。
 
-追加前先检查是否已经存在下面两类命令，避免重复安装：
+追加前先检查是否已经存在下面三类命令，避免重复安装：
 
 - `aiterm-notify.mjs --preset codex-running`
+- `aiterm-notify.mjs --preset codex-needs-user`
 - `aiterm-notify.mjs --preset codex-stop`
 
 ## Docker / Dev Container 安装
@@ -109,6 +117,13 @@ type = "command"
 command = "/home/dev/.codex/aiterm-notify.mjs --preset codex-running || true"
 timeout = 10
 
+[[hooks.PermissionRequest]]
+
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = "/home/dev/.codex/aiterm-notify.mjs --preset codex-needs-user || true"
+timeout = 10
+
 [[hooks.Stop]]
 
 [[hooks.Stop.hooks]]
@@ -143,7 +158,10 @@ Codex hook 子进程会继承这些变量。`scripts/aiterm-notify.mjs` 读取�
 Codex 事件映射：
 
 - `UserPromptSubmit` -> `codex-running` -> `running`
+- `PermissionRequest` -> `codex-needs-user` -> `needs_user`
 - `Stop` -> `codex-stop` -> `completed`
+
+`PermissionRequest` 在 Codex 即将请求批准时触发，例如 shell 升权或网络访问审批；普通回合结束仍由 `Stop` 表示完成。
 
 ## 验证
 
@@ -153,9 +171,10 @@ Codex 事件映射：
 env | rg '^AITEM_(TERMINAL_SESSION_ID|NOTIFY_URL|NOTIFY_TOKEN)='
 ```
 
-应能看到三个环境变量。然后模拟完成事件：
+应能看到三个环境变量。然后模拟等待确认和完成事件：
 
 ```sh
+/absolute/path/to/AIterm/scripts/aiterm-notify.mjs --preset codex-needs-user
 /absolute/path/to/AIterm/scripts/aiterm-notify.mjs --preset codex-stop
 ```
 

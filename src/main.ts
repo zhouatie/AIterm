@@ -31,6 +31,10 @@ import {
   broadcastEvent,
   setCheckoutTrigger,
 } from './live-view-server';
+import type {
+  MarkdownCommentAnchor,
+  MarkdownPreviewComment,
+} from './utils/markdown-comment-types';
 
 // Register checkout trigger: when the server needs a fresh FullSnapshot
 // (stale buffer + new client connected), it calls this to tell the renderer
@@ -693,6 +697,146 @@ ipcMain.on(
 // --- File System IPC Handlers ---
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+const MAX_MARKDOWN_COMMENTS_PER_FILE = 500;
+const MAX_MARKDOWN_COMMENT_BODY_LENGTH = 20_000;
+const MAX_MARKDOWN_COMMENT_QUOTE_LENGTH = 20_000;
+const MAX_MARKDOWN_COMMENT_CONTEXT_LENGTH = 1_000;
+const MARKDOWN_COMMENT_STORE_DIR = '.aiterm';
+const MARKDOWN_COMMENT_STORE_FILE = 'markdown-preview-comments.json';
+
+interface MarkdownCommentStore {
+  files: Record<string, MarkdownPreviewComment[]>;
+}
+
+interface MarkdownCommentFileRequest {
+  rootPath: string;
+  filePath: string;
+}
+
+interface MarkdownCommentSaveRequest extends MarkdownCommentFileRequest {
+  comments: MarkdownPreviewComment[];
+}
+
+function isFiniteNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+function sanitizeMarkdownCommentAnchor(value: unknown): MarkdownCommentAnchor | null {
+  if (!value || typeof value !== 'object') return null;
+  const data = value as Record<string, unknown>;
+  if (typeof data.quote !== 'string' || data.quote.length === 0) return null;
+  if (data.quote.length > MAX_MARKDOWN_COMMENT_QUOTE_LENGTH) return null;
+  if (typeof data.prefix !== 'string' || data.prefix.length > MAX_MARKDOWN_COMMENT_CONTEXT_LENGTH) return null;
+  if (typeof data.suffix !== 'string' || data.suffix.length > MAX_MARKDOWN_COMMENT_CONTEXT_LENGTH) return null;
+  if (!isFiniteNonNegativeNumber(data.startTextOffset)) return null;
+  if (!isFiniteNonNegativeNumber(data.endTextOffset)) return null;
+  if (data.endTextOffset <= data.startTextOffset) return null;
+
+  return {
+    quote: data.quote,
+    prefix: data.prefix,
+    suffix: data.suffix,
+    startTextOffset: data.startTextOffset,
+    endTextOffset: data.endTextOffset,
+  };
+}
+
+function sanitizeMarkdownComment(value: unknown, filePath: string): MarkdownPreviewComment | null {
+  if (!value || typeof value !== 'object') return null;
+  const data = value as Record<string, unknown>;
+  const anchor = sanitizeMarkdownCommentAnchor(data.anchor);
+  if (!anchor) return null;
+  if (typeof data.id !== 'string' || data.id.trim() === '') return null;
+  if (typeof data.body !== 'string' || data.body.length > MAX_MARKDOWN_COMMENT_BODY_LENGTH) return null;
+  if (typeof data.createdAt !== 'string' || data.createdAt.trim() === '') return null;
+  if (typeof data.updatedAt !== 'string' || data.updatedAt.trim() === '') return null;
+
+  return {
+    id: data.id,
+    filePath,
+    anchor,
+    body: data.body,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  };
+}
+
+function getMarkdownCommentStorePath(projectRoot: string): string {
+  return path.join(projectRoot, MARKDOWN_COMMENT_STORE_DIR, MARKDOWN_COMMENT_STORE_FILE);
+}
+
+function normalizeMarkdownCommentRelativePath(projectRoot: string, filePath: string): string | null {
+  const resolvedRoot = path.resolve(projectRoot);
+  const resolvedFile = path.resolve(path.isAbsolute(filePath) ? filePath : path.join(resolvedRoot, filePath));
+  const relative = path.relative(resolvedRoot, resolvedFile);
+
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return null;
+  return relative.split(path.sep).join('/');
+}
+
+function getMarkdownCommentRequestPath(payload: MarkdownCommentFileRequest): {
+  projectRoot: string;
+  relativeFilePath: string;
+} | { error: string } {
+  if (!payload || typeof payload.rootPath !== 'string' || payload.rootPath.trim() === '') {
+    return { error: 'Project root is required for Markdown comments.' };
+  }
+  if (typeof payload.filePath !== 'string' || payload.filePath.trim() === '') {
+    return { error: 'File path is required for Markdown comments.' };
+  }
+
+  const projectRoot = path.resolve(payload.rootPath);
+  const relativeFilePath = normalizeMarkdownCommentRelativePath(projectRoot, payload.filePath);
+  if (!relativeFilePath) {
+    return { error: 'Markdown comments can only be saved for files inside the current project root.' };
+  }
+
+  return { projectRoot, relativeFilePath };
+}
+
+function getMarkdownCommentFileEntries(parsed: unknown): Record<string, unknown> {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+
+  const data = parsed as Record<string, unknown>;
+  if (data.files && typeof data.files === 'object' && !Array.isArray(data.files)) {
+    return data.files as Record<string, unknown>;
+  }
+
+  return data;
+}
+
+async function readMarkdownCommentStore(projectRoot: string): Promise<MarkdownCommentStore> {
+  try {
+    const raw = await fs.promises.readFile(getMarkdownCommentStorePath(projectRoot), 'utf-8');
+    const parsed = JSON.parse(raw) as unknown;
+
+    const store: MarkdownCommentStore = { files: {} };
+    for (const [filePath, value] of Object.entries(getMarkdownCommentFileEntries(parsed))) {
+      if (!Array.isArray(value)) continue;
+      const relativeFilePath = normalizeMarkdownCommentRelativePath(projectRoot, filePath);
+      if (!relativeFilePath) continue;
+      const comments = value
+        .slice(0, MAX_MARKDOWN_COMMENTS_PER_FILE)
+        .map((comment) => sanitizeMarkdownComment(comment, relativeFilePath))
+        .filter((comment): comment is MarkdownPreviewComment => comment !== null);
+      if (comments.length > 0) store.files[relativeFilePath] = comments;
+    }
+    return store;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { files: {} };
+    throw error;
+  }
+}
+
+async function writeMarkdownCommentStore(projectRoot: string, store: MarkdownCommentStore): Promise<void> {
+  const storePath = getMarkdownCommentStorePath(projectRoot);
+  await fs.promises.mkdir(path.dirname(storePath), { recursive: true });
+  await fs.promises.writeFile(
+    storePath,
+    JSON.stringify(store, null, 2) + '\n',
+    'utf-8',
+  );
+}
 
 /**
  * Use `git check-ignore` to find which entries in a directory are gitignored.
@@ -812,6 +956,51 @@ ipcMain.handle(
       }
       await fs.promises.writeFile(resolved, content, 'utf-8');
       return { success: true };
+    } catch (err) {
+      return { error: (err as Error).message };
+    }
+  },
+);
+// markdown-comments:load - load per-project Markdown preview comments from .aiterm
+ipcMain.handle(
+  'markdown-comments:load',
+  async (_event, payload: MarkdownCommentFileRequest) => {
+    try {
+      const requestPath = getMarkdownCommentRequestPath(payload);
+      if ('error' in requestPath) return { error: requestPath.error };
+
+      const store = await readMarkdownCommentStore(requestPath.projectRoot);
+      return { comments: store.files[requestPath.relativeFilePath] ?? [] };
+    } catch (err) {
+      return { error: (err as Error).message };
+    }
+  },
+);
+
+// markdown-comments:save - save per-project Markdown preview comments to .aiterm
+ipcMain.handle(
+  'markdown-comments:save',
+  async (_event, payload: MarkdownCommentSaveRequest) => {
+    try {
+      const requestPath = getMarkdownCommentRequestPath(payload);
+      if ('error' in requestPath) return { error: requestPath.error };
+
+      if (!Array.isArray(payload.comments)) {
+        return { error: 'Invalid comments payload.' };
+      }
+
+      const nextComments = payload.comments
+        .slice(0, MAX_MARKDOWN_COMMENTS_PER_FILE)
+        .map((comment) => sanitizeMarkdownComment(comment, requestPath.relativeFilePath))
+        .filter((comment): comment is MarkdownPreviewComment => comment !== null);
+      const store = await readMarkdownCommentStore(requestPath.projectRoot);
+      if (nextComments.length === 0) {
+        delete store.files[requestPath.relativeFilePath];
+      } else {
+        store.files[requestPath.relativeFilePath] = nextComments;
+      }
+      await writeMarkdownCommentStore(requestPath.projectRoot, store);
+      return { success: true, comments: nextComments };
     } catch (err) {
       return { error: (err as Error).message };
     }

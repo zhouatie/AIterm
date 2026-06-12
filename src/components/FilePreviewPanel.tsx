@@ -1,5 +1,16 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Search, X } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Pencil,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownPreview from './MarkdownPreview';
 import CodePreview from './CodePreview';
@@ -8,6 +19,11 @@ import { isMarkdownFile } from '../utils/file-types';
 import { toggleMarkdownTaskMarker } from '../utils/markdown-task';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import { useKeyboardShortcuts } from '../ShortcutContext';
+import type {
+  MarkdownCommentAnchor,
+  MarkdownCommentLocationStatus,
+  MarkdownPreviewComment,
+} from '../utils/markdown-comment-types';
 
 interface FilePreviewPanelProps {
   activeSessionId: string | null;
@@ -19,6 +35,13 @@ interface FilePreviewSnapshot {
   selectedFile: string | null;
   fileContent: string | null;
   expandedPaths: string[];
+}
+
+interface MarkdownCommentDraft {
+  mode: 'create' | 'edit';
+  anchor?: MarkdownCommentAnchor;
+  commentId?: string;
+  body: string;
 }
 
 const STORAGE_KEY_FILE_TREE_SPLIT_PX = 'filePreviewTreeSplitPx';
@@ -48,6 +71,30 @@ function readFileTreeVisible(): boolean {
   return stored !== null ? stored === 'true' : true;
 }
 
+function createCommentId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'comment-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+}
+
+function formatCommentTimestamp(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString(undefined, {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function summarizeQuote(value: string): string {
+  const normalized = value.replace(/s+/g, ' ').trim();
+  if (normalized.length <= 90) return normalized;
+  return normalized.slice(0, 87) + '...';
+}
+
 const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, visible = true }) => {
   const { bindings, registerAction } = useKeyboardShortcuts();
   const [rootPath, setRootPath] = useState<string>('');
@@ -63,10 +110,19 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [findQuery, setFindQuery] = useState('');
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const [searchMatchCount, setSearchMatchCount] = useState(0);
+  const [markdownComments, setMarkdownComments] = useState<MarkdownPreviewComment[]>([]);
+  const [commentLocationMap, setCommentLocationMap] = useState<Record<string, boolean>>({});
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsSaving, setCommentsSaving] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
+  const [commentDraft, setCommentDraft] = useState<MarkdownCommentDraft | null>(null);
+  const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const fileTreeActive = visible && fileTreeVisible;
   const rootPathRef = useRef(rootPath);
   const snapshotRef = useRef<Record<string, FilePreviewSnapshot>>({});
   const fileLoadTokenRef = useRef(0);
+  const commentLoadTokenRef = useRef(0);
   const findInputRef = useRef<HTMLInputElement | null>(null);
   rootPathRef.current = rootPath;
   const prevFileTreeActiveRef = useRef(fileTreeActive);
@@ -76,6 +132,18 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     setFindQuery('');
     setCurrentSearchIndex(0);
     setSearchMatchCount(0);
+  }, []);
+
+  const resetCommentState = useCallback(() => {
+    commentLoadTokenRef.current += 1;
+    setMarkdownComments([]);
+    setCommentLocationMap({});
+    setCommentsLoading(false);
+    setCommentsSaving(false);
+    setCommentError(null);
+    setActiveCommentId(null);
+    setCommentDraft(null);
+    setIsCommentPanelOpen(false);
   }, []);
 
   const openFind = useCallback(() => {
@@ -101,7 +169,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     setExpandedPaths(snapshot?.expandedPaths ?? []);
     setLoadingFile(false);
     resetFindState();
-  }, [resetFindState]);
+    resetCommentState();
+  }, [resetCommentState, resetFindState]);
 
   useEffect(() => {
     if (!rootPath) return;
@@ -123,6 +192,41 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     findInputRef.current?.focus();
     findInputRef.current?.select();
   }, [isFindOpen]);
+
+  useEffect(() => {
+    if (!rootPath || !selectedFile || !isMarkdownFile(selectedFile)) {
+      resetCommentState();
+      return;
+    }
+
+    const loadToken = ++commentLoadTokenRef.current;
+    setMarkdownComments([]);
+    setCommentLocationMap({});
+    setCommentsLoading(true);
+    setCommentsSaving(false);
+    setCommentError(null);
+    setActiveCommentId(null);
+    setCommentDraft(null);
+    setIsCommentPanelOpen(false);
+
+    window.markdownCommentApi.load(rootPath, selectedFile).then((result) => {
+      if (commentLoadTokenRef.current !== loadToken) return;
+      if (result.error) {
+        setCommentError(result.error);
+        setMarkdownComments([]);
+      } else {
+        setMarkdownComments(result.comments ?? []);
+      }
+    }).catch((err) => {
+      if (commentLoadTokenRef.current !== loadToken) return;
+      setCommentError((err as Error).message);
+      setMarkdownComments([]);
+    }).finally(() => {
+      if (commentLoadTokenRef.current === loadToken) {
+        setCommentsLoading(false);
+      }
+    });
+  }, [resetCommentState, rootPath, selectedFile]);
 
   // Sync root path with active terminal's cwd (on session switch) — only when the tree is active
   useEffect(() => {
@@ -233,23 +337,24 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     setWriteError(null);
     setWritingTask(false);
     resetFindState();
+    resetCommentState();
     try {
       const result = await window.fileApi.readFile(filePath);
       if (fileLoadTokenRef.current !== loadToken) return;
       if (result.error) {
-        setFileContent(`Error: ${result.error}`);
+        setFileContent('Error: ' + result.error);
       } else {
         setFileContent(result.content ?? null);
       }
     } catch (err) {
       if (fileLoadTokenRef.current !== loadToken) return;
-      setFileContent(`Error: ${(err as Error).message}`);
+      setFileContent('Error: ' + (err as Error).message);
     } finally {
       if (fileLoadTokenRef.current === loadToken) {
         setLoadingFile(false);
       }
     }
-  }, [resetFindState]);
+  }, [resetCommentState, resetFindState]);
 
   const handleTaskCheckboxToggle = useCallback(async (taskIndex: number) => {
     if (!selectedFile || fileContent === null || writingTask) return;
@@ -276,6 +381,117 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     }
   }, [fileContent, selectedFile, writingTask]);
 
+  const persistMarkdownComments = useCallback(async (nextComments: MarkdownPreviewComment[]) => {
+    if (!rootPath || !selectedFile || !isMarkdownFile(selectedFile)) return false;
+
+    setCommentsSaving(true);
+    setCommentError(null);
+    try {
+      const result = await window.markdownCommentApi.save(rootPath, selectedFile, nextComments);
+      if (result.error) {
+        setCommentError(result.error);
+        return false;
+      }
+      setMarkdownComments(result.comments ?? nextComments);
+      return true;
+    } catch (err) {
+      setCommentError((err as Error).message);
+      return false;
+    } finally {
+      setCommentsSaving(false);
+    }
+  }, [rootPath, selectedFile]);
+
+  const handleCommentAnchorCreate = useCallback((anchor: MarkdownCommentAnchor) => {
+    setCommentDraft({ mode: 'create', anchor, body: '' });
+    setActiveCommentId(null);
+    setIsCommentPanelOpen(true);
+    setCommentError(null);
+  }, []);
+
+  const handleCommentSelect = useCallback((commentId: string) => {
+    setActiveCommentId(commentId);
+    setCommentDraft(null);
+    setIsCommentPanelOpen(true);
+    setCommentError(null);
+  }, []);
+
+  const handleCommentLocationChange = useCallback((statuses: MarkdownCommentLocationStatus[]) => {
+    setCommentLocationMap((prev) => {
+      const next: Record<string, boolean> = {};
+      for (const status of statuses) {
+        next[status.commentId] = status.located;
+      }
+
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(next);
+      if (prevKeys.length === nextKeys.length && nextKeys.every((key) => prev[key] === next[key])) {
+        return prev;
+      }
+      return next;
+    });
+  }, []);
+
+  const handleConfirmCommentDraft = useCallback(async () => {
+    if (!selectedFile || !commentDraft) return;
+    const body = commentDraft.body.trim();
+    if (!body) {
+      setCommentError('评论内容不能为空。');
+      return;
+    }
+
+    if (commentDraft.mode === 'create' && commentDraft.anchor) {
+      const now = new Date().toISOString();
+      const comment: MarkdownPreviewComment = {
+        id: createCommentId(),
+        filePath: selectedFile,
+        anchor: commentDraft.anchor,
+        body,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const nextComments = [...markdownComments, comment];
+      if (await persistMarkdownComments(nextComments)) {
+        setActiveCommentId(comment.id);
+        setCommentDraft(null);
+        setIsCommentPanelOpen(true);
+      }
+      return;
+    }
+
+    if (commentDraft.mode === 'edit' && commentDraft.commentId) {
+      const now = new Date().toISOString();
+      const nextComments = markdownComments.map((comment) => (
+        comment.id === commentDraft.commentId
+          ? { ...comment, body, updatedAt: now }
+          : comment
+      ));
+      if (await persistMarkdownComments(nextComments)) {
+        setActiveCommentId(commentDraft.commentId);
+        setCommentDraft(null);
+        setIsCommentPanelOpen(true);
+      }
+    }
+  }, [commentDraft, markdownComments, persistMarkdownComments, selectedFile]);
+
+  const handleDeleteActiveComment = useCallback(async () => {
+    if (!activeCommentId) return;
+    const nextComments = markdownComments.filter((comment) => comment.id !== activeCommentId);
+    if (await persistMarkdownComments(nextComments)) {
+      setActiveCommentId(null);
+      setCommentDraft(null);
+      setIsCommentPanelOpen(nextComments.length > 0);
+    }
+  }, [activeCommentId, markdownComments, persistMarkdownComments]);
+
+  const handleStartEditingActiveComment = useCallback(() => {
+    const activeComment = markdownComments.find((comment) => comment.id === activeCommentId);
+    if (!activeComment) return;
+    setCommentDraft({ mode: 'edit', commentId: activeComment.id, body: activeComment.body });
+    setIsCommentPanelOpen(true);
+    setCommentError(null);
+  }, [activeCommentId, markdownComments]);
+
   const handleSearchMatchCountChange = useCallback((count: number) => {
     setSearchMatchCount(count);
     setCurrentSearchIndex((prev) => {
@@ -293,6 +509,127 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     if (searchMatchCount === 0) return;
     setCurrentSearchIndex((prev) => (prev + 1) % searchMatchCount);
   }, [searchMatchCount]);
+
+  const selectedMarkdownFile = !!selectedFile && isMarkdownFile(selectedFile);
+  const activeComment = activeCommentId
+    ? markdownComments.find((comment) => comment.id === activeCommentId) ?? null
+    : null;
+  const commentPanelVisible = selectedMarkdownFile
+    && !loadingFile
+    && (isCommentPanelOpen || !!commentDraft || !!activeComment);
+  const unlocatedCommentCount = markdownComments.filter((comment) => commentLocationMap[comment.id] === false).length;
+
+  const renderCommentList = () => {
+    if (commentsLoading) {
+      return <div className="markdown-comment-empty">Loading...</div>;
+    }
+
+    if (markdownComments.length === 0) {
+      return <div className="markdown-comment-empty">暂无评论</div>;
+    }
+
+    return (
+      <div className="markdown-comment-list">
+        {markdownComments.map((comment) => {
+          const located = commentLocationMap[comment.id] !== false;
+          return (
+            <button
+              key={comment.id}
+              type="button"
+              className={'markdown-comment-list-item' + (comment.id === activeCommentId ? ' active' : '')}
+              onClick={() => handleCommentSelect(comment.id)}
+              title={comment.body}
+            >
+              <span className="markdown-comment-list-quote">{summarizeQuote(comment.anchor.quote)}</span>
+              <span className="markdown-comment-list-body">{comment.body}</span>
+              <span className="markdown-comment-list-meta">
+                {located ? '已定位' : '未定位'} · {formatCommentTimestamp(comment.updatedAt)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const commentPanel = commentPanelVisible ? (
+    <div className="markdown-comment-panel" role="dialog" aria-label="Markdown 评论">
+      <div className="markdown-comment-panel-header">
+        <div className="markdown-comment-panel-title">
+          <MessageSquare size={14} />
+          <span>评论</span>
+          <span className="markdown-comment-count">{markdownComments.length}</span>
+        </div>
+        <button
+          type="button"
+          className="markdown-comment-icon-button"
+          title="关闭评论"
+          aria-label="关闭评论"
+          onClick={() => {
+            setIsCommentPanelOpen(false);
+            setActiveCommentId(null);
+            setCommentDraft(null);
+          }}
+        >
+          <X size={14} />
+        </button>
+      </div>
+      {commentError && <div className="markdown-comment-error">{commentError}</div>}
+      {unlocatedCommentCount > 0 && !commentDraft && (
+        <div className="markdown-comment-warning">{unlocatedCommentCount} 条评论未定位</div>
+      )}
+      {commentDraft ? (
+        <div className="markdown-comment-editor">
+          <textarea
+            value={commentDraft.body}
+            onChange={(event) => setCommentDraft((prev) => (prev ? { ...prev, body: event.target.value } : prev))}
+            placeholder="输入评论"
+            aria-label="评论内容"
+            autoFocus
+          />
+          <div className="markdown-comment-actions">
+            <button
+              type="button"
+              className="markdown-comment-action primary"
+              onClick={handleConfirmCommentDraft}
+              disabled={commentsSaving}
+            >
+              <Check size={14} />
+              保存
+            </button>
+            <button
+              type="button"
+              className="markdown-comment-action"
+              onClick={() => setCommentDraft(null)}
+              disabled={commentsSaving}
+            >
+              <X size={14} />
+              取消
+            </button>
+          </div>
+        </div>
+      ) : activeComment ? (
+        <div className="markdown-comment-detail">
+          <div className="markdown-comment-quote">{summarizeQuote(activeComment.anchor.quote)}</div>
+          {commentLocationMap[activeComment.id] === false && (
+            <div className="markdown-comment-warning compact">未定位到正文</div>
+          )}
+          <div className="markdown-comment-body-text">{activeComment.body}</div>
+          <div className="markdown-comment-list-meta">更新于 {formatCommentTimestamp(activeComment.updatedAt)}</div>
+          <div className="markdown-comment-actions">
+            <button type="button" className="markdown-comment-action" onClick={handleStartEditingActiveComment}>
+              <Pencil size={14} />
+              编辑
+            </button>
+            <button type="button" className="markdown-comment-action danger" onClick={handleDeleteActiveComment}>
+              <Trash2 size={14} />
+              删除
+            </button>
+          </div>
+        </div>
+      ) : renderCommentList()}
+    </div>
+  ) : null;
 
   const findBar = isFindOpen ? (
     <div
@@ -367,7 +704,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
           fontVariantNumeric: 'tabular-nums',
         }}
       >
-        {searchMatchCount === 0 ? '0' : `${currentSearchIndex + 1}/${searchMatchCount}`}
+        {searchMatchCount === 0 ? '0' : (currentSearchIndex + 1) + '/' + searchMatchCount}
       </div>
       <button
         type="button"
@@ -462,6 +799,28 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const previewPane = (
     <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
       {selectedFile && !loadingFile && findBar}
+      {!isFindOpen && selectedMarkdownFile && !loadingFile && !commentPanelVisible && (
+        <button
+          type="button"
+          onClick={() => setIsCommentPanelOpen(true)}
+          title="显示 Markdown 评论"
+          aria-label="显示 Markdown 评论"
+          style={{
+            ...treeToggleButtonBaseStyle,
+            position: 'absolute',
+            top: 10,
+            right: 44,
+            zIndex: 15,
+            background: 'var(--color-surface-content-elevated)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <MessageSquare size={14} />
+          {markdownComments.length > 0 && (
+            <span className="markdown-comment-toolbar-count">{markdownComments.length}</span>
+          )}
+        </button>
+      )}
       {!isFindOpen && selectedFile && !loadingFile && (
         <button
           type="button"
@@ -480,6 +839,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
           <Search size={14} />
         </button>
       )}
+      {commentPanel}
       {loadingFile ? (
         <div
           style={{
@@ -530,6 +890,11 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             searchQuery={findQuery}
             currentSearchIndex={currentSearchIndex}
             onSearchMatchCountChange={handleSearchMatchCountChange}
+            comments={markdownComments}
+            activeCommentId={activeCommentId}
+            onCommentAnchorCreate={handleCommentAnchorCreate}
+            onCommentSelect={handleCommentSelect}
+            onCommentLocationChange={handleCommentLocationChange}
           />
         </div>
       )}

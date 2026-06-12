@@ -4,6 +4,10 @@ import type {
   TerminalAgentStatusCleared,
   TerminalAgentStatusState,
 } from './terminal-attention';
+import type {
+  MarkdownCommentApiResult,
+  MarkdownPreviewComment,
+} from './utils/markdown-comment-types';
 
 export interface TerminalApi {
   create(cols: number, rows: number, cwd?: string): Promise<{ id: string }>;
@@ -61,6 +65,11 @@ export interface SpecTreeOptions {
   specRootPath?: string;
   specDirectoryNames?: string[];
   hiddenFolderNames?: string[];
+}
+
+export interface MarkdownCommentApi {
+  load(rootPath: string, filePath: string): Promise<MarkdownCommentApiResult>;
+  save(rootPath: string, filePath: string, comments: MarkdownPreviewComment[]): Promise<MarkdownCommentApiResult>;
 }
 
 export interface FileApi {
@@ -227,6 +236,13 @@ contextBridge.exposeInMainWorld('fileApi', {
   rename: (oldPath: string, newPath: string) =>
     ipcRenderer.invoke('fs:rename', { oldPath, newPath }),
 } satisfies FileApi);
+
+contextBridge.exposeInMainWorld('markdownCommentApi', {
+  load: (rootPath: string, filePath: string) =>
+    ipcRenderer.invoke('markdown-comments:load', { rootPath, filePath }),
+  save: (rootPath: string, filePath: string, comments: MarkdownPreviewComment[]) =>
+    ipcRenderer.invoke('markdown-comments:save', { rootPath, filePath, comments }),
+} satisfies MarkdownCommentApi);
 
 export interface ThemeApi {
   setNativeTheme(mode: 'light' | 'dark' | 'system'): void;
