@@ -6,7 +6,7 @@
     <script>
       // Sync theme before first paint to prevent FOUC
       (function() {
-        var pref = localStorage.getItem('theme-mode') || 'system';
+        var pref = localStorage.getItem('theme-mode') || 'dark';
         var theme;
         if (pref === 'system') {
           theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

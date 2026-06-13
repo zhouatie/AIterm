@@ -28,7 +28,7 @@ function resolveTheme(mode: ThemeMode): EffectiveTheme {
 function loadStoredMode(): ThemeMode {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
-  return 'system';
+  return 'dark';
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);

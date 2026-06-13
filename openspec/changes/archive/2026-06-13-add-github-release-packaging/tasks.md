@@ -18,7 +18,7 @@
 ## 3. 验证
 
 - [x] 3.1 本地执行 `npm run lint`，确认基础校验通过
-- [ ] 3.2 本地执行 `npm run make`，确认生成 `out/make/zip/darwin/arm64/AIterm-darwin-arm64-<version>.zip`
-- [ ] 3.3 检查 workflow 上传路径与本地 `npm run make` 实际输出路径一致
-- [ ] 3.4 创建测试 tag 验证 GitHub Release 包含 macOS arm64 ZIP 产物
-- [ ] 3.5 下载测试 Release ZIP，确认解压后包含可移动到 Applications 的 `AIterm.app`
+- [x] 3.2 本地执行 `npm run make`，确认生成 `out/make/zip/darwin/arm64/AIterm-darwin-arm64-<version>.zip`
+- [x] 3.3 检查 workflow 上传路径与本地 `npm run make` 实际输出路径一致
+- [x] 3.4 创建测试 tag 验证 GitHub Release 包含 macOS arm64 ZIP 产物
+- [x] 3.5 下载测试 Release ZIP，确认解压后包含可移动到 Applications 的 `AIterm.app`

@@ -119,6 +119,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [commentError, setCommentError] = useState<string | null>(null);
   const [commentNotice, setCommentNotice] = useState<string | null>(null);
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
+  const [commentNavigationVersion, setCommentNavigationVersion] = useState(0);
   const [commentDraft, setCommentDraft] = useState<MarkdownCommentDraft | null>(null);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [selectedCommentIds, setSelectedCommentIds] = useState<string[]>([]);
@@ -147,6 +148,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     setCommentError(null);
     setCommentNotice(null);
     setActiveCommentId(null);
+    setCommentNavigationVersion(0);
     setCommentDraft(null);
     setIsCommentPanelOpen(false);
     setSelectedCommentIds([]);
@@ -420,6 +422,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
 
   const handleCommentSelect = useCallback((commentId: string) => {
     setActiveCommentId(commentId);
+    setCommentNavigationVersion((version) => version + 1);
     setCommentDraft(null);
     setIsCommentPanelOpen(true);
     setCommentError(null);
@@ -1028,6 +1031,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             onSearchMatchCountChange={handleSearchMatchCountChange}
             comments={markdownComments}
             activeCommentId={activeCommentId}
+            activeCommentNavigationVersion={commentNavigationVersion}
+            commentGutterHidden={isFindOpen || commentPanelVisible}
             onCommentAnchorCreate={handleCommentAnchorCreate}
             onCommentSelect={handleCommentSelect}
             onCommentLocationChange={handleCommentLocationChange}

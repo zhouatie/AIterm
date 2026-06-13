@@ -4,6 +4,12 @@ import type {
 } from './markdown-comment-types';
 
 const COMMENT_CONTEXT_LENGTH = 48;
+const COMMENT_EDGE_PADDING = 8;
+const COMMENT_GUTTER_WIDTH = 40;
+const COMMENT_MARKER_SIZE = 24;
+const COMMENT_SELECTION_TOOLBAR_GAP = 8;
+const COMMENT_SELECTION_TOOLBAR_HEIGHT = 34;
+const COMMENT_SELECTION_TOOLBAR_WIDTH = 34;
 const SKIPPED_TAG_NAMES = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'SCRIPT', 'STYLE']);
 
 export interface MarkdownCommentRangeResolution {
@@ -15,6 +21,12 @@ export interface MarkdownCommentRangeResolution {
 export interface MarkdownCommentMarkerPosition {
   top: number;
   left: number;
+}
+
+export interface MarkdownCommentSelectionToolbarPosition {
+  top: number;
+  left: number;
+  placement: 'above' | 'below';
 }
 
 interface TextSegment {
@@ -142,6 +154,18 @@ function contextMatches(text: string, anchor: MarkdownCommentAnchor, start: numb
   return score;
 }
 
+function clamp(value: number, min: number, max: number): number {
+  if (max < min) return min;
+  return Math.min(Math.max(value, min), max);
+}
+
+function getFirstRangeRect(range: Range): DOMRect | null {
+  const rects = Array.from(range.getClientRects()).filter((rect) => rect.width > 0 || rect.height > 0);
+  const rect = rects[0] ?? range.getBoundingClientRect();
+  if (rect.height <= 0 && rect.width <= 0) return null;
+  return rect;
+}
+
 export function createMarkdownCommentAnchorFromSelection(
   root: HTMLElement,
   selection: Selection | null,
@@ -225,21 +249,58 @@ export function resolveMarkdownCommentRange(
   return { comment, range, located: range !== null };
 }
 
-export function getMarkdownCommentMarkerPosition(
+export function getMarkdownCommentGutterMarkerPosition(
   container: HTMLElement,
   range: Range,
 ): MarkdownCommentMarkerPosition | null {
-  const rects = Array.from(range.getClientRects()).filter((rect) => rect.width > 0 || rect.height > 0);
-  const rect = rects[0] ?? range.getBoundingClientRect();
-  if (rect.height <= 0 && rect.width <= 0) return null;
+  const rect = getFirstRangeRect(range);
+  if (!rect) return null;
 
   const containerRect = container.getBoundingClientRect();
-  const top = container.scrollTop + (rect.top - containerRect.top) - 2;
-  const preferredLeft = container.scrollLeft + (rect.right - containerRect.left) + 8;
-  const maxLeft = Math.max(container.clientWidth - 34, 0);
+  const top = container.scrollTop
+    + (rect.top - containerRect.top)
+    + ((rect.height - COMMENT_MARKER_SIZE) / 2);
+  const left = container.scrollLeft
+    + container.clientWidth
+    - COMMENT_GUTTER_WIDTH
+    + ((COMMENT_GUTTER_WIDTH - COMMENT_MARKER_SIZE) / 2);
 
   return {
     top: Math.max(top, 0),
-    left: Math.min(Math.max(preferredLeft, 0), maxLeft),
+    left: Math.max(left, container.scrollLeft + COMMENT_EDGE_PADDING),
+  };
+}
+
+export function getMarkdownCommentSelectionToolbarPosition(
+  container: HTMLElement,
+  range: Range,
+): MarkdownCommentSelectionToolbarPosition | null {
+  const rect = getFirstRangeRect(range);
+  if (!rect) return null;
+
+  const containerRect = container.getBoundingClientRect();
+  const selectionTop = container.scrollTop + (rect.top - containerRect.top);
+  const selectionBottom = selectionTop + rect.height;
+  const selectionCenter = container.scrollLeft
+    + (rect.left - containerRect.left)
+    + (rect.width / 2);
+  const visibleLeft = container.scrollLeft + COMMENT_EDGE_PADDING;
+  const visibleRight = container.scrollLeft
+    + container.clientWidth
+    - COMMENT_SELECTION_TOOLBAR_WIDTH
+    - COMMENT_EDGE_PADDING;
+  const visibleTop = container.scrollTop + COMMENT_EDGE_PADDING;
+  const visibleBottom = container.scrollTop
+    + container.clientHeight
+    - COMMENT_SELECTION_TOOLBAR_HEIGHT
+    - COMMENT_EDGE_PADDING;
+  const preferredTop = selectionTop - COMMENT_SELECTION_TOOLBAR_HEIGHT - COMMENT_SELECTION_TOOLBAR_GAP;
+  const placement = preferredTop >= visibleTop ? 'above' : 'below';
+  const fallbackTop = selectionBottom + COMMENT_SELECTION_TOOLBAR_GAP;
+
+  return {
+    top: clamp(placement === 'above' ? preferredTop : fallbackTop, visibleTop, visibleBottom),
+    left: clamp(selectionCenter - (COMMENT_SELECTION_TOOLBAR_WIDTH / 2), visibleLeft, visibleRight),
+    placement,
   };
 }

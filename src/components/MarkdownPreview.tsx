@@ -11,7 +11,8 @@ import {
 } from '../utils/preview-find';
 import {
   createMarkdownCommentAnchorFromSelection,
-  getMarkdownCommentMarkerPosition,
+  getMarkdownCommentGutterMarkerPosition,
+  getMarkdownCommentSelectionToolbarPosition,
   resolveMarkdownCommentRange,
 } from '../utils/markdown-comment-anchors';
 import type {
@@ -30,6 +31,8 @@ interface MarkdownPreviewProps {
   onSearchMatchCountChange?: (count: number) => void;
   comments?: MarkdownPreviewComment[];
   activeCommentId?: string | null;
+  activeCommentNavigationVersion?: number;
+  commentGutterHidden?: boolean;
   onCommentAnchorCreate?: (anchor: MarkdownCommentAnchor) => void;
   onCommentSelect?: (commentId: string) => void;
   onCommentLocationChange?: (statuses: MarkdownCommentLocationStatus[]) => void;
@@ -53,6 +56,7 @@ interface SelectionCommentAction {
   anchor: MarkdownCommentAnchor;
   top: number;
   left: number;
+  placement: 'above' | 'below';
 }
 
 interface CSSHighlightsRegistry {
@@ -73,6 +77,7 @@ type HighlightCSS = typeof CSS & {
 };
 
 const HEADING_SELECTOR = 'h1, h2, h3, h4, h5, h6';
+const MARKDOWN_COMMENT_GUTTER_MIN_WIDTH = 420;
 const MARKDOWN_COMMENT_HIGHLIGHT_NAME = 'markdown-comment-highlight';
 const MARKDOWN_COMMENT_CURRENT_NAME = 'markdown-comment-current';
 
@@ -104,6 +109,19 @@ function applyMarkdownCommentHighlights(ranges: Range[], currentRange: Range | n
   }
 }
 
+function scrollCommentRangeIntoView(container: HTMLElement, range: Range) {
+  const rects = Array.from(range.getClientRects()).filter((rect) => rect.width > 0 || rect.height > 0);
+  const rect = rects[0] ?? range.getBoundingClientRect();
+  if (rect.height <= 0 && rect.width <= 0) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const nextScrollTop = container.scrollTop + (rect.top - containerRect.top) - 48;
+  container.scrollTo({
+    top: Math.max(nextScrollTop, 0),
+    behavior: 'smooth',
+  });
+}
+
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   content,
   filePath,
@@ -114,17 +132,23 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   onSearchMatchCountChange,
   comments = [],
   activeCommentId = null,
+  activeCommentNavigationVersion = 0,
+  commentGutterHidden = false,
   onCommentAnchorCreate,
   onCommentSelect,
   onCommentLocationChange,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const headingElementsRef = useRef<Map<string, HTMLHeadingElement>>(new Map());
+  const scrollFrameRef = useRef<number | null>(null);
+  const lastCommentNavigationKeyRef = useRef<string | null>(null);
   const [headings, setHeadings] = useState<MarkdownHeadingEntry[]>([]);
   const [outlineExpanded, setOutlineExpanded] = useState(false);
   const [commentMarkers, setCommentMarkers] = useState<MarkdownCommentMarker[]>([]);
   const [selectionCommentAction, setSelectionCommentAction] = useState<SelectionCommentAction | null>(null);
+  const [previewWidth, setPreviewWidth] = useState(0);
   const [commentLayoutVersion, setCommentLayoutVersion] = useState(0);
+  const commentGutterAvailable = !commentGutterHidden && previewWidth >= MARKDOWN_COMMENT_GUTTER_MIN_WIDTH;
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -211,7 +235,9 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
 
       ranges.push(resolved.range);
       if (comment.id === activeCommentId) currentRange = resolved.range;
-      const markerPosition = getMarkdownCommentMarkerPosition(container, resolved.range);
+      const markerPosition = commentGutterAvailable
+        ? getMarkdownCommentGutterMarkerPosition(container, resolved.range)
+        : null;
       if (markerPosition) {
         markers.push({
           commentId: comment.id,
@@ -226,16 +252,57 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
     setCommentMarkers(markers);
     onCommentLocationChange?.(statuses);
 
+    if (activeCommentId && currentRange) {
+      const navigationKey = activeCommentId + ':' + activeCommentNavigationVersion;
+      if (lastCommentNavigationKeyRef.current !== navigationKey) {
+        lastCommentNavigationKeyRef.current = navigationKey;
+        scrollCommentRangeIntoView(container, currentRange);
+      }
+    }
+
     return () => {
       clearMarkdownCommentHighlights();
     };
-  }, [activeCommentId, commentLayoutVersion, comments, content, filePath, onCommentLocationChange]);
+  }, [
+    activeCommentId,
+    activeCommentNavigationVersion,
+    commentGutterAvailable,
+    commentLayoutVersion,
+    comments,
+    content,
+    filePath,
+    onCommentLocationChange,
+  ]);
 
   useEffect(() => {
     const handleResize = () => setCommentLayoutVersion((version) => version + 1);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => () => {
+    if (scrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(scrollFrameRef.current);
+      scrollFrameRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updatePreviewSize = () => {
+      setPreviewWidth(container.clientWidth);
+      setCommentLayoutVersion((version) => version + 1);
+    };
+
+    updatePreviewSize();
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const resizeObserver = new ResizeObserver(updatePreviewSize);
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, [content, filePath]);
 
   const updateSelectionCommentAction = useCallback(() => {
     const container = containerRef.current;
@@ -253,16 +320,17 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
     }
 
     const range = selection.getRangeAt(0).cloneRange();
-    const markerPosition = getMarkdownCommentMarkerPosition(container, range);
-    if (!markerPosition) {
+    const toolbarPosition = getMarkdownCommentSelectionToolbarPosition(container, range);
+    if (!toolbarPosition) {
       setSelectionCommentAction(null);
       return;
     }
 
     setSelectionCommentAction({
       anchor,
-      top: markerPosition.top,
-      left: markerPosition.left,
+      top: toolbarPosition.top,
+      left: toolbarPosition.left,
+      placement: toolbarPosition.placement,
     });
   }, [onCommentAnchorCreate]);
 
@@ -272,6 +340,16 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
     setSelectionCommentAction(null);
     window.getSelection()?.removeAllRanges();
   }, [onCommentAnchorCreate, selectionCommentAction]);
+
+  const handlePreviewScroll = useCallback(() => {
+    setSelectionCommentAction(null);
+    if (scrollFrameRef.current !== null) return;
+
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      setCommentLayoutVersion((version) => version + 1);
+    });
+  }, []);
 
   const scrollToHeading = useCallback((headingId: string) => {
     const container = containerRef.current;
@@ -363,15 +441,10 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
       )}
       <div
         ref={containerRef}
+        className={'markdown-preview-scroll' + (commentGutterAvailable ? '' : ' comment-gutter-hidden')}
         onMouseUp={() => window.setTimeout(updateSelectionCommentAction, 0)}
         onKeyUp={updateSelectionCommentAction}
-        onScroll={() => setSelectionCommentAction(null)}
-        style={{
-          height: '100%',
-          overflowY: 'auto',
-          padding: '16px 24px',
-          position: 'relative',
-        }}
+        onScroll={handlePreviewScroll}
       >
         <div className="markdown-body">
           <ReactMarkdown
@@ -424,17 +497,21 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
           </button>
         ))}
         {selectionCommentAction && (
-          <button
-            type="button"
-            className="markdown-comment-add-button"
-            aria-label="添加评论"
-            title="添加评论"
+          <div
+            className={'markdown-comment-selection-toolbar ' + selectionCommentAction.placement}
             style={{ top: selectionCommentAction.top, left: selectionCommentAction.left }}
             onMouseDown={(event) => event.preventDefault()}
-            onClick={handleCreateCommentFromSelection}
           >
-            <Plus size={14} />
-          </button>
+            <button
+              type="button"
+              className="markdown-comment-selection-button"
+              aria-label="添加评论"
+              title="添加评论"
+              onClick={handleCreateCommentFromSelection}
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         )}
       </div>
     </div>
