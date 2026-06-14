@@ -906,7 +906,31 @@ html, body {
   line-height: 1.3;
 }
 
-.markdown-comment-list-toolbar > span {
+.markdown-comment-list-select-all {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.markdown-comment-list-select-all input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--color-accent-primary);
+  cursor: pointer;
+}
+
+.markdown-comment-list-select-all input:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+.markdown-comment-list-selection-summary {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

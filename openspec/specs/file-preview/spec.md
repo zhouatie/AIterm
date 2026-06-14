@@ -285,7 +285,7 @@
 - **AND** 系统 SHALL 不显示 Markdown 划线评论创建入口、评论标记或评论列表
 
 ### Requirement: Markdown 评论发送到当前 Agent
-系统 SHALL 允许用户将 Markdown 预览中的单条或多条评论作为结构化文本发送到当前活跃 terminal tab，使该 tab 中运行的 agent 能读取对应文件、定位被评论原文并处理评论意见。发送动作 SHALL 使用现有 terminal 输入链路写入当前活跃 PTY，不 SHALL 直接调用具体 agent 的 API。
+系统 SHALL 允许用户将 Markdown 预览中的单条或多条评论作为结构化文本发送到当前活跃 terminal tab，使该 tab 中运行的 agent 能读取对应文件、定位被评论原文并处理评论意见。发送动作 SHALL 使用现有 terminal 输入链路写入当前活跃 PTY，不 SHALL 直接调用具体 agent 的 API。系统 SHALL 允许用户在当前 Markdown 文件评论列表中逐条选择、全选和取消全选评论，以便执行批量发送或批量删除。
 
 #### Scenario: 发送单条评论到当前 terminal
 - **WHEN** 用户在 Markdown 评论详情或评论列表中触发单条评论的发送给 agent 操作
@@ -312,6 +312,24 @@
 - **AND** 系统 SHALL 通过现有评论保存链路保存删除后的评论列表
 - **AND** 系统 SHALL 清空已删除评论的选中状态
 - **AND** 若当前正在查看的评论被删除，系统 SHALL 退出该评论详情态
+
+#### Scenario: 全选当前文件评论
+- **WHEN** 当前 Markdown 文件评论列表存在一条或多条评论
+- **AND** 用户触发评论列表全选控制
+- **THEN** 系统 SHALL 选中当前文件评论列表中的全部评论
+- **AND** 系统 SHALL 同时选中已定位评论和未定位评论
+- **AND** 系统 SHALL NOT 选中其他 Markdown 文件中的评论
+
+#### Scenario: 全选后取消全选
+- **WHEN** 当前 Markdown 文件评论列表中的全部评论已被选中
+- **AND** 用户再次触发评论列表全选控制
+- **THEN** 系统 SHALL 清空当前文件评论列表的评论选择
+- **AND** 系统 SHALL 禁用依赖选中评论的发送选中和删除选中操作
+
+#### Scenario: 部分选中状态
+- **WHEN** 当前 Markdown 文件评论列表只选中了部分评论
+- **THEN** 评论列表全选控制 SHALL 呈现部分选中状态
+- **AND** 用户触发该控制后，系统 SHALL 选中当前文件评论列表中的全部评论
 
 #### Scenario: 多条评论注入内容包含处理规则
 - **WHEN** 系统生成包含多条评论的 agent payload

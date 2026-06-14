@@ -129,6 +129,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const fileLoadTokenRef = useRef(0);
   const commentLoadTokenRef = useRef(0);
   const findInputRef = useRef<HTMLInputElement | null>(null);
+  const selectAllCommentsInputRef = useRef<HTMLInputElement | null>(null);
   rootPathRef.current = rootPath;
   const prevFileTreeActiveRef = useRef(fileTreeActive);
 
@@ -537,6 +538,12 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     setCommentNotice(null);
   }, []);
 
+  const handleToggleAllCommentSelection = useCallback((commentIds: string[], allSelected: boolean) => {
+    setSelectedCommentIds(allSelected ? [] : commentIds);
+    setCommentError(null);
+    setCommentNotice(null);
+  }, []);
+
   const handleSendCommentsToAgent = useCallback((commentsToSend: MarkdownPreviewComment[]) => {
     if (commentsToSend.length === 0) return;
     if (!activeSessionId) {
@@ -590,6 +597,15 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const unlocatedCommentCount = markdownComments.filter((comment) => commentLocationMap[comment.id] === false).length;
   const selectedComments = markdownComments.filter((comment) => selectedCommentIds.includes(comment.id));
   const selectedCommentCount = selectedComments.length;
+  const allCommentIds = markdownComments.map((comment) => comment.id);
+  const allCommentsSelected = markdownComments.length > 0 && selectedCommentCount === markdownComments.length;
+  const someCommentsSelected = selectedCommentCount > 0 && !allCommentsSelected;
+
+  useEffect(() => {
+    if (selectAllCommentsInputRef.current) {
+      selectAllCommentsInputRef.current.indeterminate = someCommentsSelected;
+    }
+  }, [someCommentsSelected]);
 
   const renderCommentList = () => {
     if (commentsLoading) {
@@ -603,7 +619,22 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     return (
       <>
         <div className="markdown-comment-list-toolbar">
-          <span>{selectedCommentCount > 0 ? `已选择 ${selectedCommentCount} 条` : '选择评论进行批量操作'}</span>
+          <label
+            className="markdown-comment-list-select-all"
+            title={allCommentsSelected ? '取消全选当前文件评论' : '全选当前文件评论'}
+          >
+            <input
+              ref={selectAllCommentsInputRef}
+              type="checkbox"
+              checked={allCommentsSelected}
+              onChange={() => handleToggleAllCommentSelection(allCommentIds, allCommentsSelected)}
+              aria-label={allCommentsSelected ? '取消全选当前文件评论' : '全选当前文件评论'}
+              aria-checked={someCommentsSelected ? 'mixed' : allCommentsSelected}
+            />
+            <span className="markdown-comment-list-selection-summary">
+              {selectedCommentCount > 0 ? `已选择 ${selectedCommentCount} 条` : '全选'}
+            </span>
+          </label>
           <div className="markdown-comment-list-toolbar-actions">
             <button
               type="button"
