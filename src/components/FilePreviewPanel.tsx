@@ -7,6 +7,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Pencil,
+  RefreshCw,
   Search,
   Send,
   Trash2,
@@ -92,9 +93,13 @@ function formatCommentTimestamp(value: string): string {
 }
 
 function summarizeQuote(value: string): string {
-  const normalized = value.replace(/s+/g, ' ').trim();
+  const normalized = value.replace(/\s+/g, ' ').trim();
   if (normalized.length <= 90) return normalized;
   return normalized.slice(0, 87) + '...';
+}
+
+function isCommentLocated(locationMap: Record<string, boolean>, commentId: string): boolean {
+  return locationMap[commentId] !== false;
 }
 
 const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, visible = true }) => {
@@ -367,6 +372,30 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     }
   }, [resetCommentState, resetFindState]);
 
+  const handleReloadSelectedFile = useCallback(async () => {
+    if (!selectedFile || loadingFile || writingTask) return;
+
+    const loadToken = ++fileLoadTokenRef.current;
+    setLoadingFile(true);
+    setWriteError(null);
+    try {
+      const result = await window.fileApi.readFile(selectedFile);
+      if (fileLoadTokenRef.current !== loadToken) return;
+      if (result.error) {
+        setFileContent('Error: ' + result.error);
+      } else {
+        setFileContent(result.content ?? null);
+      }
+    } catch (err) {
+      if (fileLoadTokenRef.current !== loadToken) return;
+      setFileContent('Error: ' + (err as Error).message);
+    } finally {
+      if (fileLoadTokenRef.current === loadToken) {
+        setLoadingFile(false);
+      }
+    }
+  }, [loadingFile, selectedFile, writingTask]);
+
   const handleTaskCheckboxToggle = useCallback(async (taskIndex: number) => {
     if (!selectedFile || fileContent === null || writingTask) return;
 
@@ -519,6 +548,27 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     }
   }, [activeCommentId, markdownComments, persistMarkdownComments, selectedCommentIds]);
 
+  const handleDeleteUnlocatedComments = useCallback(async () => {
+    const unlocatedIdSet = new Set(
+      markdownComments
+        .filter((comment) => !isCommentLocated(commentLocationMap, comment.id))
+        .map((comment) => comment.id),
+    );
+    if (unlocatedIdSet.size === 0) return;
+
+    const nextComments = markdownComments.filter((comment) => !unlocatedIdSet.has(comment.id));
+    if (await persistMarkdownComments(nextComments)) {
+      if (activeCommentId && unlocatedIdSet.has(activeCommentId)) {
+        setActiveCommentId(null);
+        setCommentDraft(null);
+      }
+      setSelectedCommentIds((prev) => prev.filter((id) => !unlocatedIdSet.has(id)));
+      setIsCommentPanelOpen(nextComments.length > 0);
+      setCommentNotice(`已清理 ${unlocatedIdSet.size} 条评论。`);
+      setCommentError(null);
+    }
+  }, [activeCommentId, commentLocationMap, markdownComments, persistMarkdownComments]);
+
   const handleStartEditingActiveComment = useCallback(() => {
     const activeComment = markdownComments.find((comment) => comment.id === activeCommentId);
     if (!activeComment) return;
@@ -597,9 +647,24 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const unlocatedCommentCount = markdownComments.filter((comment) => commentLocationMap[comment.id] === false).length;
   const selectedComments = markdownComments.filter((comment) => selectedCommentIds.includes(comment.id));
   const selectedCommentCount = selectedComments.length;
+  const selectedUnlocatedCommentCount = selectedComments.filter(
+    (comment) => !isCommentLocated(commentLocationMap, comment.id),
+  ).length;
   const allCommentIds = markdownComments.map((comment) => comment.id);
   const allCommentsSelected = markdownComments.length > 0 && selectedCommentCount === markdownComments.length;
   const someCommentsSelected = selectedCommentCount > 0 && !allCommentsSelected;
+  const canSendSelectedComments = selectedCommentCount > 0
+    && !!activeSessionId
+    && selectedUnlocatedCommentCount === 0;
+  const selectedSendTitle = !activeSessionId
+    ? '当前没有可用的 terminal tab'
+    : selectedUnlocatedCommentCount > 0
+      ? '选中包含未定位评论，请逐条确认后发送'
+      : '发送选中评论给当前 terminal tab';
+  const commentButtonTitle = unlocatedCommentCount > 0
+    ? `显示 Markdown 评论，${unlocatedCommentCount} 条未定位`
+    : '显示 Markdown 评论';
+  const reloadPreviewButtonRight = selectedMarkdownFile ? 74 : 44;
 
   useEffect(() => {
     if (selectAllCommentsInputRef.current) {
@@ -640,8 +705,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
               type="button"
               className="markdown-comment-action compact"
               onClick={() => handleSendCommentsToAgent(selectedComments)}
-              disabled={selectedCommentCount === 0 || !activeSessionId}
-              title={activeSessionId ? '发送选中评论给当前 terminal tab' : '当前没有可用的 terminal tab'}
+              disabled={!canSendSelectedComments}
+              title={selectedSendTitle}
               aria-label="发送选中评论给 agent"
             >
               <Send size={13} />
@@ -662,7 +727,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
         </div>
         <div className="markdown-comment-list">
           {markdownComments.map((comment) => {
-            const located = commentLocationMap[comment.id] !== false;
+            const located = isCommentLocated(commentLocationMap, comment.id);
             const selected = selectedCommentIds.includes(comment.id);
             return (
               <div
@@ -698,7 +763,13 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
                   className="markdown-comment-list-send"
                   onClick={() => handleSendCommentsToAgent([comment])}
                   disabled={!activeSessionId}
-                  title={activeSessionId ? '发送此评论给当前 terminal tab' : '当前没有可用的 terminal tab'}
+                  title={
+                    activeSessionId
+                      ? located
+                        ? '发送此评论给当前 terminal tab'
+                        : '未定位，将按原选中文本发送'
+                      : '当前没有可用的 terminal tab'
+                  }
                   aria-label="发送此评论给 agent"
                 >
                   <Send size={13} />
@@ -736,7 +807,19 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
       {commentError && <div className="markdown-comment-error">{commentError}</div>}
       {commentNotice && <div className="markdown-comment-success">{commentNotice}</div>}
       {unlocatedCommentCount > 0 && !commentDraft && (
-        <div className="markdown-comment-warning">{unlocatedCommentCount} 条评论未定位</div>
+        <div className="markdown-comment-warning markdown-comment-warning-row">
+          <span>{unlocatedCommentCount} 条未定位</span>
+          <button
+            type="button"
+            className="markdown-comment-warning-action"
+            onClick={handleDeleteUnlocatedComments}
+            disabled={commentsSaving}
+            title="删除未定位评论"
+            aria-label="删除未定位评论"
+          >
+            清理
+          </button>
+        </div>
       )}
       {commentDraft ? (
         <div className="markdown-comment-editor">
@@ -771,7 +854,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
       ) : activeComment ? (
         <div className="markdown-comment-detail">
           <div className="markdown-comment-quote">{summarizeQuote(activeComment.anchor.quote)}</div>
-          {commentLocationMap[activeComment.id] === false && (
+          {!isCommentLocated(commentLocationMap, activeComment.id) && (
             <div className="markdown-comment-warning compact">未定位到正文</div>
           )}
           <div className="markdown-comment-body-text">{activeComment.body}</div>
@@ -782,7 +865,13 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
               className="markdown-comment-action"
               onClick={() => handleSendCommentsToAgent([activeComment])}
               disabled={!activeSessionId}
-              title={activeSessionId ? '发送此评论给当前 terminal tab' : '当前没有可用的 terminal tab'}
+              title={
+                activeSessionId
+                  ? isCommentLocated(commentLocationMap, activeComment.id)
+                    ? '发送此评论给当前 terminal tab'
+                    : '未定位，将按原选中文本发送'
+                  : '当前没有可用的 terminal tab'
+              }
             >
               <Send size={14} />
               发送给 agent
@@ -969,12 +1058,31 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const previewPane = (
     <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
       {selectedFile && !loadingFile && findBar}
+      {!isFindOpen && selectedFile && !loadingFile && (
+        <button
+          type="button"
+          onClick={handleReloadSelectedFile}
+          title="刷新预览"
+          aria-label="刷新预览"
+          style={{
+            ...treeToggleButtonBaseStyle,
+            position: 'absolute',
+            top: 10,
+            right: reloadPreviewButtonRight,
+            zIndex: 15,
+            background: 'var(--color-surface-content-elevated)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <RefreshCw size={14} />
+        </button>
+      )}
       {!isFindOpen && selectedMarkdownFile && !loadingFile && !commentPanelVisible && (
         <button
           type="button"
           onClick={() => setIsCommentPanelOpen(true)}
-          title="显示 Markdown 评论"
-          aria-label="显示 Markdown 评论"
+          title={commentButtonTitle}
+          aria-label={commentButtonTitle}
           style={{
             ...treeToggleButtonBaseStyle,
             position: 'absolute',
@@ -988,6 +1096,9 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
           <MessageSquare size={14} />
           {markdownComments.length > 0 && (
             <span className="markdown-comment-toolbar-count">{markdownComments.length}</span>
+          )}
+          {unlocatedCommentCount > 0 && (
+            <span className="markdown-comment-toolbar-warning-count">{unlocatedCommentCount}</span>
           )}
         </button>
       )}
