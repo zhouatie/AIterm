@@ -2,6 +2,7 @@ import type {
   TerminalApi,
   FileApi,
   MarkdownCommentApi,
+  AppInfoApi,
   ThemeApi,
   TabStateApi,
   LiveViewApi,
@@ -19,6 +20,7 @@ declare global {
     terminalApi: TerminalApi;
     fileApi: FileApi;
     markdownCommentApi: MarkdownCommentApi;
+    appInfoApi: AppInfoApi;
     themeApi: ThemeApi;
     tabStateApi: TabStateApi;
     liveViewApi: LiveViewApi;

@@ -529,6 +529,11 @@ const createWindow = () => {
 
 // --- IPC Handlers ---
 
+ipcMain.handle('app:get-info', () => ({
+  name: app.getName(),
+  version: app.getVersion(),
+}));
+
 // terminal:create — create a PTY session and return the session ID
 ipcMain.handle(
   'terminal:create',

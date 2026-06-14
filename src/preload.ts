@@ -72,6 +72,15 @@ export interface MarkdownCommentApi {
   save(rootPath: string, filePath: string, comments: MarkdownPreviewComment[]): Promise<MarkdownCommentApiResult>;
 }
 
+export interface AppInfo {
+  name: string;
+  version: string;
+}
+
+export interface AppInfoApi {
+  get(): Promise<AppInfo>;
+}
+
 export interface FileApi {
   readDir(dirPath: string): Promise<{ entries?: DirEntry[]; error?: string }>;
   readFile(filePath: string): Promise<{ content?: string; error?: string }>;
@@ -263,6 +272,10 @@ export interface TabStateApi {
   saveSync(json: string): void;
   load(): Promise<string | null>;
 }
+
+contextBridge.exposeInMainWorld('appInfoApi', {
+  get: () => ipcRenderer.invoke('app:get-info'),
+} satisfies AppInfoApi);
 
 contextBridge.exposeInMainWorld('themeApi', {
   setNativeTheme: (mode: 'light' | 'dark' | 'system') =>

@@ -109,6 +109,21 @@ const toggleButtonStyle = {
   WebkitAppRegion: 'no-drag' as const,
 };
 
+const versionLabelStyle: React.CSSProperties = {
+  marginLeft: 'auto',
+  minWidth: 0,
+  maxWidth: 220,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  color: 'var(--color-text-muted)',
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: 0,
+  pointerEvents: 'none',
+  WebkitAppRegion: 'drag',
+};
+
 function applyChromeButtonHover(target: HTMLButtonElement) {
   target.style.backgroundColor = 'var(--color-surface-content-elevated)';
   target.style.borderColor = 'var(--color-border-primary)';
@@ -155,6 +170,7 @@ const AppContent: React.FC = () => {
     readTerminalRendererPreferWebgl,
   );
   const [hiddenFolderNames, setHiddenFolderNamesState] = useState(getHiddenFolderNames);
+  const [appInfo, setAppInfo] = useState<{ name: string; version: string } | null>(null);
   const fileTreeToggleTitle = getIconButtonTooltip({
     label: panelVisible ? '收起文件树' : '展开文件树',
     bindings,
@@ -164,6 +180,22 @@ const AppContent: React.FC = () => {
   // Live View state
   const [isLiveViewOpen, setIsLiveViewOpen] = useState(false);
   const [liveViewActive, setLiveViewActive] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    window.appInfoApi.get()
+      .then((nextAppInfo) => {
+        if (!cancelled) setAppInfo(nextAppInfo);
+      })
+      .catch((error) => {
+        console.warn('[App] Failed to load app info:', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Start/stop rrweb recording in sync with live view active state
   useEffect(() => {
@@ -294,6 +326,15 @@ const AppContent: React.FC = () => {
             </button>
             {liveViewActive && <span className="live-dot" />}
           </div>
+
+          {appInfo && (
+            <div
+              title={`当前版本：${appInfo.name} v${appInfo.version}`}
+              style={versionLabelStyle}
+            >
+              {appInfo.name} v{appInfo.version}
+            </div>
+          )}
         </div>
 
         <div
