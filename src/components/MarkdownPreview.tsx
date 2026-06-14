@@ -392,33 +392,25 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   }
 
   let taskCheckboxIndex = 0;
+  const outlineClassName = 'markdown-heading-outline' + (outlineExpanded ? ' is-expanded' : '');
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       {headings.length > 0 && (
         <nav
-          className="markdown-heading-outline"
+          className={outlineClassName}
           aria-label="Markdown 标题导航"
+          aria-expanded={outlineExpanded}
           tabIndex={0}
           onMouseEnter={() => setOutlineExpanded(true)}
           onMouseLeave={() => setOutlineExpanded(false)}
           onFocus={() => setOutlineExpanded(true)}
           onBlur={handleOutlineBlur}
-          style={{
-            width: outlineExpanded ? 260 : 30,
-          }}
         >
           <div className="markdown-heading-outline-rail" aria-hidden="true">
             <ListTree size={14} />
           </div>
-          <div
-            className="markdown-heading-outline-panel"
-            style={{
-              opacity: outlineExpanded ? 1 : 0,
-              transform: outlineExpanded ? 'translateX(0)' : 'translateX(-8px)',
-              pointerEvents: outlineExpanded ? 'auto' : 'none',
-            }}
-          >
+          <div className="markdown-heading-outline-panel">
             {headings.map((heading) => (
               <button
                 key={heading.id}
