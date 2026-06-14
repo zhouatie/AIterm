@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ListTree, MessageSquare, Plus } from 'lucide-react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Check, Copy, ListTree, MessageSquare, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -80,6 +80,11 @@ const HEADING_SELECTOR = 'h1, h2, h3, h4, h5, h6';
 const MARKDOWN_COMMENT_GUTTER_MIN_WIDTH = 420;
 const MARKDOWN_COMMENT_HIGHLIGHT_NAME = 'markdown-comment-highlight';
 const MARKDOWN_COMMENT_CURRENT_NAME = 'markdown-comment-current';
+const CODE_COPY_FEEDBACK_MS = 1400;
+
+interface MarkdownCodeBlockProps extends React.HTMLAttributes<HTMLPreElement> {
+  children?: React.ReactNode;
+}
 
 function getHighlightConstructor(): HighlightConstructor {
   return (window as HighlightWindow).Highlight;
@@ -121,6 +126,83 @@ function scrollCommentRangeIntoView(container: HTMLElement, range: Range) {
     behavior: 'smooth',
   });
 }
+
+function getTextFromReactNode(node: React.ReactNode): string {
+  if (node === null || node === undefined || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(getTextFromReactNode).join('');
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) {
+    return getTextFromReactNode(node.props.children);
+  }
+  return '';
+}
+
+const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({ children, ...preProps }) => {
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const resetTimerRef = useRef<number | null>(null);
+  const codeText = useMemo(() => getTextFromReactNode(children), [children]);
+
+  useEffect(() => () => {
+    if (resetTimerRef.current !== null) {
+      window.clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
+  }, []);
+
+  const resetCopyStateSoon = useCallback(() => {
+    if (resetTimerRef.current !== null) {
+      window.clearTimeout(resetTimerRef.current);
+    }
+    resetTimerRef.current = window.setTimeout(() => {
+      resetTimerRef.current = null;
+      setCopyState('idle');
+    }, CODE_COPY_FEEDBACK_MS);
+  }, []);
+
+  const handleCopy = useCallback(async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!codeText) return;
+
+    try {
+      await navigator.clipboard.writeText(codeText);
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
+    }
+
+    resetCopyStateSoon();
+  }, [codeText, resetCopyStateSoon]);
+
+  const copyLabel = copyState === 'copied'
+    ? '已复制代码块'
+    : copyState === 'failed'
+      ? '复制代码块失败'
+      : '复制代码块';
+
+  return (
+    <div className="markdown-code-block">
+      <pre {...preProps}>{children}</pre>
+      <button
+        type="button"
+        className={
+          'markdown-code-copy-button'
+          + (copyState === 'copied' ? ' copied' : '')
+          + (copyState === 'failed' ? ' failed' : '')
+        }
+        aria-label={copyLabel}
+        title={copyLabel}
+        disabled={!codeText}
+        onClick={handleCopy}
+        onMouseDown={(event) => event.stopPropagation()}
+        onMouseUp={(event) => event.stopPropagation()}
+      >
+        {copyState === 'copied' ? <Check size={14} /> : <Copy size={14} />}
+      </button>
+    </div>
+  );
+};
 
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   content,
@@ -443,6 +525,10 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight]}
             components={{
+              pre: ({ children, node, ...props }) => {
+                void node;
+                return <MarkdownCodeBlock {...props}>{children}</MarkdownCodeBlock>;
+              },
               input: ({ type, checked, disabled, ...props }) => {
                 if (type !== 'checkbox') {
                   return <input type={type} checked={checked} disabled={disabled} {...props} />;

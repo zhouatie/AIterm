@@ -425,6 +425,69 @@ html, body {
   margin-bottom: 16px;
 }
 
+.markdown-code-block {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.markdown-code-block pre {
+  margin: 0;
+  padding-right: 52px;
+}
+
+.markdown-code-copy-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 6px;
+  color: var(--color-icon-default);
+  background: var(--color-surface-content-elevated);
+  box-shadow: 0 6px 16px var(--color-shadow);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 150ms ease, transform 150ms ease, color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+}
+
+.markdown-code-block:hover .markdown-code-copy-button,
+.markdown-code-copy-button:focus-visible,
+.markdown-code-copy-button.copied,
+.markdown-code-copy-button.failed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.markdown-code-copy-button:hover,
+.markdown-code-copy-button:focus-visible {
+  color: var(--color-icon-active);
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-secondary);
+  outline: none;
+}
+
+.markdown-code-copy-button.copied {
+  color: var(--color-agent-status-completed);
+  border-color: var(--color-agent-status-completed);
+}
+
+.markdown-code-copy-button.failed {
+  color: var(--color-agent-status-error);
+  border-color: var(--color-agent-status-error);
+}
+
+.markdown-code-copy-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 .markdown-body pre code {
   padding: 0;
   background-color: transparent;
