@@ -3,6 +3,7 @@ import type {
   FileApi,
   MarkdownCommentApi,
   AppInfoApi,
+  AppUpdateApi,
   ThemeApi,
   TabStateApi,
   LiveViewApi,
@@ -21,6 +22,7 @@ declare global {
     fileApi: FileApi;
     markdownCommentApi: MarkdownCommentApi;
     appInfoApi: AppInfoApi;
+    appUpdateApi: AppUpdateApi;
     themeApi: ThemeApi;
     tabStateApi: TabStateApi;
     liveViewApi: LiveViewApi;

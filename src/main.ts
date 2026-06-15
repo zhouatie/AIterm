@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import http from 'node:http';
+import https from 'node:https';
 import { randomBytes } from 'node:crypto';
 import { execFile, execFileSync } from 'node:child_process';
 import started from 'electron-squirrel-startup';
@@ -60,12 +61,190 @@ const manualInterruptBySessionId = new Map<string, number>();
 const TERMINAL_OUTPUT_FLUSH_MS = 16;
 const TERMINAL_CLOSE_CONFIRM_BUTTON_INDEX = 1;
 const MANUAL_INTERRUPT_SUPPRESS_MS = 2500;
+const AITERM_RELEASES_URL = 'https://github.com/zhouatie/AIterm/releases';
+const AITERM_LATEST_RELEASE_API_URL = 'https://api.github.com/repos/zhouatie/AIterm/releases/latest';
+const AITERM_RELEASES_HOSTNAME = 'github.com';
+const AITERM_RELEASES_PATH_PREFIX = '/zhouatie/AIterm/releases';
+const UPDATE_CHECK_TIMEOUT_MS = 10000;
+const UPDATE_CHECK_MAX_RESPONSE_BYTES = 1024 * 1024;
+
+interface AppUpdateCheckSuccess {
+  ok: true;
+  currentVersion: string;
+  latestVersion: string;
+  latestTag: string;
+  releaseName: string | null;
+  releaseUrl: string;
+  hasUpdate: boolean;
+}
+
+interface AppUpdateCheckFailure {
+  ok: false;
+  currentVersion: string;
+  releaseUrl: string;
+  error: string;
+}
+
+type AppUpdateCheckResult = AppUpdateCheckSuccess | AppUpdateCheckFailure;
+
+interface GitHubLatestReleaseResponse {
+  tag_name?: unknown;
+  html_url?: unknown;
+  name?: unknown;
+}
 
 interface TerminalStreamState {
   attached: boolean;
   pendingOutput: string;
   liveBatch: string;
   flushTimer: ReturnType<typeof setTimeout> | null;
+}
+
+function getUpdateErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : '检查更新失败';
+}
+
+function parseReleaseVersion(version: string): [number, number, number] | null {
+  const match = version.trim().replace(/^v/i, '').match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!match) return null;
+
+  const parsed = match.slice(1).map((part) => Number(part));
+  if (parsed.some((part) => !Number.isSafeInteger(part) || part < 0)) return null;
+
+  return [parsed[0], parsed[1], parsed[2]];
+}
+
+function formatReleaseVersion(version: [number, number, number]): string {
+  return version.join('.');
+}
+
+function compareReleaseVersions(
+  currentVersion: [number, number, number],
+  latestVersion: [number, number, number],
+): number {
+  for (let index = 0; index < currentVersion.length; index++) {
+    if (currentVersion[index] < latestVersion[index]) return -1;
+    if (currentVersion[index] > latestVersion[index]) return 1;
+  }
+  return 0;
+}
+
+function isAllowedReleaseUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:'
+      && parsed.hostname === AITERM_RELEASES_HOSTNAME
+      && (
+        parsed.pathname === AITERM_RELEASES_PATH_PREFIX
+        || parsed.pathname.startsWith(`${AITERM_RELEASES_PATH_PREFIX}/`)
+      );
+  } catch {
+    return false;
+  }
+}
+
+function resolveReleaseUrl(url?: string): string | null {
+  if (!url) return AITERM_RELEASES_URL;
+  if (!isAllowedReleaseUrl(url)) return null;
+  return url;
+}
+
+function requestJson(url: string): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const request = https.get(
+      url,
+      {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'AIterm-update-check',
+        },
+      },
+    );
+
+    request.setTimeout(UPDATE_CHECK_TIMEOUT_MS, () => {
+      request.destroy(new Error('检查更新超时'));
+    });
+
+    request.on('response', (response) => {
+      const statusCode = response.statusCode ?? 0;
+      let body = '';
+
+      response.setEncoding('utf8');
+      response.on('data', (chunk: string) => {
+        body += chunk;
+        if (body.length > UPDATE_CHECK_MAX_RESPONSE_BYTES) {
+          request.destroy(new Error('Release 响应过大'));
+        }
+      });
+      response.on('end', () => {
+        if (statusCode < 200 || statusCode >= 300) {
+          reject(new Error(`GitHub Release 请求失败：${statusCode}`));
+          return;
+        }
+
+        try {
+          resolve(JSON.parse(body));
+        } catch {
+          reject(new Error('GitHub Release 响应不是有效 JSON'));
+        }
+      });
+    });
+
+    request.on('error', (error) => reject(error));
+  });
+}
+
+function isGitHubLatestReleaseResponse(data: unknown): data is GitHubLatestReleaseResponse {
+  return typeof data === 'object' && data !== null;
+}
+
+async function checkForManualUpdate(): Promise<AppUpdateCheckResult> {
+  const currentVersion = app.getVersion();
+
+  try {
+    const releaseData = await requestJson(AITERM_LATEST_RELEASE_API_URL);
+    if (!isGitHubLatestReleaseResponse(releaseData)) {
+      throw new Error('GitHub Release 响应格式无效');
+    }
+
+    const latestTag = typeof releaseData.tag_name === 'string' ? releaseData.tag_name.trim() : '';
+    const latestReleaseUrl = typeof releaseData.html_url === 'string'
+      ? resolveReleaseUrl(releaseData.html_url)
+      : null;
+    const latestVersion = parseReleaseVersion(latestTag);
+    const parsedCurrentVersion = parseReleaseVersion(currentVersion);
+
+    if (!latestTag || !latestVersion) {
+      throw new Error('无法解析最新 Release 版本');
+    }
+    if (!parsedCurrentVersion) {
+      throw new Error('无法解析当前应用版本');
+    }
+    if (!latestReleaseUrl) {
+      throw new Error('GitHub Release URL 不在允许范围内');
+    }
+
+    const releaseName = typeof releaseData.name === 'string' && releaseData.name.trim()
+      ? releaseData.name.trim()
+      : null;
+
+    return {
+      ok: true,
+      currentVersion,
+      latestVersion: formatReleaseVersion(latestVersion),
+      latestTag,
+      releaseName,
+      releaseUrl: latestReleaseUrl,
+      hasUpdate: compareReleaseVersions(parsedCurrentVersion, latestVersion) < 0,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      currentVersion,
+      releaseUrl: AITERM_RELEASES_URL,
+      error: getUpdateErrorMessage(error),
+    };
+  }
 }
 
 const terminalStreamStates = new Map<string, TerminalStreamState>();
@@ -533,6 +712,21 @@ ipcMain.handle('app:get-info', () => ({
   name: app.getName(),
   version: app.getVersion(),
 }));
+
+ipcMain.handle('app:update:check', () => checkForManualUpdate());
+
+ipcMain.handle('app:update:open-release-page', async (_event, releaseUrl?: unknown) => {
+  const resolvedUrl = typeof releaseUrl === 'string'
+    ? resolveReleaseUrl(releaseUrl)
+    : resolveReleaseUrl();
+
+  if (!resolvedUrl) {
+    return { ok: false, error: 'Release URL 不在允许范围内' };
+  }
+
+  await shell.openExternal(resolvedUrl);
+  return { ok: true };
+});
 
 // terminal:create — create a PTY session and return the session ID
 ipcMain.handle(

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
-import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast, RefreshCw, ExternalLink } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
@@ -30,6 +30,7 @@ import {
 } from './utils/terminal-settings';
 import { getIconButtonTooltip } from './utils/icon-button-tooltips';
 import { startRecording, stopLiveRecording, forceCheckout } from './live-view-recorder';
+import type { AppUpdateCheckResult } from './preload';
 
 // --- Active Session Context ---
 // Shared between TerminalPanel (writer) and FilePreviewPanel (reader)
@@ -109,8 +110,16 @@ const toggleButtonStyle = {
   WebkitAppRegion: 'no-drag' as const,
 };
 
-const versionLabelStyle: React.CSSProperties = {
+const titleBarMetaStyle: React.CSSProperties = {
   marginLeft: 'auto',
+  minWidth: 0,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  WebkitAppRegion: 'no-drag',
+};
+
+const versionLabelStyle: React.CSSProperties = {
   minWidth: 0,
   maxWidth: 220,
   overflow: 'hidden',
@@ -121,8 +130,81 @@ const versionLabelStyle: React.CSSProperties = {
   fontWeight: 600,
   letterSpacing: 0,
   pointerEvents: 'none',
-  WebkitAppRegion: 'drag',
+  flexShrink: 1,
 };
+
+const updateStatusLabelStyle: React.CSSProperties = {
+  maxWidth: 112,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  color: 'var(--color-text-muted)',
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: 0,
+  flexShrink: 0,
+};
+
+type UpdateUiState =
+  | { kind: 'idle' }
+  | { kind: 'checking' }
+  | { kind: 'latest'; currentVersion: string }
+  | { kind: 'available'; currentVersion: string; latestVersion: string; releaseUrl: string }
+  | { kind: 'error'; currentVersion: string; releaseUrl: string; error: string };
+
+function getUpdateStateFromResult(result: AppUpdateCheckResult): UpdateUiState {
+  if (!result.ok) {
+    return {
+      kind: 'error',
+      currentVersion: result.currentVersion,
+      releaseUrl: result.releaseUrl,
+      error: result.error,
+    };
+  }
+
+  if (!result.hasUpdate) {
+    return { kind: 'latest', currentVersion: result.currentVersion };
+  }
+
+  return {
+    kind: 'available',
+    currentVersion: result.currentVersion,
+    latestVersion: result.latestVersion,
+    releaseUrl: result.releaseUrl,
+  };
+}
+
+function getUpdateStatusLabel(state: UpdateUiState): string | null {
+  switch (state.kind) {
+    case 'checking':
+      return '正在检查';
+    case 'latest':
+      return '已是最新';
+    case 'available':
+      return `发现 v${state.latestVersion}`;
+    case 'error':
+      return '检查失败';
+    case 'idle':
+    default:
+      return null;
+  }
+}
+
+function getUpdateStatusTitle(state: UpdateUiState): string {
+  switch (state.kind) {
+    case 'checking':
+      return '正在检查更新';
+    case 'latest':
+      return `当前版本 v${state.currentVersion} 已是最新`;
+    case 'available':
+      return `当前版本 v${state.currentVersion}，最新版本 v${state.latestVersion}`;
+    case 'error':
+      return `检查更新失败：${state.error}`;
+    case 'idle':
+    default:
+      return '检查更新';
+  }
+}
 
 function applyChromeButtonHover(target: HTMLButtonElement) {
   target.style.backgroundColor = 'var(--color-surface-content-elevated)';
@@ -171,6 +253,7 @@ const AppContent: React.FC = () => {
   );
   const [hiddenFolderNames, setHiddenFolderNamesState] = useState(getHiddenFolderNames);
   const [appInfo, setAppInfo] = useState<{ name: string; version: string } | null>(null);
+  const [updateState, setUpdateState] = useState<UpdateUiState>({ kind: 'idle' });
   const fileTreeToggleTitle = getIconButtonTooltip({
     label: panelVisible ? '收起文件树' : '展开文件树',
     bindings,
@@ -245,6 +328,45 @@ const AppContent: React.FC = () => {
     setHiddenFolderNamesState(getHiddenFolderNames());
   }, []);
 
+  const handleCheckUpdate = useCallback(() => {
+    if (updateState.kind === 'checking') return;
+
+    setUpdateState({ kind: 'checking' });
+    window.appUpdateApi.check()
+      .then((result) => {
+        setUpdateState(getUpdateStateFromResult(result));
+      })
+      .catch((error: unknown) => {
+        setUpdateState({
+          kind: 'error',
+          currentVersion: appInfo?.version ?? 'unknown',
+          releaseUrl: '',
+          error: error instanceof Error ? error.message : '检查更新失败',
+        });
+      });
+  }, [appInfo?.version, updateState.kind]);
+
+  const handleOpenReleasePage = useCallback((releaseUrl?: string) => {
+    window.appUpdateApi.openReleasePage(releaseUrl)
+      .then((result) => {
+        if (result.ok) return;
+        setUpdateState({
+          kind: 'error',
+          currentVersion: appInfo?.version ?? 'unknown',
+          releaseUrl: '',
+          error: result.error ?? '无法打开 GitHub Release 页面',
+        });
+      })
+      .catch((error: unknown) => {
+        setUpdateState({
+          kind: 'error',
+          currentVersion: appInfo?.version ?? 'unknown',
+          releaseUrl: '',
+          error: error instanceof Error ? error.message : '无法打开 GitHub Release 页面',
+        });
+      });
+  }, [appInfo?.version]);
+
   useEffect(() => {
     return registerAction('toggle-file-tree', () => {
       togglePanel();
@@ -254,6 +376,14 @@ const AppContent: React.FC = () => {
   const revealTerminalUi = useCallback(() => {
     switchPanel(TERMINAL_PANEL_ID);
   }, [switchPanel]);
+
+  const updateStatusLabel = getUpdateStatusLabel(updateState);
+  const updateStatusTitle = getUpdateStatusTitle(updateState);
+  const updateReleaseUrl = updateState.kind === 'available' || updateState.kind === 'error'
+    ? updateState.releaseUrl
+    : undefined;
+  const canOpenReleasePage = updateState.kind === 'available' || updateState.kind === 'error';
+  const isCheckingUpdate = updateState.kind === 'checking';
 
   return (
     <TerminalUiContext.Provider value={revealTerminalUi}>
@@ -328,11 +458,50 @@ const AppContent: React.FC = () => {
           </div>
 
           {appInfo && (
-            <div
-              title={`当前版本：${appInfo.name} v${appInfo.version}`}
-              style={versionLabelStyle}
-            >
-              {appInfo.name} v{appInfo.version}
+            <div style={titleBarMetaStyle}>
+              <div
+                title={`当前版本：${appInfo.name} v${appInfo.version}`}
+                style={versionLabelStyle}
+              >
+                {appInfo.name} v{appInfo.version}
+              </div>
+
+              <button
+                onClick={handleCheckUpdate}
+                disabled={isCheckingUpdate}
+                title={isCheckingUpdate ? '正在检查更新' : '检查更新'}
+                aria-label="检查更新"
+                style={{
+                  ...toggleButtonStyle,
+                  cursor: isCheckingUpdate ? 'default' : 'pointer',
+                  opacity: isCheckingUpdate ? 0.65 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isCheckingUpdate) applyChromeButtonHover(e.currentTarget);
+                }}
+                onMouseLeave={(e) => resetChromeButtonHover(e.currentTarget)}
+              >
+                <RefreshCw size={16} />
+              </button>
+
+              {updateStatusLabel && (
+                <div title={updateStatusTitle} style={updateStatusLabelStyle}>
+                  {updateStatusLabel}
+                </div>
+              )}
+
+              {canOpenReleasePage && (
+                <button
+                  onClick={() => handleOpenReleasePage(updateReleaseUrl)}
+                  title={updateState.kind === 'available' ? '打开 GitHub Release 下载页' : '打开 GitHub Release 页面'}
+                  aria-label={updateState.kind === 'available' ? '打开 GitHub Release 下载页' : '打开 GitHub Release 页面'}
+                  style={toggleButtonStyle}
+                  onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
+                  onMouseLeave={(e) => resetChromeButtonHover(e.currentTarget)}
+                >
+                  <ExternalLink size={16} />
+                </button>
+              )}
             </div>
           )}
         </div>

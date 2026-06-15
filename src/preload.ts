@@ -81,6 +81,35 @@ export interface AppInfoApi {
   get(): Promise<AppInfo>;
 }
 
+export interface AppUpdateCheckSuccess {
+  ok: true;
+  currentVersion: string;
+  latestVersion: string;
+  latestTag: string;
+  releaseName: string | null;
+  releaseUrl: string;
+  hasUpdate: boolean;
+}
+
+export interface AppUpdateCheckFailure {
+  ok: false;
+  currentVersion: string;
+  releaseUrl: string;
+  error: string;
+}
+
+export type AppUpdateCheckResult = AppUpdateCheckSuccess | AppUpdateCheckFailure;
+
+export interface AppUpdateOpenResult {
+  ok: boolean;
+  error?: string;
+}
+
+export interface AppUpdateApi {
+  check(): Promise<AppUpdateCheckResult>;
+  openReleasePage(releaseUrl?: string): Promise<AppUpdateOpenResult>;
+}
+
 export interface FileApi {
   readDir(dirPath: string): Promise<{ entries?: DirEntry[]; error?: string }>;
   readFile(filePath: string): Promise<{ content?: string; error?: string }>;
@@ -276,6 +305,12 @@ export interface TabStateApi {
 contextBridge.exposeInMainWorld('appInfoApi', {
   get: () => ipcRenderer.invoke('app:get-info'),
 } satisfies AppInfoApi);
+
+contextBridge.exposeInMainWorld('appUpdateApi', {
+  check: () => ipcRenderer.invoke('app:update:check'),
+  openReleasePage: (releaseUrl?: string) =>
+    ipcRenderer.invoke('app:update:open-release-page', releaseUrl),
+} satisfies AppUpdateApi);
 
 contextBridge.exposeInMainWorld('themeApi', {
   setNativeTheme: (mode: 'light' | 'dark' | 'system') =>

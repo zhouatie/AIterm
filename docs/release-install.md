@@ -38,6 +38,14 @@ GitHub Release 上传的也是这个 ZIP。
 
 如果 macOS 提示来自未验证开发者，说明当前包还没有完成 Apple Developer ID 签名和 notarization。这是第一阶段发布链路的限制。
 
+## 应用内检查更新
+
+AIterm 标题栏会显示当前运行版本。点击版本号旁边的检查更新按钮后，应用会请求 GitHub Release 的最新正式版本，并与当前运行版本比较。
+
+如果当前版本已是最新，应用会显示已是最新。如果发现新版本，应用会显示最新版本号，并提供打开 GitHub Release 下载页的入口。用户仍需手动下载新版 ZIP、解压，并用新的 `AIterm.app` 替换 `/Applications` 或 `~/Applications` 中的旧版本。
+
+如果检查失败，可以通过应用内入口打开 GitHub Release 页面手动查看。检查失败不会影响终端、文件预览或其他核心功能。
+
 ## 发布步骤
 
 1. 更新 `package.json` 的 `version`。
@@ -55,7 +63,7 @@ GitHub Release 上传的也是这个 ZIP。
 
 ## 当前阶段限制
 
-- 不提供应用内自动更新。升级时需要从 GitHub Release 下载新 ZIP，并替换 Applications 中的旧 `AIterm.app`。
+- 应用内只提供手动检查更新和打开 GitHub Release 下载页；不会自动下载、自动替换、自动安装或自动重启。升级时仍需要从 GitHub Release 下载新 ZIP，并替换 Applications 中的旧 `AIterm.app`。
 - 不提供 Apple Developer ID 签名。
 - 不提供 notarization。
 - 不提供 DMG 安装器。
