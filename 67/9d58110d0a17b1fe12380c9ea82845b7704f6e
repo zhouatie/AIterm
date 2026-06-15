@@ -1,0 +1,123 @@
+openspec/specs/electron-shell/spec.md
+  c8aa9ac069079b1d 4,153-188
+openspec/changes/archive/2026-06-15-add-manual-update-check/proposal.md
+  c8aa9ac069079b1d 1-31
+openspec/changes/archive/2026-06-15-add-manual-update-check/specs/desktop-app-distribution/spec.md
+  c8aa9ac069079b1d 1-35
+src/main.ts
+  c8aa9ac069079b1d 6,64-94,103-249,716-730
+src/preload.ts
+  c8aa9ac069079b1d 84-112,309-313
+openspec/changes/archive/2026-06-15-add-manual-update-check/design.md
+  c8aa9ac069079b1d 1-85
+openspec/changes/archive/2026-06-15-add-manual-update-check/specs/electron-shell/spec.md
+  c8aa9ac069079b1d 1-37
+openspec/changes/archive/2026-06-15-add-manual-update-check/tasks.md
+  c8aa9ac069079b1d 1-30
+docs/release-install.md
+  c8aa9ac069079b1d 41-48,66
+openspec/changes/archive/2026-06-15-add-manual-update-check/.openspec.yaml
+  c8aa9ac069079b1d 1-2
+src/global.d.ts
+  c8aa9ac069079b1d 6,25
+src/App.tsx
+  c8aa9ac069079b1d 2,33,113,115-122,133-145,148-207,256,331-369,380-386,461-504
+openspec/specs/desktop-app-distribution/spec.md
+  c8aa9ac069079b1d 52-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "679d58110d0a17b1fe12380c9ea82845b7704f6e",
+  "prompts": {
+    "c8aa9ac069079b1d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ec8e0-784c-74b0-be9c-43eaa7f9664f",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 947,
+      "total_deletions": 29,
+      "accepted_lines": 708,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/specs/electron-shell/spec.md": {
+          "additions": 37,
+          "deletions": 1,
+          "accepted_lines": 37
+        },
+        "src/App.tsx": {
+          "additions": 177,
+          "deletions": 8,
+          "accepted_lines": 177
+        },
+        "openspec/changes/add-manual-update-check/specs/desktop-app-distribution/spec.md": {
+          "additions": 35
+        },
+        "openspec/changes/add-manual-update-check/specs/electron-shell/spec.md": {
+          "additions": 37
+        },
+        "openspec/changes/add-manual-update-check/proposal.md": {
+          "additions": 31
+        },
+        "openspec/changes/archive/2026-06-15-add-manual-update-check/design.md": {
+          "additions": 85,
+          "accepted_lines": 85
+        },
+        "openspec/changes/archive/2026-06-15-add-manual-update-check/specs/desktop-app-distribution/spec.md": {
+          "additions": 35,
+          "accepted_lines": 35
+        },
+        "openspec/changes/archive/2026-06-15-add-manual-update-check/tasks.md": {
+          "additions": 30,
+          "accepted_lines": 30
+        },
+        "openspec/changes/add-manual-update-check/tasks.md": {
+          "additions": 49,
+          "deletions": 19
+        },
+        "src/global.d.ts": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-manual-update-check/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-15-add-manual-update-check/proposal.md": {
+          "additions": 31,
+          "accepted_lines": 31
+        },
+        "src/main.ts": {
+          "additions": 194,
+          "accepted_lines": 194
+        },
+        "openspec/changes/archive/2026-06-15-add-manual-update-check/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-manual-update-check/design.md": {
+          "additions": 85
+        },
+        "openspec/changes/archive/2026-06-15-add-manual-update-check/specs/electron-shell/spec.md": {
+          "additions": 37,
+          "accepted_lines": 37
+        },
+        "src/preload.ts": {
+          "additions": 35,
+          "accepted_lines": 35
+        },
+        "openspec/specs/desktop-app-distribution/spec.md": {
+          "additions": 34,
+          "accepted_lines": 34
+        },
+        "docs/release-install.md": {
+          "additions": 9,
+          "deletions": 1,
+          "accepted_lines": 9
+        }
+      }
+    }
+  }
+}
