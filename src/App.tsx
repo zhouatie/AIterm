@@ -1,9 +1,20 @@
 import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
-import { PanelLeftClose, PanelLeftOpen, Sun, Moon, Monitor, Cast, RefreshCw, ExternalLink } from 'lucide-react';
+import {
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
+  Moon,
+  Monitor,
+  Cast,
+  RefreshCw,
+  ExternalLink,
+  Wrench,
+} from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
 import LiveViewPanel from './components/LiveViewPanel';
+import UtilityToolsPanel from './components/UtilityToolsPanel';
 import SplitLayout from './components/SplitLayout';
 import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
@@ -117,7 +128,7 @@ const titleBarMetaStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: 6,
   WebkitAppRegion: 'no-drag',
-};
+} as React.CSSProperties;
 
 const versionLabelStyle: React.CSSProperties = {
   minWidth: 0,
@@ -153,7 +164,7 @@ type UpdateUiState =
   | { kind: 'error'; currentVersion: string; releaseUrl: string; error: string };
 
 function getUpdateStateFromResult(result: AppUpdateCheckResult): UpdateUiState {
-  if (!result.ok) {
+  if (result.ok === false) {
     return {
       kind: 'error',
       currentVersion: result.currentVersion,
@@ -263,6 +274,7 @@ const AppContent: React.FC = () => {
   // Live View state
   const [isLiveViewOpen, setIsLiveViewOpen] = useState(false);
   const [liveViewActive, setLiveViewActive] = useState(false);
+  const [isUtilityToolsOpen, setIsUtilityToolsOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -367,6 +379,10 @@ const AppContent: React.FC = () => {
       });
   }, [appInfo?.version]);
 
+  const openUtilityTools = useCallback(() => {
+    setIsUtilityToolsOpen(true);
+  }, []);
+
   useEffect(() => {
     return registerAction('toggle-file-tree', () => {
       togglePanel();
@@ -457,6 +473,17 @@ const AppContent: React.FC = () => {
             {liveViewActive && <span className="live-dot" />}
           </div>
 
+          <button
+            onClick={openUtilityTools}
+            title="开发者工具"
+            aria-label="开发者工具"
+            style={{ ...toggleButtonStyle, marginLeft: 4 }}
+            onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
+            onMouseLeave={(e) => resetChromeButtonHover(e.currentTarget)}
+          >
+            <Wrench size={16} />
+          </button>
+
           {appInfo && (
             <div style={titleBarMetaStyle}>
               <div
@@ -545,6 +572,11 @@ const AppContent: React.FC = () => {
         isOpen={isLiveViewOpen}
         onClose={() => setIsLiveViewOpen(false)}
         onActiveChange={setLiveViewActive}
+      />
+
+      <UtilityToolsPanel
+        isOpen={isUtilityToolsOpen}
+        onClose={() => setIsUtilityToolsOpen(false)}
       />
       </>
     </TerminalUiContext.Provider>
