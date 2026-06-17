@@ -73,10 +73,10 @@ interface TerminalPanelProps {
 }
 
 const SIDEBAR_WIDTH = 240;
-const SIDEBAR_HEADER_HEIGHT = 46;
-const SIDEBAR_FOOTER_HEIGHT = 48;
-const ROW_HEIGHT = 34;
-const SIDEBAR_TOGGLE_SIZE = 28;
+const SIDEBAR_HEADER_HEIGHT = 40;
+const SIDEBAR_FOOTER_HEIGHT = 38;
+const ROW_HEIGHT = 30;
+const SIDEBAR_TOGGLE_SIZE = 26;
 const TERMINAL_SCROLL_CONTROL_SIZE = 28;
 /** Duration (ms) for the sidebar collapse/expand animation. */
 const SIDEBAR_COLLAPSE_MS = 180;
@@ -1427,7 +1427,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: sidebarCollapsed ? 'center' : 'space-between',
-            padding: sidebarCollapsed ? 0 : '0 12px',
+            padding: sidebarCollapsed ? 0 : '0 10px',
             borderBottom: '1px solid var(--color-border-secondary)',
             flexShrink: 0,
           }}
@@ -1454,8 +1454,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 26,
-                height: 26,
+                width: 24,
+                height: 24,
                 border: '1px solid transparent',
                 backgroundColor: 'transparent',
                 color: 'var(--color-text-tertiary)',
@@ -1478,7 +1478,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 event.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <Plus size={15} />
+              <Plus size={14} />
             </button>
           )}
         </div>
@@ -1488,7 +1488,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             flex: 1,
             overflowY: 'auto',
             overflowX: 'hidden',
-            padding: sidebarCollapsed ? '8px 0' : '10px 10px 14px',
+            padding: sidebarCollapsed ? '8px 0' : '8px 8px 10px',
           }}
         >
           {!sidebarCollapsed && workspaces.map((workspace) => {
@@ -1503,7 +1503,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             });
 
             return (
-              <div key={workspace.id} style={{ marginBottom: 6 }}>
+              <div key={workspace.id} style={{ marginBottom: 4 }}>
                 <div
                   ref={(element) => {
                     if (element) workspaceRefs.current.set(workspace.id, element);
@@ -1531,9 +1531,9 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                     height: ROW_HEIGHT,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 8,
-                    padding: '0 10px',
-                    borderRadius: 10,
+                    gap: 6,
+                    padding: '0 8px',
+                    borderRadius: 8,
                     cursor: 'pointer',
                     backgroundColor:
                       dragState && dropTarget?.workspaceId === workspace.id && !workspace.isExpanded
@@ -1560,7 +1560,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 >
                   <span
                     style={{
-                      width: 14,
+                      width: 13,
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1568,11 +1568,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                       color: isWorkspaceActive ? 'var(--color-icon-active)' : 'var(--color-icon-default)',
                     }}
                   >
-                    {workspace.isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    {workspace.isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                   </span>
                   <span
                     style={{
-                      width: 14,
+                      width: 13,
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1580,7 +1580,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                       color: 'var(--color-icon-folder)',
                     }}
                   >
-                    <Folder size={14} />
+                    <Folder size={13} />
                   </span>
 
                   {renameState?.type === 'workspace' && renameState.workspaceId === workspace.id ? (
@@ -1612,7 +1612,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                         backgroundColor: 'var(--color-bg-primary)',
                         color: 'var(--color-text-primary)',
                         fontSize: 12,
-                        padding: '4px 6px',
+                        padding: '3px 5px',
                         outline: 'none',
                       }}
                     />
@@ -1641,8 +1641,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                     }}
                     title={workspaceNewTabTitle}
                     style={{
-                      width: 18,
-                      height: 18,
+                      width: 16,
+                      height: 16,
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1666,13 +1666,13 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                       event.currentTarget.style.color = 'var(--color-text-muted)';
                     }}
                   >
-                    <Plus size={12} />
+                    <Plus size={11} />
                   </button>
                 </div>
 
                 {workspace.isExpanded && (
                   <div
-                    style={{ marginTop: 4, paddingLeft: 10 }}
+                    style={{ marginTop: 2, paddingLeft: 8 }}
                     onDragOver={(event) => {
                       if (!dragState) return;
                       if (workspace.sessions.length > 0) return;
@@ -1733,11 +1733,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                             height: ROW_HEIGHT,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 8,
-                            padding: '0 10px 0 18px',
-                            marginTop: 2,
-                            marginBottom: 2,
-                            borderRadius: 10,
+                            gap: 6,
+                            padding: '0 8px 0 14px',
+                            marginTop: 1,
+                            marginBottom: 1,
+                            borderRadius: 8,
                             cursor: isRenamingSession ? 'text' : 'grab',
                             backgroundColor: isDraggingSelf
                               ? 'var(--color-sidebar-item-hover)'
@@ -1777,7 +1777,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                title={agentStatusTitle}
                                style={{
                                  width: 8,
-                                 height: 14,
+                                 height: 13,
                                  display: 'inline-flex',
                                  alignItems: 'center',
                                  justifyContent: 'center',
@@ -1805,7 +1805,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                              </span>
                              <span
                                style={{
-                                 width: '1.25rem',
+                                 width: '1rem',
                                  flexShrink: 0,
                                  fontSize: 10,
                                  fontVariantNumeric: 'tabular-nums',
@@ -1848,7 +1848,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                   backgroundColor: 'var(--color-surface-content-elevated)',
                                   color: 'var(--color-text-primary)',
                                   fontSize: 12,
-                                  padding: '4px 6px',
+                                  padding: '3px 5px',
                                   outline: 'none',
                                 }}
                               />
@@ -1875,8 +1875,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                 }}
                                 title={closeSessionTitle}
                                 style={{
-                                  width: 18,
-                                  height: 18,
+                                  width: 16,
+                                  height: 16,
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -1902,7 +1902,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                   event.currentTarget.style.color = 'var(--color-text-muted)';
                                 }}
                               >
-                                <X size={12} />
+                                <X size={11} />
                               </button>
                             )}
                         </div>
@@ -1922,7 +1922,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              padding: '0 10px 10px',
+              padding: '0 8px 8px',
               borderTop: '1px solid var(--color-border-secondary)',
               flexShrink: 0,
             }}
@@ -1958,15 +1958,15 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 event.currentTarget.style.color = 'var(--color-text-tertiary)';
               }}
             >
-              <PanelLeftClose size={14} />
+              <PanelLeftClose size={13} />
               {aggregateAgentStatus && (
                 <span
                   style={{
                     position: 'absolute',
-                    right: 3,
-                    top: 3,
-                    width: 7,
-                    height: 7,
+                    right: 2,
+                    top: 2,
+                    width: 6,
+                    height: 6,
                     borderRadius: aggregateAgentStatus.state === 'completed' ? 2 : '50%',
                     backgroundColor: getAgentStatusColor(aggregateAgentStatus.state, false),
                     boxShadow: `0 0 0 3px ${getAgentStatusSoftColor(aggregateAgentStatus.state)}`,
@@ -2111,8 +2111,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           title={sidebarToggleTitleWithStatus}
           style={{
             position: 'absolute',
-            bottom: 12,
-            left: 10,
+            bottom: 10,
+            left: 8,
             width: SIDEBAR_TOGGLE_SIZE,
             height: SIDEBAR_TOGGLE_SIZE,
             display: 'inline-flex',
@@ -2139,15 +2139,15 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             event.currentTarget.style.color = 'var(--color-text-tertiary)';
           }}
         >
-          <PanelLeftOpen size={14} />
+          <PanelLeftOpen size={13} />
           {aggregateAgentStatus && (
             <span
               style={{
                 position: 'absolute',
-                right: 3,
-                top: 3,
-                width: 7,
-                height: 7,
+                right: 2,
+                top: 2,
+                width: 6,
+                height: 6,
                 borderRadius: aggregateAgentStatus.state === 'completed' ? 2 : '50%',
                 backgroundColor: getAgentStatusColor(aggregateAgentStatus.state, false),
                 boxShadow: `0 0 0 3px ${getAgentStatusSoftColor(aggregateAgentStatus.state)}`,

@@ -4,7 +4,7 @@
 终端分组导航能力，提供基于 workspace / 终端会话的侧边双层结构、终端会话切换与关闭、以及围绕当前终端上下文自动更新标签名称的交互。
 ## Requirements
 ### Requirement: Tab 栏显示
-终端面板 SHALL 在左侧显示一个双层导航区域，以 workspace 为一级节点、终端会话为二级节点。
+终端面板 SHALL 在左侧显示一个双层导航区域，以 workspace 为一级节点、终端会话为二级节点；展开态导航 SHALL 使用紧凑的视觉密度，同时不得缩小标题文字可显示范围。
 
 #### Scenario: 启动时默认显示一个 workspace 与一个二级终端
 - **WHEN** 终端面板首次渲染且无持久化 tab 数据
@@ -31,6 +31,18 @@
 - **THEN** 一级 workspace 节点 SHALL 垂直排列在左侧
 - **THEN** 每个已展开的一级节点下方 SHALL 显示其所属的二级终端节点列表
 - **THEN** 新建按钮 SHALL 显示在该侧边导航区域内，而非顶部横向 Tab 栏
+
+#### Scenario: 展开态侧边 tab 紧凑显示
+- **WHEN** terminal 侧边 tab 栏处于展开态
+- **THEN** workspace 节点与二级终端节点 SHALL 使用比当前基线更小的行高、内边距和列表间距
+- **THEN** header、footer、节点图标、关闭按钮、新增按钮和折叠按钮的视觉占位 SHALL 与紧凑行高协调
+- **THEN** 相同侧边栏高度下 SHALL 能显示不少于当前基线数量的 workspace 与二级终端节点
+
+#### Scenario: 紧凑显示不缩小标题文字范围
+- **WHEN** terminal 侧边 tab 栏处于展开态且节点标题较长
+- **THEN** workspace 标题的可用文本显示宽度 SHALL NOT 小于当前基线实现
+- **THEN** 二级终端标题的可用文本显示宽度 SHALL NOT 小于当前基线实现
+- **THEN** 系统 SHALL 优先压缩非文本视觉占位，而不是通过缩窄展开态侧边栏或提前截断标题来获得紧凑效果
 
 #### Scenario: 侧边栏支持整体收起与展开
 - **WHEN** 用户触发 terminal 侧边 tab 栏的收起 / 展开控件
