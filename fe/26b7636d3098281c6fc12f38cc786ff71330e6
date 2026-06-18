@@ -1,0 +1,153 @@
+openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/proposal.md
+  25165888cbfa336f 1-29
+openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/specs/file-preview/spec.md
+  25165888cbfa336f 1-28
+openspec/specs/file-preview/spec.md
+  25165888cbfa336f 181-207
+openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/design.md
+  25165888cbfa336f 1-67
+openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/.openspec.yaml
+  25165888cbfa336f 1-2
+src/index.css
+  25165888cbfa336f 458-550
+src/components/MarkdownPreview.tsx
+  25165888cbfa336f 1-2,23-31,42-85,109-130,152-163,166-237
+openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/tasks.md
+  25165888cbfa336f 1-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "fe26b7636d3098281c6fc12f38cc786ff71330e6",
+  "prompts": {
+    "25165888cbfa336f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb776-0299-7f90-b64d-27d5569a1eaa",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 617,
+      "total_deletions": 65,
+      "accepted_lines": 436,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/specs/file-preview/spec.md": {
+          "additions": 27,
+          "accepted_lines": 27
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/proposal.md": {
+          "additions": 29
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/specs/file-preview/spec.md": {
+          "additions": 30,
+          "deletions": 2
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/index.css": {
+          "additions": 98,
+          "deletions": 5,
+          "accepted_lines": 93
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/specs/file-preview/spec.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "src/components/MarkdownPreview.tsx": {
+          "additions": 162,
+          "deletions": 40,
+          "accepted_lines": 161
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/design.md": {
+          "additions": 67,
+          "accepted_lines": 67
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/tasks.md": {
+          "additions": 47,
+          "deletions": 18
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/design.md": {
+          "additions": 67
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/proposal.md": {
+          "additions": 29,
+          "accepted_lines": 29
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/tasks.md": {
+          "additions": 29,
+          "accepted_lines": 29
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        }
+      }
+    },
+    "7fab35e0da7eba2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb5b2-7d82-7b93-886b-bcccf6a371d7",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 472,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/settings-panel/spec.md": {
+          "accepted_lines": 23
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/keyboard-shortcuts/spec.md": {
+          "accepted_lines": 48
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-navigation/spec.md": {
+          "accepted_lines": 5
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/proposal.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/browser-url-autocomplete/spec.md": {
+          "accepted_lines": 21
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-panel/spec.md": {
+          "accepted_lines": 61
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-autosave/spec.md": {
+          "accepted_lines": 21
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/electron-shell/spec.md": {
+          "accepted_lines": 26
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-editor/spec.md": {
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-vault-switching/spec.md": {
+          "accepted_lines": 9
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/browser-panel/spec.md": {
+          "accepted_lines": 41
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/tasks.md": {
+          "accepted_lines": 39
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-storage/spec.md": {
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/design.md": {
+          "accepted_lines": 85
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/git-diff-panel/spec.md": {
+          "accepted_lines": 25
+        }
+      }
+    }
+  }
+}

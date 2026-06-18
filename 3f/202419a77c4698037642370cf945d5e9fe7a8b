@@ -1,0 +1,102 @@
+openspec/specs/file-preview/spec.md
+  05d0949b9fdbb39c 249-315
+openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/specs/file-preview/spec.md
+  05d0949b9fdbb39c 1-68
+src/components/FilePreviewPanel.tsx
+  05d0949b9fdbb39c 3,118,150-153,171,193,195,364,382,390,407,456,465,679-684,1078-1115,1117-1135,1137-1150,1206-1208
+src/index.css
+  05d0949b9fdbb39c 647-970
+openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/.openspec.yaml
+  05d0949b9fdbb39c 1-2
+openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/design.md
+  05d0949b9fdbb39c 1-99
+src/components/MarkdownPreview.tsx
+  05d0949b9fdbb39c 2-16,50-51,64-86,89-102,105-111,148-158,205-388,480-481,487,489,492-499,501,507-510,512-519,525,527,535,537,546,549,561-563,565-576,579,581,586-599,696-735,737-740,759-763,791,810,812,814,816,823-827,829-936,965-1134,1138,1252
+openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/proposal.md
+  05d0949b9fdbb39c 1-32
+openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/tasks.md
+  05d0949b9fdbb39c 1-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "3f202419a77c4698037642370cf945d5e9fe7a8b",
+  "prompts": {
+    "05d0949b9fdbb39c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ed485-1c40-7fe0-b78e-1d9990ef75bc",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1913,
+      "total_deletions": 163,
+      "accepted_lines": 1399,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-markdown-mind-map-view/design.md": {
+          "additions": 110,
+          "deletions": 11
+        },
+        "openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/proposal.md": {
+          "additions": 32,
+          "accepted_lines": 32
+        },
+        "src/components/MarkdownPreview.tsx": {
+          "additions": 704,
+          "deletions": 46,
+          "accepted_lines": 667
+        },
+        "openspec/changes/add-markdown-mind-map-view/tasks.md": {
+          "additions": 74,
+          "deletions": 29
+        },
+        "openspec/changes/add-markdown-mind-map-view/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/design.md": {
+          "additions": 99,
+          "accepted_lines": 99
+        },
+        "openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/specs/file-preview/spec.md": {
+          "additions": 68,
+          "accepted_lines": 68
+        },
+        "mindmap-harness.tmp.html": {
+          "additions": 178
+        },
+        "openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "src/components/FilePreviewPanel.tsx": {
+          "additions": 95,
+          "deletions": 64,
+          "accepted_lines": 95
+        },
+        "openspec/changes/add-markdown-mind-map-view/specs/file-preview/spec.md": {
+          "additions": 76,
+          "deletions": 8
+        },
+        "src/index.css": {
+          "additions": 326,
+          "deletions": 2,
+          "accepted_lines": 324
+        },
+        "openspec/changes/archive/2026-06-17-add-markdown-mind-map-view/tasks.md": {
+          "additions": 45,
+          "accepted_lines": 45
+        },
+        "openspec/specs/file-preview/spec.md": {
+          "additions": 67,
+          "accepted_lines": 67
+        },
+        "openspec/changes/add-markdown-mind-map-view/proposal.md": {
+          "additions": 35,
+          "deletions": 3
+        }
+      }
+    }
+  }
+}

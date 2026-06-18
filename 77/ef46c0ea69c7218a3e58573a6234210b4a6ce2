@@ -1,0 +1,119 @@
+openspec/specs/electron-shell/spec.md
+  a32f94bd91213955 134-152
+src/global.d.ts
+  a32f94bd91213955 5,23
+openspec/specs/panel-layout/spec.md
+  a32f94bd91213955 139-156
+src/preload.ts
+  a32f94bd91213955 75-83,276-278
+openspec/changes/archive/2026-06-14-add-app-version-display/.openspec.yaml
+  a32f94bd91213955 1-2
+openspec/changes/archive/2026-06-14-add-app-version-display/proposal.md
+  a32f94bd91213955 1-29
+openspec/changes/archive/2026-06-14-add-app-version-display/specs/electron-shell/spec.md
+  a32f94bd91213955 1-20
+src/App.tsx
+  a32f94bd91213955 112-126,173,184-198,329-337
+openspec/changes/archive/2026-06-14-add-app-version-display/specs/panel-layout/spec.md
+  a32f94bd91213955 1-20
+src/main.ts
+  a32f94bd91213955 532-536
+openspec/changes/archive/2026-06-14-add-app-version-display/design.md
+  a32f94bd91213955 1-70
+openspec/changes/archive/2026-06-14-add-app-version-display/tasks.md
+  a32f94bd91213955 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "77ef46c0ea69c7218a3e58573a6234210b4a6ce2",
+  "prompts": {
+    "a32f94bd91213955": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ec65a-68c8-73b0-a9b5-87d1906bd5b1",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 423,
+      "total_deletions": 167,
+      "accepted_lines": 256,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-14-add-app-version-display/proposal.md": {
+          "additions": 29,
+          "accepted_lines": 29
+        },
+        "openspec/changes/archive/2026-06-14-add-app-version-display/tasks.md": {
+          "additions": 17,
+          "accepted_lines": 17
+        },
+        "openspec/changes/archive/2026-06-14-add-app-version-display/specs/panel-layout/spec.md": {
+          "additions": 20,
+          "accepted_lines": 20
+        },
+        "src/preload.ts": {
+          "additions": 13,
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-14-add-app-version-display/design.md": {
+          "additions": 70,
+          "accepted_lines": 70
+        },
+        "src/App.tsx": {
+          "additions": 41,
+          "accepted_lines": 41
+        },
+        "openspec/changes/archive/2026-06-14-add-app-version-display/specs/electron-shell/spec.md": {
+          "additions": 20,
+          "accepted_lines": 20
+        },
+        "openspec/changes/archive/2026-06-14-add-app-version-display/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-app-version-display/design.md": {
+          "additions": 70,
+          "deletions": 70
+        },
+        "openspec/changes/add-app-version-display/specs/electron-shell/spec.md": {
+          "additions": 20,
+          "deletions": 20
+        },
+        "src/global.d.ts": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-app-version-display/tasks.md": {
+          "additions": 26,
+          "deletions": 26
+        },
+        "openspec/specs/electron-shell/spec.md": {
+          "additions": 19,
+          "accepted_lines": 19
+        },
+        "openspec/changes/add-app-version-display/proposal.md": {
+          "additions": 29,
+          "deletions": 29
+        },
+        "openspec/changes/add-app-version-display/.openspec.yaml": {
+          "additions": 2,
+          "deletions": 2
+        },
+        "openspec/changes/add-app-version-display/specs/panel-layout/spec.md": {
+          "additions": 20,
+          "deletions": 20
+        },
+        "src/main.ts": {
+          "additions": 5,
+          "accepted_lines": 5
+        },
+        "openspec/specs/panel-layout/spec.md": {
+          "additions": 18,
+          "accepted_lines": 18
+        }
+      }
+    }
+  }
+}

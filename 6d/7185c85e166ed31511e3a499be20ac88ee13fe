@@ -1,0 +1,165 @@
+openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/design.md
+  6f91cb6a8de66484 1-52
+openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/specs/terminal-tabs/spec.md
+  6f91cb6a8de66484 1-62
+openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/.openspec.yaml
+  6f91cb6a8de66484 1-2
+src/components/TerminalPanel.tsx
+  6f91cb6a8de66484 76-79,1430,1457-1458,1481,1491,1506,1534-1536,1563,1571,1575,1583,1615,1644-1645,1669,1675,1736-1740,1780,1808,1851,1878-1879,1905,1925,1961,1966-1969,2114-2115,2142,2147-2150
+openspec/specs/terminal-tabs/spec.md
+  6f91cb6a8de66484 7,35-45
+openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/proposal.md
+  6f91cb6a8de66484 1-28
+openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/tasks.md
+  6f91cb6a8de66484 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "6d7185c85e166ed31511e3a499be20ac88ee13fe",
+  "prompts": {
+    "69caeffbd09334fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ec8ef-1420-70b0-8ec4-5978ac336fdb",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1638,
+      "total_deletions": 588,
+      "accepted_lines": 0,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-terminal-conversation-minimap/specs/terminal-conversation-minimap/spec.md": {
+          "additions": 236,
+          "deletions": 51
+        },
+        "openspec/changes/add-terminal-conversation-minimap/.openspec.yaml": {
+          "additions": 2
+        },
+        "scripts/verify-terminal-conversation-minimap.mjs": {
+          "additions": 226,
+          "deletions": 95
+        },
+        "src/components/TerminalConversationMinimap.css": {
+          "additions": 139,
+          "deletions": 16
+        },
+        "openspec/changes/add-terminal-conversation-minimap/design.md": {
+          "additions": 146,
+          "deletions": 46
+        },
+        "openspec/changes/add-terminal-conversation-minimap/proposal.md": {
+          "additions": 49,
+          "deletions": 14
+        },
+        "src/components/TerminalConversationMinimap.tsx": {
+          "additions": 176,
+          "deletions": 31
+        },
+        "src/utils/terminal-conversation-minimap.ts": {
+          "additions": 570,
+          "deletions": 279
+        },
+        "openspec/changes/add-terminal-conversation-minimap/tasks.md": {
+          "additions": 94,
+          "deletions": 56
+        }
+      }
+    },
+    "6f91cb6a8de66484": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ed366-f339-7b71-a679-6c01bc48ac1d",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 397,
+      "total_deletions": 53,
+      "accepted_lines": 221,
+      "overriden_lines": 4,
+      "per_file_stats": {
+        "openspec/changes/compact-terminal-sidebar-tabs/tasks.md": {
+          "additions": 28,
+          "deletions": 6
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/design.md": {
+          "additions": 52,
+          "accepted_lines": 52
+        },
+        "openspec/specs/terminal-tabs/spec.md": {
+          "additions": 13,
+          "deletions": 1,
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/tasks.md": {
+          "additions": 22,
+          "accepted_lines": 18,
+          "overriden_lines": 4
+        },
+        "openspec/changes/compact-terminal-sidebar-tabs/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/compact-terminal-sidebar-tabs/specs/terminal-tabs/spec.md": {
+          "additions": 62
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 46,
+          "deletions": 46,
+          "accepted_lines": 46
+        },
+        "openspec/changes/compact-terminal-sidebar-tabs/design.md": {
+          "additions": 52
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/specs/terminal-tabs/spec.md": {
+          "additions": 62,
+          "accepted_lines": 62
+        },
+        "openspec/changes/compact-terminal-sidebar-tabs/proposal.md": {
+          "additions": 28
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/proposal.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        }
+      }
+    },
+    "83359125324f3c16": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ed01a-eac8-7572-9dd5-d8deb4d85552",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 194,
+      "total_deletions": 324,
+      "accepted_lines": 0,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-terminal-conversation-minimap/specs/terminal-conversation-minimap/spec.md": {
+          "additions": 80,
+          "deletions": 183
+        },
+        "openspec/changes/add-terminal-conversation-minimap/proposal.md": {
+          "additions": 13,
+          "deletions": 19
+        },
+        "openspec/changes/add-terminal-conversation-minimap/design.md": {
+          "additions": 43,
+          "deletions": 65
+        },
+        "openspec/changes/add-terminal-conversation-minimap/tasks.md": {
+          "additions": 58,
+          "deletions": 57
+        }
+      }
+    }
+  }
+}

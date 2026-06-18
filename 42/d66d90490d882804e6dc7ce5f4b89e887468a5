@@ -1,0 +1,36 @@
+scripts/aiterm-notify.mjs
+  4d2a5ae7f69fa2fa 74-80,168,240
+docs/codex-hook-notifications.md
+  4d2a5ae7f69fa2fa 3,32-38,47,49,52,120-126,161,164,174,177
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "42d66d90490d882804e6dc7ce5f4b89e887468a5",
+  "prompts": {
+    "4d2a5ae7f69fa2fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ebb62-7742-7481-be1f-bee39f399e4f",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 32,
+      "total_deletions": 4,
+      "accepted_lines": 32,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "scripts/aiterm-notify.mjs": {
+          "additions": 9,
+          "accepted_lines": 9
+        },
+        "docs/codex-hook-notifications.md": {
+          "additions": 23,
+          "deletions": 4,
+          "accepted_lines": 23
+        }
+      }
+    }
+  }
+}
