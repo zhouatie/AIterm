@@ -376,6 +376,12 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     }
   }, [resetCommentState, resetFindState]);
 
+  useEffect(() => (
+    window.fileApi.onOpenFilePreview(({ filePath }) => {
+      void handleSelectFile(filePath);
+    })
+  ), [handleSelectFile]);
+
   const handleReloadSelectedFile = useCallback(async () => {
     if (!selectedFile || loadingFile || writingTask) return;
 

@@ -133,6 +133,9 @@ export interface FileApi {
   showInFolder(filePath: string): void;
   fileExists(filePath: string): Promise<boolean>;
   openFilePreview(filePath: string, line?: number, col?: number): void;
+  onOpenFilePreview(
+    callback: (data: { filePath: string; line?: number; col?: number }) => void,
+  ): () => void;
   ensureDir(dirPath: string): Promise<{ success?: boolean; error?: string }>;
   deleteFile(filePath: string): Promise<{ success?: boolean; error?: string }>;
   rename(oldPath: string, newPath: string): Promise<{ success?: boolean; error?: string }>;
@@ -272,6 +275,18 @@ contextBridge.exposeInMainWorld('fileApi', {
 
   openFilePreview: (filePath: string, line?: number, col?: number) =>
     ipcRenderer.send('fs:open-file-preview', { filePath, line, col }),
+
+  onOpenFilePreview: (callback: (data: { filePath: string; line?: number; col?: number }) => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: { filePath: string; line?: number; col?: number },
+    ) => callback(data);
+    ipcRenderer.on('fs:open-file-preview', listener);
+    return () => {
+      ipcRenderer.removeListener('fs:open-file-preview', listener);
+    };
+  },
+
   ensureDir: (dirPath: string) =>
     ipcRenderer.invoke('fs:ensure-dir', { dirPath }),
 
