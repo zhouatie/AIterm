@@ -1,0 +1,153 @@
+src/components/AgentInboxPanel.tsx
+  8e33258dad8e0b02 1-144
+openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/.openspec.yaml
+  8e33258dad8e0b02 1-2
+openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/specs/sdd-workflow-panels/spec.md
+  8e33258dad8e0b02 1-247
+src/preload.ts
+  8e33258dad8e0b02 11-13,78-79,292-296
+src/components/FilePreviewPanel.tsx
+  8e33258dad8e0b02 20,51-52,119,1031-1053,1055,1064-1068
+src/App.tsx
+  8e33258dad8e0b02 12,19,30,242,282,391-394,496-510,606-609,628-637
+src/index.css
+  8e33258dad8e0b02 262-763
+src/components/TerminalPanel.tsx
+  8e33258dad8e0b02 27,416-421,482-485,801-811,873-874,883,886-888,1962
+src/utils/openspec-workflow.ts
+  8e33258dad8e0b02 1-46
+src/components/OpenSpecDashboard.tsx
+  8e33258dad8e0b02 1-204
+openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/proposal.md
+  8e33258dad8e0b02 1-28
+openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/tasks.md
+  8e33258dad8e0b02 1-49
+openspec/specs/sdd-workflow-panels/spec.md
+  8e33258dad8e0b02 1-251
+openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/design.md
+  8e33258dad8e0b02 1-87
+src/main.ts
+  8e33258dad8e0b02 4,40-47,1241-1263,1437-1612
+src/global.d.ts
+  8e33258dad8e0b02 5,25
+src/contexts/agent-status.tsx
+  8e33258dad8e0b02 1-210
+src/components/TerminalInstance.tsx
+  8e33258dad8e0b02 216,221,231,238-241,388
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "9bf2b13a213c9ad7a7136f6893fa6c4fdf767a62",
+  "prompts": {
+    "8e33258dad8e0b02": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edb5f-f4a3-71d2-be6a-5660f643924e",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2554,
+      "total_deletions": 128,
+      "accepted_lines": 2104,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/proposal.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "openspec/changes/add-sdd-workflow-panels/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/components/OpenSpecDashboard.tsx": {
+          "additions": 204,
+          "accepted_lines": 204
+        },
+        "openspec/changes/add-sdd-workflow-panels/tasks.md": {
+          "additions": 81,
+          "deletions": 32
+        },
+        "openspec/changes/add-sdd-workflow-panels/proposal.md": {
+          "additions": 28
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/tasks.md": {
+          "additions": 49,
+          "accepted_lines": 49
+        },
+        "src/components/FilePreviewPanel.tsx": {
+          "additions": 33,
+          "deletions": 3,
+          "accepted_lines": 33
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "src/components/AgentInboxPanel.tsx": {
+          "additions": 146,
+          "deletions": 2,
+          "accepted_lines": 144
+        },
+        "openspec/changes/add-sdd-workflow-panels/design.md": {
+          "additions": 87
+        },
+        "src/utils/openspec-workflow.ts": {
+          "additions": 46,
+          "accepted_lines": 46
+        },
+        "src/App.tsx": {
+          "additions": 41,
+          "deletions": 9,
+          "accepted_lines": 40
+        },
+        "src/index.css": {
+          "additions": 502,
+          "accepted_lines": 502
+        },
+        "openspec/changes/add-sdd-workflow-panels/specs/sdd-workflow-panels/spec.md": {
+          "additions": 247
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/design.md": {
+          "additions": 87,
+          "accepted_lines": 87
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/specs/sdd-workflow-panels/spec.md": {
+          "additions": 247,
+          "accepted_lines": 247
+        },
+        "src/preload.ts": {
+          "additions": 12,
+          "accepted_lines": 12
+        },
+        "src/global.d.ts": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "src/main.ts": {
+          "additions": 210,
+          "deletions": 2,
+          "accepted_lines": 208
+        },
+        "src/contexts/agent-status.tsx": {
+          "additions": 210,
+          "accepted_lines": 210
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 31,
+          "deletions": 79,
+          "accepted_lines": 31
+        },
+        "src/components/TerminalInstance.tsx": {
+          "additions": 8,
+          "deletions": 1,
+          "accepted_lines": 8
+        },
+        "openspec/specs/sdd-workflow-panels/spec.md": {
+          "additions": 251,
+          "accepted_lines": 251
+        }
+      }
+    }
+  }
+}
