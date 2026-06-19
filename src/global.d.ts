@@ -2,6 +2,7 @@ import type {
   TerminalApi,
   FileApi,
   MarkdownCommentApi,
+  OpenSpecWorkflowApi,
   AppInfoApi,
   AppUpdateApi,
   ThemeApi,
@@ -21,6 +22,7 @@ declare global {
     terminalApi: TerminalApi;
     fileApi: FileApi;
     markdownCommentApi: MarkdownCommentApi;
+    openspecWorkflowApi: OpenSpecWorkflowApi;
     appInfoApi: AppInfoApi;
     appUpdateApi: AppUpdateApi;
     themeApi: ThemeApi;

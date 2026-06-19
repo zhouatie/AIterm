@@ -9,12 +9,14 @@ import {
   RefreshCw,
   ExternalLink,
   Wrench,
+  Bell,
 } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
 import SettingsPanel from './components/SettingsPanel';
 import LiveViewPanel from './components/LiveViewPanel';
 import UtilityToolsPanel from './components/UtilityToolsPanel';
+import AgentInboxPanel from './components/AgentInboxPanel';
 import SplitLayout from './components/SplitLayout';
 import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
@@ -25,6 +27,7 @@ import {
 } from './components/PanelManager';
 import type { PanelDefinition } from './components/PanelManager';
 import { TerminalUiContext } from './contexts/terminal-ui';
+import { AgentStatusProvider, useAgentStatus } from './contexts/agent-status';
 import {
   readSpecDirectoryNames,
   saveSpecDirectoryNames,
@@ -236,6 +239,7 @@ function resetChromeButtonHover(target: HTMLButtonElement) {
 const AppContent: React.FC = () => {
   const { activeSessionId } = useActiveSession();
   const { switchPanel } = usePanelManager();
+  const { pendingAttentionCount } = useAgentStatus();
   const { mode, cycleTheme } = useTheme();
   const {
     bindings,
@@ -275,6 +279,7 @@ const AppContent: React.FC = () => {
   const [isLiveViewOpen, setIsLiveViewOpen] = useState(false);
   const [liveViewActive, setLiveViewActive] = useState(false);
   const [isUtilityToolsOpen, setIsUtilityToolsOpen] = useState(false);
+  const [isAgentInboxOpen, setIsAgentInboxOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -383,6 +388,10 @@ const AppContent: React.FC = () => {
     setIsUtilityToolsOpen(true);
   }, []);
 
+  const toggleAgentInbox = useCallback(() => {
+    setIsAgentInboxOpen((prev) => !prev);
+  }, []);
+
   useEffect(() => {
     return registerAction('toggle-file-tree', () => {
       togglePanel();
@@ -484,6 +493,22 @@ const AppContent: React.FC = () => {
             <Wrench size={16} />
           </button>
 
+          <div style={{ position: 'relative', display: 'inline-flex', marginLeft: 4 }}>
+            <button
+              onClick={toggleAgentInbox}
+              title={pendingAttentionCount > 0 ? `Agent Inbox，${pendingAttentionCount} 项待处理` : 'Agent Inbox'}
+              aria-label={pendingAttentionCount > 0 ? `Agent Inbox，${pendingAttentionCount} 项待处理` : 'Agent Inbox'}
+              style={toggleButtonStyle}
+              onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
+              onMouseLeave={(e) => resetChromeButtonHover(e.currentTarget)}
+            >
+              <Bell size={16} />
+            </button>
+            {pendingAttentionCount > 0 && (
+              <span className="agent-inbox-titlebar-badge">{pendingAttentionCount}</span>
+            )}
+          </div>
+
           {appInfo && (
             <div style={titleBarMetaStyle}>
               <div
@@ -578,6 +603,11 @@ const AppContent: React.FC = () => {
         isOpen={isUtilityToolsOpen}
         onClose={() => setIsUtilityToolsOpen(false)}
       />
+
+      <AgentInboxPanel
+        isOpen={isAgentInboxOpen}
+        onClose={() => setIsAgentInboxOpen(false)}
+      />
       </>
     </TerminalUiContext.Provider>
   );
@@ -595,14 +625,16 @@ const App: React.FC = () => {
     <ActiveSessionContext.Provider
       value={{ activeSessionId, setActiveSessionId: handleSetActiveSession }}
     >
-      <ShortcutProvider>
-        <PanelManagerProvider
-          defaultPanel={TERMINAL_PANEL_ID}
-          initialPanels={INITIAL_PANELS}
-        >
-          <AppContent />
-        </PanelManagerProvider>
-      </ShortcutProvider>
+      <AgentStatusProvider activeSessionId={activeSessionId}>
+        <ShortcutProvider>
+          <PanelManagerProvider
+            defaultPanel={TERMINAL_PANEL_ID}
+            initialPanels={INITIAL_PANELS}
+          >
+            <AppContent />
+          </PanelManagerProvider>
+        </ShortcutProvider>
+      </AgentStatusProvider>
     </ActiveSessionContext.Provider>
   );
 };

@@ -213,11 +213,12 @@ interface TerminalInstanceProps {
   sessionId: string;
   isActive: boolean;
   preferWebglRenderer: boolean;
+  onUserInput?: (sessionId: string) => void;
   onScrollStateChange?: (sessionId: string, state: TerminalScrollState) => void;
 }
 
 const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProps>(
-  ({ sessionId, isActive, preferWebglRenderer, onScrollStateChange }, ref) => {
+  ({ sessionId, isActive, preferWebglRenderer, onUserInput, onScrollStateChange }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<Terminal | null>(null);
     const initializedRef = useRef(false);
@@ -227,11 +228,16 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
     const serializeAddonRef = useRef<SerializeAddon | null>(null);
     const rendererTypeRef = useRef<RendererType>('dom');
     const onScrollStateChangeRef = useRef(onScrollStateChange);
+    const onUserInputRef = useRef(onUserInput);
     const { theme } = useTheme();
 
     useEffect(() => {
       onScrollStateChangeRef.current = onScrollStateChange;
     }, [onScrollStateChange]);
+
+    useEffect(() => {
+      onUserInputRef.current = onUserInput;
+    }, [onUserInput]);
 
     const emitScrollState = useCallback(() => {
       if (!terminalRef.current) return;
@@ -379,6 +385,7 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
 
       // User input → PTY stdin
       const dataDisposable = terminal.onData((data: string) => {
+        onUserInputRef.current?.(sessionId);
         window.terminalApi.input(sessionId, data);
       });
 

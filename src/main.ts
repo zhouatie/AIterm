@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, nativeTheme, Notification, dialog } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import type { Dirent } from 'node:fs';
 import os from 'node:os';
 import http from 'node:http';
 import https from 'node:https';
@@ -36,6 +37,14 @@ import type {
   MarkdownCommentAnchor,
   MarkdownPreviewComment,
 } from './utils/markdown-comment-types';
+import type {
+  OpenSpecArtifactId,
+  OpenSpecArtifactStatus,
+  OpenSpecChangeSummary,
+  OpenSpecNextAction,
+  OpenSpecTaskProgress,
+  OpenSpecWorkflowSummary,
+} from './utils/openspec-workflow';
 
 // Register checkout trigger: when the server needs a fresh FullSnapshot
 // (stale buffer + new client connected), it calls this to tell the renderer
@@ -1229,6 +1238,29 @@ ipcMain.handle(
   },
 );
 
+// openspec-workflow:read — summarize active OpenSpec changes for the current project root
+ipcMain.handle(
+  'openspec-workflow:read',
+  async (_event, { rootPath }: { rootPath: string }) => {
+    try {
+      const resolved = path.resolve(rootPath);
+      if (shouldSkipScanningRoot(resolved)) {
+        return {
+          summary: {
+            rootPath: resolved,
+            changesPath: path.join(resolved, 'openspec', 'changes'),
+            changes: [],
+          },
+        };
+      }
+
+      return { summary: await readOpenSpecWorkflowSummary(resolved) };
+    } catch (err) {
+      return { error: (err as Error).message };
+    }
+  },
+);
+
 // --- fd availability detection (cached at startup) ---
 
 let fdPath: string | null = null;
@@ -1400,6 +1432,182 @@ function isHomeRoot(rootPath: string): boolean {
 function shouldSkipScanningRoot(rootPath: string): boolean {
   const resolved = path.resolve(rootPath);
   return SYSTEM_SCAN_BLOCKED_ROOTS.some((blockedRoot) => isSameOrInsidePath(resolved, blockedRoot));
+}
+
+async function fileExistsAt(filePath: string): Promise<boolean> {
+  try {
+    const stat = await fs.promises.stat(filePath);
+    return stat.isFile();
+  } catch {
+    return false;
+  }
+}
+
+async function directoryExistsAt(dirPath: string): Promise<boolean> {
+  try {
+    const stat = await fs.promises.stat(dirPath);
+    return stat.isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+async function collectOpenSpecFiles(dirPath: string): Promise<string[]> {
+  if (!await directoryExistsAt(dirPath)) return [];
+
+  const result: string[] = [];
+
+  async function visit(currentPath: string): Promise<void> {
+    let entries: Dirent[];
+    try {
+      entries = await fs.promises.readdir(currentPath, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      const entryPath = path.join(currentPath, entry.name);
+      if (entry.isDirectory()) {
+        await visit(entryPath);
+        continue;
+      }
+
+      if (entry.isFile() && entry.name === 'spec.md') {
+        result.push(entryPath);
+      }
+    }
+  }
+
+  await visit(dirPath);
+  result.sort((a, b) => a.localeCompare(b));
+  return result;
+}
+
+function parseOpenSpecTaskProgress(content: string | null, hasTasksFile: boolean): OpenSpecTaskProgress {
+  if (!hasTasksFile || content === null) {
+    return {
+      total: 0,
+      completed: 0,
+      hasTasksFile: false,
+      hasCheckboxes: false,
+    };
+  }
+
+  const checkboxPattern = /^\s*-\s+\[( |x|X)\]\s+/gm;
+  let total = 0;
+  let completed = 0;
+  let match: RegExpExecArray | null;
+  while ((match = checkboxPattern.exec(content)) !== null) {
+    total += 1;
+    if (match[1].toLowerCase() === 'x') completed += 1;
+  }
+
+  return {
+    total,
+    completed,
+    hasTasksFile: true,
+    hasCheckboxes: total > 0,
+  };
+}
+
+function createOpenSpecArtifactStatus(
+  id: OpenSpecArtifactId,
+  filePath: string | null,
+  present: boolean,
+  count?: number,
+): OpenSpecArtifactStatus {
+  return {
+    id,
+    state: present ? 'present' : 'missing',
+    path: present ? filePath : null,
+    count,
+  };
+}
+
+function resolveOpenSpecNextAction(
+  artifacts: Record<OpenSpecArtifactId, OpenSpecArtifactStatus>,
+  taskProgress: OpenSpecTaskProgress,
+): OpenSpecNextAction {
+  if (artifacts.proposal.state === 'missing') return 'create-proposal';
+  if (artifacts.design.state === 'missing' || artifacts.specs.state === 'missing') {
+    return 'continue-design-specs';
+  }
+  if (artifacts.tasks.state === 'missing') return 'create-tasks';
+  if (!taskProgress.hasCheckboxes) return 'inspect';
+  if (taskProgress.completed < taskProgress.total) return 'apply';
+  return 'verify-review-archive';
+}
+
+async function readOpenSpecChangeSummary(changePath: string, name: string): Promise<OpenSpecChangeSummary> {
+  const proposalPath = path.join(changePath, 'proposal.md');
+  const designPath = path.join(changePath, 'design.md');
+  const tasksPath = path.join(changePath, 'tasks.md');
+  const specsPath = path.join(changePath, 'specs');
+  const [proposalExists, designExists, tasksExists, specFiles, changeStat] = await Promise.all([
+    fileExistsAt(proposalPath),
+    fileExistsAt(designPath),
+    fileExistsAt(tasksPath),
+    collectOpenSpecFiles(specsPath),
+    fs.promises.stat(changePath),
+  ]);
+
+  let tasksContent: string | null = null;
+  if (tasksExists) {
+    try {
+      tasksContent = await fs.promises.readFile(tasksPath, 'utf-8');
+    } catch {
+      tasksContent = '';
+    }
+  }
+
+  const taskProgress = parseOpenSpecTaskProgress(tasksContent, tasksExists);
+  const specsCount = specFiles.length;
+  const artifacts: Record<OpenSpecArtifactId, OpenSpecArtifactStatus> = {
+    proposal: createOpenSpecArtifactStatus('proposal', proposalPath, proposalExists),
+    design: createOpenSpecArtifactStatus('design', designPath, designExists),
+    specs: createOpenSpecArtifactStatus('specs', specsCount > 0 ? specFiles[0] : null, specsCount > 0, specsCount),
+    tasks: createOpenSpecArtifactStatus('tasks', tasksPath, tasksExists),
+  };
+
+  return {
+    name,
+    path: changePath,
+    artifacts,
+    specsCount,
+    taskProgress,
+    nextAction: resolveOpenSpecNextAction(artifacts, taskProgress),
+    mtime: changeStat.mtimeMs,
+  };
+}
+
+async function readOpenSpecWorkflowSummary(rootPath: string): Promise<OpenSpecWorkflowSummary> {
+  const resolvedRoot = path.resolve(rootPath);
+  const changesPath = path.join(resolvedRoot, 'openspec', 'changes');
+  if (!await directoryExistsAt(changesPath)) {
+    return {
+      rootPath: resolvedRoot,
+      changesPath,
+      changes: [],
+    };
+  }
+
+  const entries = await fs.promises.readdir(changesPath, { withFileTypes: true });
+  const changeDirs = entries
+    .filter((entry) => entry.isDirectory() && entry.name !== 'archive')
+    .map((entry) => ({
+      name: entry.name,
+      path: path.join(changesPath, entry.name),
+    }));
+  const changes = await Promise.all(
+    changeDirs.map((changeDir) => readOpenSpecChangeSummary(changeDir.path, changeDir.name)),
+  );
+
+  changes.sort((a, b) => b.mtime - a.mtime || a.name.localeCompare(b.name));
+  return {
+    rootPath: resolvedRoot,
+    changesPath,
+    changes,
+  };
 }
 
 function getExcludedDirNames(rootPath: string): string[] {

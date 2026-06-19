@@ -17,6 +17,7 @@ import FileTree from './FileTree';
 import MarkdownPreview from './MarkdownPreview';
 import CodePreview from './CodePreview';
 import SplitLayout from './SplitLayout';
+import OpenSpecDashboard from './OpenSpecDashboard';
 import { isMarkdownFile } from '../utils/file-types';
 import { toggleMarkdownTaskMarker } from '../utils/markdown-task';
 import { buildMarkdownCommentAgentPayload } from '../utils/markdown-comment-agent-payload';
@@ -46,6 +47,8 @@ interface MarkdownCommentDraft {
   commentId?: string;
   body: string;
 }
+
+type FilePreviewMode = 'files' | 'openspec';
 
 const STORAGE_KEY_FILE_TREE_SPLIT_PX = 'filePreviewTreeSplitPx';
 const STORAGE_KEY_FILE_TREE_VISIBLE = 'filePreviewTreeVisible';
@@ -113,6 +116,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [refreshKey, setRefreshKey] = useState(0);
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [fileTreeVisible, setFileTreeVisible] = useState(readFileTreeVisible);
+  const [previewMode, setPreviewMode] = useState<FilePreviewMode>('files');
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [findQuery, setFindQuery] = useState('');
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
@@ -1024,9 +1028,31 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
         backgroundColor: 'var(--color-bg-primary)',
       }}
     >
-      {/* File tree (includes its own toolbar with refresh) */}
+      <div className="file-preview-mode-bar">
+        {renderFileTreeToggleButton(false)}
+        <div className="file-preview-mode-switch" role="tablist" aria-label="左侧工作区模式">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={previewMode === 'files'}
+            className={'file-preview-mode-button' + (previewMode === 'files' ? ' active' : '')}
+            onClick={() => setPreviewMode('files')}
+          >
+            Files
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={previewMode === 'openspec'}
+            className={'file-preview-mode-button' + (previewMode === 'openspec' ? ' active' : '')}
+            onClick={() => setPreviewMode('openspec')}
+          >
+            OpenSpec
+          </button>
+        </div>
+      </div>
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        {rootPath ? (
+        {rootPath && previewMode === 'files' ? (
           <FileTree
             rootPath={rootPath}
             selectedFile={selectedFile}
@@ -1035,7 +1061,11 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             refreshKey={refreshKey}
             expandedPaths={expandedPaths}
             onExpandedPathsChange={setExpandedPaths}
-            leadingControl={renderFileTreeToggleButton(false)}
+          />
+        ) : rootPath && previewMode === 'openspec' ? (
+          <OpenSpecDashboard
+            rootPath={rootPath}
+            onOpenFile={handleSelectFile}
           />
         ) : (
           <div

@@ -24,6 +24,7 @@ import TerminalInstance from './TerminalInstance';
 import type { TerminalInstanceHandle, TerminalScrollState } from './TerminalInstance';
 import TerminalSearchBar from './TerminalSearchBar';
 import { useTerminalUi } from '../contexts/terminal-ui';
+import { useAgentStatus, type TerminalSessionSummary } from '../contexts/agent-status';
 
 interface WorkspaceNode {
   id: string;
@@ -80,7 +81,6 @@ const SIDEBAR_TOGGLE_SIZE = 26;
 const TERMINAL_SCROLL_CONTROL_SIZE = 28;
 /** Duration (ms) for the sidebar collapse/expand animation. */
 const SIDEBAR_COLLAPSE_MS = 180;
-const COMPLETED_STATUS_AUTO_CLEAR_MS = 2400;
 const CLEAR_ON_SELECT_STATES: readonly TerminalAgentStatusState[] = [
   'needs_user',
   'completed',
@@ -413,11 +413,15 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const workspaceRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const sessionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const completedStatusTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const {
+    agentStatusBySessionId,
+    clearSessionAgentStatus,
+    setSessionSummaries,
+    registerSessionActivator,
+  } = useAgentStatus();
 
   const [workspaces, setWorkspaces] = useState<WorkspaceNode[]>([]);
   const [sessionNameOverrides, setSessionNameOverrides] = useState<Record<string, string>>({});
-  const [agentStatusBySessionId, setAgentStatusBySessionId] = useState<Record<string, TerminalAgentStatus>>({});
   const [activeSessionId, setActiveSessionId] = useState<string>('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [menuState, setMenuState] = useState<SidebarMenuState | null>(null);
@@ -475,6 +479,10 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     updateActiveScrollState(nextState);
   }, [activeSessionId, updateActiveScrollState]);
 
+  const handleTerminalUserInput = useCallback((sessionId: string) => {
+    clearSessionAgentStatus(sessionId, CLEAR_ON_SELECT_STATES);
+  }, [clearSessionAgentStatus]);
+
   const scrollActiveTerminal = useCallback((direction: 'top' | 'bottom'): boolean => {
     if (!activeSessionId) return false;
     const terminalHandle = terminalInstanceRefs.current.get(activeSessionId);
@@ -504,38 +512,6 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     updateActiveScrollState(terminalHandle.getScrollState());
     return true;
   }, [activeSessionId, updateActiveScrollState]);
-
-  const cancelCompletedStatusTimer = useCallback((sessionId: string) => {
-    const timer = completedStatusTimersRef.current.get(sessionId);
-    if (!timer) return;
-    clearTimeout(timer);
-    completedStatusTimersRef.current.delete(sessionId);
-  }, []);
-
-  const clearSessionAgentStatus = useCallback((
-    sessionId: string,
-    states?: readonly TerminalAgentStatusState[],
-  ) => {
-    cancelCompletedStatusTimer(sessionId);
-    setAgentStatusBySessionId((prev) => {
-      const current = prev[sessionId];
-      if (!current) return prev;
-      if (states && !states.includes(current.state)) return prev;
-      if (!(sessionId in prev)) return prev;
-      const next = { ...prev };
-      delete next[sessionId];
-      return next;
-    });
-  }, [cancelCompletedStatusTimer]);
-
-  const scheduleCompletedStatusClear = useCallback((sessionId: string) => {
-    cancelCompletedStatusTimer(sessionId);
-    const timer = setTimeout(() => {
-      completedStatusTimersRef.current.delete(sessionId);
-      clearSessionAgentStatus(sessionId, ['completed']);
-    }, COMPLETED_STATUS_AUTO_CLEAR_MS);
-    completedStatusTimersRef.current.set(sessionId, timer);
-  }, [cancelCompletedStatusTimer, clearSessionAgentStatus]);
 
   const applySessionInfo = useCallback((info: TerminalSessionInfo) => {
     setWorkspaces((prev) =>
@@ -726,15 +702,6 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [createWorkspace, initialDirectory, applySessionInfo]);
 
   useEffect(() => {
-    return () => {
-      for (const timer of completedStatusTimersRef.current.values()) {
-        clearTimeout(timer);
-      }
-      completedStatusTimersRef.current.clear();
-    };
-  }, []);
-
-  useEffect(() => {
     return registerAction('toggle-terminal-sidebar', () => {
       setSidebarCollapsed((prev) => !prev);
     });
@@ -831,6 +798,18 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [activeSessionId, onActiveSessionChange]);
 
   useEffect(() => {
+    const summaries: TerminalSessionSummary[] = workspaces.flatMap((workspace) =>
+      workspace.sessions.map((session) => ({
+        id: session.id,
+        label: getSessionDisplayLabel(session, sessionNameOverrides),
+        cwd: session.cwd,
+        workspaceName: workspace.name,
+      })),
+    );
+    setSessionSummaries(summaries);
+  }, [sessionNameOverrides, setSessionSummaries, workspaces]);
+
+  useEffect(() => {
     updateActiveScrollState(null);
     const frame = requestAnimationFrame(refreshActiveTerminalScrollState);
     return () => cancelAnimationFrame(frame);
@@ -849,39 +828,6 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     });
     return unsubscribe;
   }, [applySessionInfo]);
-
-  useEffect(() => {
-    const unsubscribe = window.terminalApi.onAgentStatus((status) => {
-      if (status.state === 'idle') {
-        clearSessionAgentStatus(status.id);
-        return;
-      }
-
-      if (status.state === 'completed' && status.id === activeSessionId) {
-        scheduleCompletedStatusClear(status.id);
-      } else {
-        cancelCompletedStatusTimer(status.id);
-      }
-
-      setAgentStatusBySessionId((prev) => ({
-        ...prev,
-        [status.id]: status,
-      }));
-    });
-    return unsubscribe;
-  }, [
-    activeSessionId,
-    cancelCompletedStatusTimer,
-    clearSessionAgentStatus,
-    scheduleCompletedStatusClear,
-  ]);
-
-  useEffect(() => {
-    const unsubscribe = window.terminalApi.onAgentStatusCleared(({ id }) => {
-      clearSessionAgentStatus(id);
-    });
-    return unsubscribe;
-  }, [clearSessionAgentStatus]);
 
   useEffect(() => {
     if (sidebarCollapsed) {
@@ -924,8 +870,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     setActiveSessionId(sessionId);
   }, [clearSessionAgentStatus]);
 
-  const handleActivateSessionFromNotification = useCallback((sessionId: string) => {
-    if (!findWorkspaceBySessionId(workspacesRef.current, sessionId)) return;
+  const handleActivateSessionFromNotification = useCallback((sessionId: string): boolean => {
+    if (!findWorkspaceBySessionId(workspacesRef.current, sessionId)) return false;
 
     revealTerminalUi();
     setSidebarCollapsed(false);
@@ -934,7 +880,12 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     requestAnimationFrame(() => {
       terminalInstanceRefs.current.get(sessionId)?.getTerminal()?.focus();
     });
+    return true;
   }, [handleSelectSession, revealTerminalUi]);
+
+  useEffect(() => (
+    registerSessionActivator(handleActivateSessionFromNotification)
+  ), [handleActivateSessionFromNotification, registerSessionActivator]);
 
   useEffect(() => {
     const unsubscribe = window.terminalApi.onActivateSession(({ id }) => {
@@ -2008,6 +1959,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
               sessionId={session.id}
               isActive={session.id === activeSessionId}
               preferWebglRenderer={preferWebglRenderer}
+              onUserInput={handleTerminalUserInput}
               onScrollStateChange={handleTerminalScrollStateChange}
             />
           )),

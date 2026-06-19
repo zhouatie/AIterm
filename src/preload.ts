@@ -8,6 +8,9 @@ import type {
   MarkdownCommentApiResult,
   MarkdownPreviewComment,
 } from './utils/markdown-comment-types';
+import type {
+  OpenSpecWorkflowResult,
+} from './utils/openspec-workflow';
 
 export interface TerminalApi {
   create(cols: number, rows: number, cwd?: string): Promise<{ id: string }>;
@@ -70,6 +73,10 @@ export interface SpecTreeOptions {
 export interface MarkdownCommentApi {
   load(rootPath: string, filePath: string): Promise<MarkdownCommentApiResult>;
   save(rootPath: string, filePath: string, comments: MarkdownPreviewComment[]): Promise<MarkdownCommentApiResult>;
+}
+
+export interface OpenSpecWorkflowApi {
+  read(rootPath: string): Promise<OpenSpecWorkflowResult>;
 }
 
 export interface AppInfo {
@@ -281,6 +288,11 @@ contextBridge.exposeInMainWorld('markdownCommentApi', {
   save: (rootPath: string, filePath: string, comments: MarkdownPreviewComment[]) =>
     ipcRenderer.invoke('markdown-comments:save', { rootPath, filePath, comments }),
 } satisfies MarkdownCommentApi);
+
+contextBridge.exposeInMainWorld('openspecWorkflowApi', {
+  read: (rootPath: string) =>
+    ipcRenderer.invoke('openspec-workflow:read', { rootPath }),
+} satisfies OpenSpecWorkflowApi);
 
 export interface ThemeApi {
   setNativeTheme(mode: 'light' | 'dark' | 'system'): void;
