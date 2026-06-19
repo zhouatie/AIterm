@@ -1311,6 +1311,13 @@ html, body {
   transform: translateY(-1px);
 }
 
+.terminal-spec-change-card.active {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent-primary);
+  background: var(--color-surface-content-elevated);
+  box-shadow: var(--shadow-tab-active);
+}
+
 .terminal-spec-change-card-header {
   min-width: 0;
   display: flex;
@@ -1421,7 +1428,7 @@ html, body {
 .terminal-spec-change-footer {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
   gap: 6px;
   color: var(--color-text-tertiary);
@@ -1442,6 +1449,10 @@ html, body {
 
 .terminal-spec-task-progress svg {
   flex: 0 0 auto;
+}
+
+.terminal-spec-task-progress {
+  grid-column: 1 / -1;
 }
 
 .terminal-spec-target {

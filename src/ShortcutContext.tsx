@@ -11,6 +11,7 @@ import React, {
 export type ShortcutActionId =
   | 'toggle-file-tree'
   | 'toggle-terminal-sidebar'
+  | 'toggle-terminal-sidebar-mode'
   | 'find-in-file-preview'
   | 'create-workspace'
   | 'create-terminal-tab'
@@ -64,6 +65,11 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
     id: 'toggle-terminal-sidebar',
     title: 'Terminal Tab 展示/收起',
     description: '切换 terminal 导航侧边栏的显示状态',
+  },
+  {
+    id: 'toggle-terminal-sidebar-mode',
+    title: 'Terminal/Spec 模式切换',
+    description: '在 Terminal 侧边栏的 Terminal 与 Spec 模式之间切换',
   },
   {
     id: 'find-in-file-preview',
@@ -160,6 +166,7 @@ export const SHORTCUT_ACTIONS: ShortcutActionDefinition[] = [
 export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindings = {
   'toggle-file-tree': 'Meta+S',
   'toggle-terminal-sidebar': 'Meta+B',
+  'toggle-terminal-sidebar-mode': 'Meta+D',
   'find-in-file-preview': 'Meta+F',
   'create-workspace': 'Meta+N',
   'create-terminal-tab': 'Meta+T',

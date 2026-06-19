@@ -1,8 +1,5 @@
-# Capability: keyboard-shortcuts
+## MODIFIED Requirements
 
-## Purpose
-应用级快捷键系统，负责默认快捷键定义、用户自定义绑定持久化以及保存前的配置校验。
-## Requirements
 ### Requirement: 默认快捷键定义
 系统 SHALL 为当前支持的应用动作提供默认快捷键绑定，且默认绑定中 SHALL NOT 包含已移除的浏览器、Git Diff 或笔记动作。
 
@@ -30,17 +27,6 @@
 - **THEN** 跳转到最后一个 terminal tab SHALL 默认绑定为 `Command + 9`
 - **THEN** 文件预览内容查找 SHALL 默认绑定为 `Command + F`
 - **THEN** 浏览器面板展示/收起、Git Diff 面板展示/收起、笔记面板展示/收起 SHALL NOT 出现在默认绑定中
-
-### Requirement: 快捷键配置持久化
-系统 SHALL 支持保存用户自定义快捷键，并在后续启动时恢复。
-
-#### Scenario: 保存自定义绑定
-- **WHEN** 用户在设置面板中修改快捷键并执行保存
-- **THEN** 系统 SHALL 持久化保存新的快捷键绑定
-
-#### Scenario: 重新启动后恢复自定义绑定
-- **WHEN** 用户已经保存过自定义快捷键后重新启动应用
-- **THEN** 系统 SHALL 加载并使用上一次保存的快捷键绑定，而不是回退到默认值
 
 ### Requirement: 快捷键配置校验
 系统 SHALL 阻止无效或冲突的快捷键配置被保存。快捷键触发判断 SHALL 能正确区分真实用户可编辑输入元素（`<input>`、`<select>`、`contentEditable` 元素及非终端 `<textarea>`）与 xterm.js 内部键盘捕获元素，在终端获焦时不得屏蔽全局面板、terminal 创建、rename、close、Terminal / Spec 模式切换和 terminal tab 切换快捷键的触发。
@@ -72,31 +58,3 @@
 - **WHEN** 用户正在 workspace 或 terminal tab 的重命名输入框中输入内容
 - **THEN** 按下任意快捷键组合
 - **THEN** 系统 SHALL 不触发全局面板快捷键，避免干扰用户输入
-
-### Requirement: 已移除动作的旧绑定忽略
-系统 SHALL 在读取旧快捷键配置时忽略已移除的动作绑定，避免旧 localStorage 中的浏览器、Git Diff 或笔记快捷键影响当前工作台。
-
-#### Scenario: 加载包含已移除动作的旧配置
-- **WHEN** 本地快捷键配置仍包含 `toggle-browser`、`toggle-git-diff` 或 `toggle-notes`
-- **THEN** 系统 SHALL 忽略这些已移除动作
-- **THEN** 系统 SHALL 继续加载当前仍支持的快捷键动作
-
-### Requirement: 文件预览查找快捷键触发
-系统 SHALL 支持通过应用级快捷键触发右侧文件预览内容查找，并保持与输入焦点、终端焦点及现有快捷键体系一致。
-
-#### Scenario: 触发文件预览查找
-- **WHEN** 用户当前位于主工作界面，且焦点不在终端（xterm.js）内部
-- **AND** 文件预览模块右侧存在可查找的已选中文件
-- **THEN** 用户按下文件预览查找快捷键时，系统 SHALL 打开右侧预览区查找框
-- **THEN** 系统 SHALL 不打开左侧文件树搜索框
-- **THEN** 系统 SHALL 不打开终端搜索栏
-
-#### Scenario: 终端聚焦时不触发文件预览查找
-- **WHEN** 用户点击终端面板，终端（xterm.js）获得焦点
-- **THEN** 用户按下文件预览查找快捷键（默认 `Command + F`）时，系统 SHALL 不打开右侧预览区查找框
-- **THEN** 系统 SHALL 将该按键交给终端搜索行为处理
-
-#### Scenario: 查找框输入时不重复触发全局查找动作
-- **WHEN** 文件预览查找框已经聚焦，且用户继续输入文本
-- **THEN** 系统 SHALL 将按键输入交给查找框本身
-- **THEN** 系统 SHALL 不重复触发应用级文件预览查找动作

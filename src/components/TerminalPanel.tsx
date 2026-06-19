@@ -14,6 +14,7 @@ import {
   PanelLeftOpen,
   Plus,
   RefreshCw,
+  TerminalSquare,
   X,
 } from 'lucide-react';
 import type { TerminalAgentStatus, TerminalAgentStatusState, TerminalSessionInfo } from '../preload';
@@ -65,6 +66,7 @@ interface SpecProjectSession {
   workspaceId: string;
   workspaceName: string;
   sessionLabel: string;
+  agentStatus?: TerminalAgentStatus;
   priority: number;
   order: number;
 }
@@ -76,6 +78,13 @@ interface SpecProjectGroup {
   targetSessionId: string | null;
   targetWorkspaceName: string | null;
   targetSessionLabel: string | null;
+}
+
+interface SpecChangeNavigationItem {
+  key: string;
+  project: SpecProjectGroup;
+  change: OpenSpecChangeSummary;
+  changes: OpenSpecChangeSummary[];
 }
 
 interface SpecProjectReadState {
@@ -112,10 +121,21 @@ interface PendingSpecSkillSelect {
   options: SpecSkillOption[];
 }
 
+interface PendingSpecTerminalSelect {
+  mode: 'activate' | 'next-step';
+  rootPath: string;
+  changeLabel: string;
+  change: OpenSpecChangeSummary;
+  changes: OpenSpecChangeSummary[];
+  sessions: SpecProjectSession[];
+}
+
 interface PendingSpecAction {
   targetSessionId: string;
   targetSessionLabel: string;
   changeLabel: string;
+  rootPath: string;
+  change: OpenSpecChangeSummary;
   intent: SddCommandIntent;
   payload: SddCommandPayload;
 }
@@ -223,6 +243,15 @@ function getProjectRootPath(session: TerminalSessionInfo): string | null {
   return trimmed ? trimmed.replace(/\/+$/, '') : null;
 }
 
+function getSpecChangeBindingKey(rootPath: string, change: OpenSpecChangeSummary): string {
+  return JSON.stringify([rootPath, change.workflow, change.name]);
+}
+
+function isAgentCandidateStatus(status: TerminalAgentStatus | undefined): boolean {
+  return !!status
+    && (status.state === 'running' || status.state === 'needs_user' || status.state === 'error');
+}
+
 function getTaskProgressLabel(change: OpenSpecChangeSummary): string {
   const progress = change.taskProgress;
   if (!progress.hasTasksFile) return 'tasks 缺失';
@@ -240,6 +269,11 @@ function getArtifactTitle(artifact: OpenSpecArtifactStatus): string {
 function getArtifactPath(artifact: OpenSpecArtifactStatus): string | null {
   if (artifact.state !== 'present') return null;
   return artifact.path;
+}
+
+function hasPresentSpecsArtifact(change: OpenSpecChangeSummary): boolean {
+  const specsArtifact = change.artifacts.specs;
+  return specsArtifact?.state === 'present' && (specsArtifact.count ?? 0) > 0;
 }
 
 function shouldConfirmSpecAction(intent: SddCommandIntent): boolean {
@@ -632,6 +666,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const didDropRef = useRef(false);
   const workspaceRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const sessionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const specChangeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const renameInputRef = useRef<HTMLInputElement>(null);
   const specLoadTokenRef = useRef(0);
   const {
@@ -649,6 +684,9 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const [specRefreshVersion, setSpecRefreshVersion] = useState(0);
   const [specProjectStates, setSpecProjectStates] = useState<Record<string, SpecProjectReadState>>({});
   const [specNavigationNotice, setSpecNavigationNotice] = useState<SpecNavigationNotice | null>(null);
+  const [specSessionBindings, setSpecSessionBindings] = useState<Record<string, string>>({});
+  const [activeSpecChangeKey, setActiveSpecChangeKey] = useState<string | null>(null);
+  const [pendingSpecTerminalSelect, setPendingSpecTerminalSelect] = useState<PendingSpecTerminalSelect | null>(null);
   const [pendingSpecSkillSelect, setPendingSpecSkillSelect] = useState<PendingSpecSkillSelect | null>(null);
   const [pendingSpecAction, setPendingSpecAction] = useState<PendingSpecAction | null>(null);
   const [menuState, setMenuState] = useState<SidebarMenuState | null>(null);
@@ -697,6 +735,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           workspaceId: workspace.id,
           workspaceName: workspace.name,
           sessionLabel: getSessionDisplayLabel(session, sessionNameOverrides),
+          agentStatus: agentStatusBySessionId[session.id],
           priority: session.id === activeSessionId
             ? 3
             : workspace.lastActiveSessionId === session.id
@@ -724,11 +763,15 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         };
       })
       .sort((a, b) => a.rootLabel.localeCompare(b.rootLabel) || a.rootPath.localeCompare(b.rootPath));
-  }, [activeSessionId, sessionNameOverrides, workspaces]);
+  }, [activeSessionId, agentStatusBySessionId, sessionNameOverrides, workspaces]);
 
   const specProjectRootsKey = useMemo(
     () => specProjectGroups.map((group) => group.rootPath).join('\n'),
     [specProjectGroups],
+  );
+  const specProjectRootPaths = useMemo(
+    () => specProjectRootsKey ? specProjectRootsKey.split('\n') : [],
+    [specProjectRootsKey],
   );
 
   const updateActiveScrollState = useCallback((nextState: TerminalScrollState | null) => {
@@ -984,6 +1027,12 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     });
   }, [registerAction]);
 
+  useEffect(() => {
+    return registerAction('toggle-terminal-sidebar-mode', () => {
+      setSidebarMode((prev) => (prev === 'terminal' ? 'spec' : 'terminal'));
+    });
+  }, [registerAction]);
+
   // 按住 Command 时在 tab 旁边临时显示跳转序号 + terminal-local shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -1089,7 +1138,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   useEffect(() => {
     if (sidebarMode !== 'spec') return;
 
-    const rootPaths = specProjectGroups.map((group) => group.rootPath);
+    const rootPaths = specProjectRootPaths;
     const loadToken = ++specLoadTokenRef.current;
 
     if (rootPaths.length === 0) {
@@ -1142,7 +1191,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     }).catch(() => {
       // Individual reads already map errors into project states.
     });
-  }, [sidebarMode, specProjectGroups, specProjectRootsKey, specRefreshVersion]);
+  }, [sidebarMode, specProjectRootPaths, specRefreshVersion]);
 
   useEffect(() => {
     updateActiveScrollState(null);
@@ -1187,6 +1236,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       setHoveredWorkspaceId(null);
       setHoveredSessionId(null);
     } else {
+      setPendingSpecTerminalSelect(null);
       setPendingSpecSkillSelect(null);
       setPendingSpecAction(null);
     }
@@ -1240,7 +1290,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     return unsubscribe;
   }, [handleActivateSessionFromNotification]);
 
-  const selectRelativeTerminalTab = useCallback((direction: -1 | 1) => {
+  const selectRelativeTerminalSession = useCallback((direction: -1 | 1) => {
     const sessionIds = getOrderedSessionIds(workspacesRef.current);
     if (sessionIds.length <= 1) return;
 
@@ -1253,18 +1303,6 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
     handleSelectSession(nextSessionId);
   }, [activeSessionId, handleSelectSession]);
-
-  useEffect(() => {
-    return registerAction('select-previous-terminal-tab', () => {
-      selectRelativeTerminalTab(-1);
-    });
-  }, [registerAction, selectRelativeTerminalTab]);
-
-  useEffect(() => {
-    return registerAction('select-next-terminal-tab', () => {
-      selectRelativeTerminalTab(1);
-    });
-  }, [registerAction, selectRelativeTerminalTab]);
 
   // 按 1-based 编号直接跳转到指定 terminal tab；超出范围时静默无效
   const selectTerminalTabByIndex = useCallback((oneBased: number) => {
@@ -1606,24 +1644,105 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     return true;
   }, []);
 
-  const handleOpenSpecSkillSelect = useCallback((
-    event: React.MouseEvent<HTMLButtonElement>,
+  const bindSpecChangeSession = useCallback((
+    rootPath: string,
+    change: OpenSpecChangeSummary,
+    sessionId: string,
+  ) => {
+    const bindingKey = getSpecChangeBindingKey(rootPath, change);
+    setSpecSessionBindings((prev) => (
+      prev[bindingKey] === sessionId ? prev : { ...prev, [bindingKey]: sessionId }
+    ));
+  }, []);
+
+  const clearSpecChangeBinding = useCallback((
+    rootPath: string,
+    change: OpenSpecChangeSummary,
+  ) => {
+    const bindingKey = getSpecChangeBindingKey(rootPath, change);
+    setSpecSessionBindings((prev) => {
+      if (!prev[bindingKey]) return prev;
+      const next = { ...prev };
+      delete next[bindingKey];
+      return next;
+    });
+  }, []);
+
+  const getAvailableSpecSessions = useCallback((project: SpecProjectGroup): SpecProjectSession[] => (
+    project.sessions.filter((session) => findWorkspaceBySessionId(workspacesRef.current, session.sessionId))
+  ), []);
+
+  const resolveSpecChangeSession = useCallback((
     project: SpecProjectGroup,
     change: OpenSpecChangeSummary,
     changes: OpenSpecChangeSummary[],
-  ) => {
-    event.preventDefault();
-    event.stopPropagation();
+    mode: PendingSpecTerminalSelect['mode'],
+  ): SpecProjectSession | null => {
+    const bindingKey = getSpecChangeBindingKey(project.rootPath, change);
+    const boundSessionId = specSessionBindings[bindingKey] ?? null;
+    const availableSessions = getAvailableSpecSessions(project);
 
-    const targetSessionId = project.targetSessionId;
-    if (!targetSessionId || !findWorkspaceBySessionId(workspacesRef.current, targetSessionId)) {
+    if (boundSessionId) {
+      const boundSession = availableSessions.find((session) => session.sessionId === boundSessionId) ?? null;
+      if (boundSession) return boundSession;
+      clearSpecChangeBinding(project.rootPath, change);
+    }
+
+    if (availableSessions.length === 0) {
+      setPendingSpecTerminalSelect(null);
+      setPendingSpecSkillSelect(null);
+      setPendingSpecAction(null);
+      setSpecNavigationNotice({ type: 'error', message: '无法定位对应 terminal tab。' });
+      return null;
+    }
+
+    const agentCandidates = availableSessions.filter((session) => (
+      isAgentCandidateStatus(session.agentStatus)
+    ));
+    const autoSelectedSession = agentCandidates.length === 1
+      ? agentCandidates[0]
+      : availableSessions.length === 1
+        ? availableSessions[0]
+        : null;
+
+    if (autoSelectedSession) {
+      bindSpecChangeSession(project.rootPath, change, autoSelectedSession.sessionId);
+      return autoSelectedSession;
+    }
+
+    setPendingSpecSkillSelect(null);
+    setPendingSpecAction(null);
+    setSpecNavigationNotice(null);
+    setPendingSpecTerminalSelect({
+      mode,
+      rootPath: project.rootPath,
+      changeLabel: `${getWorkflowLabel(change.workflow)} · ${change.name}`,
+      change,
+      changes,
+      sessions: availableSessions,
+    });
+    return null;
+  }, [
+    bindSpecChangeSession,
+    clearSpecChangeBinding,
+    getAvailableSpecSessions,
+    specSessionBindings,
+  ]);
+
+  const openSpecSkillSelectForSession = useCallback((
+    rootPath: string,
+    change: OpenSpecChangeSummary,
+    changes: OpenSpecChangeSummary[],
+    targetSession: SpecProjectSession,
+  ) => {
+    if (!findWorkspaceBySessionId(workspacesRef.current, targetSession.sessionId)) {
+      clearSpecChangeBinding(rootPath, change);
       setPendingSpecSkillSelect(null);
       setPendingSpecAction(null);
       setSpecNavigationNotice({ type: 'error', message: '目标 terminal tab 不可用，无法执行下一步操作。' });
       return;
     }
 
-    const targetSessionLabel = project.targetSessionLabel ?? 'terminal';
     const options = getSpecSkillOptions(change);
     if (options.length === 0) {
       setPendingSpecSkillSelect(null);
@@ -1635,15 +1754,67 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     setPendingSpecAction(null);
     setSpecNavigationNotice(null);
     setPendingSpecSkillSelect({
-      targetSessionId,
-      targetSessionLabel,
+      targetSessionId: targetSession.sessionId,
+      targetSessionLabel: targetSession.sessionLabel,
       changeLabel: `${getWorkflowLabel(change.workflow)} · ${change.name}`,
       change,
       changes,
-      rootPath: project.rootPath,
+      rootPath,
       options,
     });
-  }, []);
+  }, [clearSpecChangeBinding]);
+
+  const activateSpecProjectSession = useCallback((session: SpecProjectSession) => {
+    handleSelectSession(session.sessionId);
+
+    requestAnimationFrame(() => {
+      terminalInstanceRefs.current.get(session.sessionId)?.getTerminal()?.focus();
+    });
+  }, [handleSelectSession]);
+
+  const handleOpenSpecSkillSelect = useCallback((
+    event: React.MouseEvent<HTMLButtonElement>,
+    project: SpecProjectGroup,
+    change: OpenSpecChangeSummary,
+    changes: OpenSpecChangeSummary[],
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const targetSession = resolveSpecChangeSession(project, change, changes, 'next-step');
+    if (!targetSession) return;
+    openSpecSkillSelectForSession(project.rootPath, change, changes, targetSession);
+  }, [openSpecSkillSelectForSession, resolveSpecChangeSession]);
+
+  const handleOpenSpecTerminalSelect = useCallback((
+    event: React.MouseEvent<HTMLButtonElement>,
+    project: SpecProjectGroup,
+    change: OpenSpecChangeSummary,
+    changes: OpenSpecChangeSummary[],
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const availableSessions = getAvailableSpecSessions(project);
+    if (availableSessions.length === 0) {
+      clearSpecChangeBinding(project.rootPath, change);
+      setPendingSpecTerminalSelect(null);
+      setSpecNavigationNotice({ type: 'error', message: '无法定位对应 terminal tab。' });
+      return;
+    }
+
+    setPendingSpecSkillSelect(null);
+    setPendingSpecAction(null);
+    setSpecNavigationNotice(null);
+    setPendingSpecTerminalSelect({
+      mode: 'activate',
+      rootPath: project.rootPath,
+      changeLabel: `${getWorkflowLabel(change.workflow)} · ${change.name}`,
+      change,
+      changes,
+      sessions: availableSessions,
+    });
+  }, [clearSpecChangeBinding, getAvailableSpecSessions]);
 
   const handleSelectSpecSkill = useCallback((action: SpecSelectableSkillAction) => {
     if (!pendingSpecSkillSelect) return;
@@ -1658,6 +1829,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     } = pendingSpecSkillSelect;
 
     if (!findWorkspaceBySessionId(workspacesRef.current, targetSessionId)) {
+      clearSpecChangeBinding(rootPath, change);
       setPendingSpecSkillSelect(null);
       setPendingSpecAction(null);
       setSpecNavigationNotice({ type: 'error', message: '目标 terminal tab 不可用，无法执行下一步操作。' });
@@ -1688,6 +1860,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           targetSessionId,
           targetSessionLabel,
           changeLabel,
+          rootPath,
+          change,
           intent,
           payload,
         });
@@ -1702,7 +1876,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       setPendingSpecAction(null);
       setSpecNavigationNotice({ type: 'error', message: (err as Error).message });
     }
-  }, [executeSpecActionPayload, pendingSpecSkillSelect]);
+  }, [clearSpecChangeBinding, executeSpecActionPayload, pendingSpecSkillSelect]);
 
   const handleConfirmSpecAction = useCallback(() => {
     if (!pendingSpecAction) return;
@@ -1711,10 +1885,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       pendingSpecAction.targetSessionLabel,
       pendingSpecAction.payload,
     )) {
+      clearSpecChangeBinding(pendingSpecAction.rootPath, pendingSpecAction.change);
       return;
     }
     setPendingSpecAction(null);
-  }, [executeSpecActionPayload, pendingSpecAction]);
+  }, [clearSpecChangeBinding, executeSpecActionPayload, pendingSpecAction]);
 
   const handleCancelSpecAction = useCallback(() => {
     setPendingSpecAction(null);
@@ -1726,32 +1901,158 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     setSpecNavigationNotice({ type: 'info', message: '已取消下一步选择。' });
   }, []);
 
-  const handleSelectSpecProjectSession = useCallback((rootPath: string) => {
-    const project = specProjectGroups.find((group) => group.rootPath === rootPath);
-    const targetSessionId = project?.targetSessionId ?? null;
-    if (!targetSessionId || !findWorkspaceBySessionId(workspacesRef.current, targetSessionId)) {
-      setSpecNavigationNotice({ type: 'error', message: '无法定位对应 terminal tab。' });
+  const handleCancelSpecTerminalSelect = useCallback(() => {
+    setPendingSpecTerminalSelect(null);
+    setSpecNavigationNotice({ type: 'info', message: '已取消 terminal 绑定。' });
+  }, []);
+
+  const handleSelectSpecTerminal = useCallback((sessionId: string) => {
+    if (!pendingSpecTerminalSelect) return;
+    const targetSession = pendingSpecTerminalSelect.sessions.find((session) => session.sessionId === sessionId);
+    if (!targetSession || !findWorkspaceBySessionId(workspacesRef.current, sessionId)) {
+      clearSpecChangeBinding(pendingSpecTerminalSelect.rootPath, pendingSpecTerminalSelect.change);
+      setPendingSpecTerminalSelect(null);
+      setSpecNavigationNotice({ type: 'error', message: '目标 terminal tab 不可用，请重新选择。' });
       return;
     }
 
+    bindSpecChangeSession(
+      pendingSpecTerminalSelect.rootPath,
+      pendingSpecTerminalSelect.change,
+      targetSession.sessionId,
+    );
+    setPendingSpecTerminalSelect(null);
     setSpecNavigationNotice(null);
-    setSidebarMode('terminal');
-    handleSelectSession(targetSessionId);
 
-    requestAnimationFrame(() => {
-      sessionRefs.current.get(targetSessionId)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      terminalInstanceRefs.current.get(targetSessionId)?.getTerminal()?.focus();
-    });
-  }, [handleSelectSession, specProjectGroups]);
+    if (pendingSpecTerminalSelect.mode === 'activate') {
+      activateSpecProjectSession(targetSession);
+      return;
+    }
+
+    openSpecSkillSelectForSession(
+      pendingSpecTerminalSelect.rootPath,
+      pendingSpecTerminalSelect.change,
+      pendingSpecTerminalSelect.changes,
+      targetSession,
+    );
+  }, [
+    activateSpecProjectSession,
+    bindSpecChangeSession,
+    clearSpecChangeBinding,
+    openSpecSkillSelectForSession,
+    pendingSpecTerminalSelect,
+  ]);
+
+  const handleSelectSpecProjectSession = useCallback((
+    project: SpecProjectGroup,
+    change: OpenSpecChangeSummary,
+    changes: OpenSpecChangeSummary[],
+  ) => {
+    setActiveSpecChangeKey(getSpecChangeBindingKey(project.rootPath, change));
+    const targetSession = resolveSpecChangeSession(project, change, changes, 'activate');
+    if (!targetSession) return;
+
+    setSpecNavigationNotice(null);
+    activateSpecProjectSession(targetSession);
+  }, [activateSpecProjectSession, resolveSpecChangeSession]);
 
   const handleSpecChangeKeyDown = useCallback((
     event: React.KeyboardEvent<HTMLDivElement>,
-    rootPath: string,
+    project: SpecProjectGroup,
+    change: OpenSpecChangeSummary,
+    changes: OpenSpecChangeSummary[],
   ) => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
+    if (event.target !== event.currentTarget) return;
     event.preventDefault();
-    handleSelectSpecProjectSession(rootPath);
+    handleSelectSpecProjectSession(project, change, changes);
   }, [handleSelectSpecProjectSession]);
+
+  const getVisibleSpecChangeNavigationItems = useCallback((): SpecChangeNavigationItem[] => {
+    const items: SpecChangeNavigationItem[] = [];
+
+    for (const project of specProjectGroups) {
+      const projectState = specProjectStates[project.rootPath];
+      if (!projectState || projectState.loading || projectState.error) continue;
+
+      const changes = (projectState.summary?.changes ?? []).filter(hasPresentSpecsArtifact);
+      if (changes.length === 0) continue;
+
+      for (const change of changes) {
+        items.push({
+          key: getSpecChangeBindingKey(project.rootPath, change),
+          project,
+          change,
+          changes,
+        });
+      }
+    }
+
+    return items;
+  }, [specProjectGroups, specProjectStates]);
+
+  const selectRelativeSpecChangeCard = useCallback((direction: -1 | 1) => {
+    const items = getVisibleSpecChangeNavigationItems();
+    if (items.length === 0) return;
+
+    let currentIndex = activeSpecChangeKey
+      ? items.findIndex((item) => item.key === activeSpecChangeKey)
+      : -1;
+
+    if (currentIndex === -1 && activeSessionId) {
+      currentIndex = items.findIndex((item) => specSessionBindings[item.key] === activeSessionId);
+    }
+
+    if (currentIndex === -1 && activeSessionId) {
+      currentIndex = items.findIndex((item) => (
+        item.project.sessions.some((session) => session.sessionId === activeSessionId)
+      ));
+    }
+
+    const nextIndex = currentIndex === -1
+      ? direction === 1 ? 0 : items.length - 1
+      : (currentIndex + direction + items.length) % items.length;
+    const targetItem = items[nextIndex];
+    if (!targetItem) return;
+
+    setActiveSpecChangeKey(targetItem.key);
+    requestAnimationFrame(() => {
+      specChangeRefs.current.get(targetItem.key)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    handleSelectSpecProjectSession(targetItem.project, targetItem.change, targetItem.changes);
+  }, [
+    activeSessionId,
+    activeSpecChangeKey,
+    getVisibleSpecChangeNavigationItems,
+    handleSelectSpecProjectSession,
+    specSessionBindings,
+  ]);
+
+  const selectRelativeTerminalNavigationItem = useCallback((direction: -1 | 1) => {
+    if (!sidebarCollapsed && sidebarMode === 'spec') {
+      selectRelativeSpecChangeCard(direction);
+      return;
+    }
+
+    selectRelativeTerminalSession(direction);
+  }, [
+    selectRelativeSpecChangeCard,
+    selectRelativeTerminalSession,
+    sidebarCollapsed,
+    sidebarMode,
+  ]);
+
+  useEffect(() => {
+    return registerAction('select-previous-terminal-tab', () => {
+      selectRelativeTerminalNavigationItem(-1);
+    });
+  }, [registerAction, selectRelativeTerminalNavigationItem]);
+
+  useEffect(() => {
+    return registerAction('select-next-terminal-tab', () => {
+      selectRelativeTerminalNavigationItem(1);
+    });
+  }, [registerAction, selectRelativeTerminalNavigationItem]);
 
   const menuItems: ContextMenuItem[] = (() => {
     if (!menuState) return [];
@@ -1846,71 +2147,103 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     project: SpecProjectGroup,
     change: OpenSpecChangeSummary,
     changes: OpenSpecChangeSummary[],
-  ) => (
-    <div
-      key={change.path}
-      className="terminal-spec-change-card"
-      role="button"
-      tabIndex={0}
-      onClick={() => handleSelectSpecProjectSession(project.rootPath)}
-      onKeyDown={(event) => handleSpecChangeKeyDown(event, project.rootPath)}
-      title={`切回 ${project.targetWorkspaceName ?? 'workspace'} / ${project.targetSessionLabel ?? 'terminal'}`}
-    >
-      <div className="terminal-spec-change-card-header">
-        <div className="terminal-spec-change-title" title={change.name}>
-          <span className="terminal-spec-workflow">{getWorkflowLabel(change.workflow)}</span>
-          <span>{change.name}</span>
+  ) => {
+    const bindingKey = getSpecChangeBindingKey(project.rootPath, change);
+    const boundSessionId = specSessionBindings[bindingKey] ?? null;
+    const boundSession = boundSessionId
+      ? project.sessions.find((session) => session.sessionId === boundSessionId) ?? null
+      : null;
+    const targetSessionLabel = boundSession?.sessionLabel ?? project.targetSessionLabel ?? '未绑定';
+    const targetWorkspaceLabel = boundSession?.workspaceName ?? project.targetWorkspaceName ?? 'workspace';
+    const targetTitle = `重新绑定 terminal：${targetWorkspaceLabel} / ${targetSessionLabel}`;
+    const isActiveSpecChange = activeSpecChangeKey === bindingKey;
+
+    return (
+      <div
+        key={bindingKey}
+        ref={(element) => {
+          if (element) {
+            specChangeRefs.current.set(bindingKey, element);
+          } else {
+            specChangeRefs.current.delete(bindingKey);
+          }
+        }}
+        className={'terminal-spec-change-card' + (isActiveSpecChange ? ' active' : '')}
+        role="button"
+        tabIndex={0}
+        onClick={() => handleSelectSpecProjectSession(project, change, changes)}
+        onKeyDown={(event) => handleSpecChangeKeyDown(event, project, change, changes)}
+        title={`绑定/切换右侧 terminal：${targetWorkspaceLabel} / ${targetSessionLabel}`}
+      >
+        <div className="terminal-spec-change-card-header">
+          <div className="terminal-spec-change-title" title={change.name}>
+            <span className="terminal-spec-workflow">{getWorkflowLabel(change.workflow)}</span>
+            <span>{change.name}</span>
+          </div>
+          <span className="terminal-spec-next-action">{SPEC_ACTION_LABELS[change.nextAction]}</span>
         </div>
-        <span className="terminal-spec-next-action">{SPEC_ACTION_LABELS[change.nextAction]}</span>
-      </div>
 
-      <div className="terminal-spec-artifact-grid">
-        {change.artifactIds.map((artifactId) => {
-          const artifact = change.artifacts[artifactId];
-          if (!artifact) return null;
-          const present = artifact.state === 'present';
-          return (
-            <button
-              key={artifact.id}
-              type="button"
-              className={'terminal-spec-artifact-pill' + (present ? ' present' : ' missing')}
-              onClick={(event) => handleOpenSpecArtifact(event, artifact)}
-              disabled={!present}
-              title={getArtifactTitle(artifact)}
-            >
-              {present ? <CheckCircle2 size={11} /> : <AlertCircle size={11} />}
-              <span>{SPEC_ARTIFACT_LABELS[artifact.id]}</span>
-              {artifact.id === 'specs' && present && (
-                <span className="terminal-spec-artifact-count">{artifact.count}</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+        <div className="terminal-spec-artifact-grid">
+          {change.artifactIds.map((artifactId) => {
+            const artifact = change.artifacts[artifactId];
+            if (!artifact) return null;
+            const present = artifact.state === 'present';
+            return (
+              <button
+                key={artifact.id}
+                type="button"
+                className={'terminal-spec-artifact-pill' + (present ? ' present' : ' missing')}
+                onClick={(event) => handleOpenSpecArtifact(event, artifact)}
+                disabled={!present}
+                title={getArtifactTitle(artifact)}
+              >
+                {present ? <CheckCircle2 size={11} /> : <AlertCircle size={11} />}
+                <span>{SPEC_ARTIFACT_LABELS[artifact.id]}</span>
+                {artifact.id === 'specs' && present && (
+                  <span className="terminal-spec-artifact-count">{artifact.count}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-      <div className="terminal-spec-change-footer">
-        <span className="terminal-spec-task-progress">
-          <ListChecks size={12} />
-          {getTaskProgressLabel(change)}
-        </span>
-        <button
-          type="button"
-          className="terminal-spec-next-step"
-          onClick={(event) => handleOpenSpecSkillSelect(event, project, change, changes)}
-          title={`选择下一步 Skill：${SPEC_ACTION_LABELS[change.nextAction]}，目标 ${project.targetSessionLabel ?? 'terminal'}`}
-        >
-          <ChevronRight size={11} />
-          <span>下一步</span>
-        </button>
+        <div className="terminal-spec-change-footer">
+          <span className="terminal-spec-task-progress">
+            <ListChecks size={12} />
+            {getTaskProgressLabel(change)}
+          </span>
+          <button
+            type="button"
+            className="terminal-spec-next-step"
+            onClick={(event) => handleOpenSpecTerminalSelect(event, project, change, changes)}
+            title={targetTitle}
+          >
+            <TerminalSquare size={11} />
+            <span>目标：{targetSessionLabel}</span>
+          </button>
+          <button
+            type="button"
+            className="terminal-spec-next-step"
+            onClick={(event) => handleOpenSpecSkillSelect(event, project, change, changes)}
+            title={`选择下一步 Skill：${SPEC_ACTION_LABELS[change.nextAction]}，目标 ${targetSessionLabel}`}
+          >
+            <ChevronRight size={11} />
+            <span>下一步</span>
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderSpecProjectGroup = (project: SpecProjectGroup) => {
     const projectState = specProjectStates[project.rootPath];
     const loading = projectState?.loading ?? false;
     const error = projectState?.error ?? null;
-    const changes = projectState?.summary?.changes ?? [];
+    const changes = (projectState?.summary?.changes ?? []).filter(hasPresentSpecsArtifact);
+
+    if (!loading && !error && changes.length === 0) {
+      return null;
+    }
 
     return (
       <section key={project.rootPath} className="terminal-spec-project">
@@ -1933,13 +2266,6 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           <div className="terminal-spec-state error">
             <AlertCircle size={13} />
             <span>{error}</span>
-          </div>
-        )}
-
-        {!loading && !error && changes.length === 0 && (
-          <div className="terminal-spec-state empty">
-            <FileText size={14} />
-            <span>无 active changes</span>
           </div>
         )}
 
@@ -2549,6 +2875,48 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                 <div className={'terminal-spec-state ' + (specNavigationNotice.type === 'error' ? 'error' : 'notice')}>
                   {specNavigationNotice.type === 'error' ? <AlertCircle size={13} /> : <CheckCircle2 size={13} />}
                   <span>{specNavigationNotice.message}</span>
+                </div>
+              )}
+              {pendingSpecTerminalSelect && (
+                <div className="terminal-spec-skill-select" role="dialog" aria-label="绑定目标 Terminal">
+                  <div className="terminal-spec-confirm-header">
+                    <span>绑定 Terminal</span>
+                    <button
+                      type="button"
+                      className="terminal-spec-confirm-close"
+                      onClick={handleCancelSpecTerminalSelect}
+                      title="取消"
+                      aria-label="取消 terminal 绑定"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                  <div className="terminal-spec-confirm-meta">
+                    <span>{pendingSpecTerminalSelect.changeLabel}</span>
+                    <span>{pendingSpecTerminalSelect.mode === 'next-step' ? '用于下一步' : '用于卡片定位'}</span>
+                  </div>
+                  <div className="terminal-spec-skill-options">
+                    {pendingSpecTerminalSelect.sessions.map((session) => {
+                      const agentStatus = session.agentStatus;
+                      const agentLabel = agentStatus
+                        ? `${getAgentDisplayName(agentStatus.agent)} · ${getAgentStatusLabel(agentStatus.state)}`
+                        : '普通 terminal';
+                      return (
+                        <button
+                          key={session.sessionId}
+                          type="button"
+                          className={'terminal-spec-skill-option' + (isAgentCandidateStatus(agentStatus) ? ' recommended' : '')}
+                          onClick={() => handleSelectSpecTerminal(session.sessionId)}
+                        >
+                          <span className="terminal-spec-skill-option-label">
+                            {session.sessionLabel}
+                            <em>{session.workspaceName}</em>
+                          </span>
+                          <small>{agentLabel}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
               {pendingSpecSkillSelect && (
