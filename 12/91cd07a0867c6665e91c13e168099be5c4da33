@@ -1,0 +1,63 @@
+package.json
+  4dd959216feca7ef 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "1291cd07a0867c6665e91c13e168099be5c4da33",
+  "prompts": {
+    "4b2f84ab766bad16": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edeeb-7530-7503-8242-c3828d3f9adb",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 243,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-menubar-agent-status/tasks.md": {
+          "accepted_lines": 34
+        },
+        "openspec/changes/add-menubar-agent-status/proposal.md": {
+          "accepted_lines": 28
+        },
+        "openspec/changes/add-menubar-agent-status/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-menubar-agent-status/design.md": {
+          "accepted_lines": 70
+        },
+        "openspec/changes/add-menubar-agent-status/specs/agent-attention-notifications/spec.md": {
+          "accepted_lines": 56
+        },
+        "openspec/changes/add-menubar-agent-status/specs/electron-shell/spec.md": {
+          "accepted_lines": 53
+        }
+      }
+    },
+    "4dd959216feca7ef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edee4-ec38-7443-8ff9-6ad601c3fc00",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "package.json": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        }
+      }
+    }
+  }
+}
