@@ -43,6 +43,7 @@ import type {
   OpenSpecChangeSummary,
   OpenSpecNextAction,
   OpenSpecTaskProgress,
+  OpenSpecWorkflowId,
   OpenSpecWorkflowSummary,
 } from './utils/openspec-workflow';
 
@@ -1524,88 +1525,160 @@ function createOpenSpecArtifactStatus(
   };
 }
 
+interface SddWorkflowArtifactConfig {
+  id: OpenSpecArtifactId;
+  fileName?: string;
+}
+
+interface SddWorkflowProviderConfig {
+  workflow: OpenSpecWorkflowId;
+  directoryName: string;
+  firstArtifactId: OpenSpecArtifactId;
+  taskArtifactId: OpenSpecArtifactId;
+  artifacts: SddWorkflowArtifactConfig[];
+}
+
+const SDD_WORKFLOW_PROVIDERS: SddWorkflowProviderConfig[] = [
+  {
+    workflow: 'openspec',
+    directoryName: 'openspec',
+    firstArtifactId: 'proposal',
+    taskArtifactId: 'tasks',
+    artifacts: [
+      { id: 'proposal', fileName: 'proposal.md' },
+      { id: 'design', fileName: 'design.md' },
+      { id: 'specs' },
+      { id: 'tasks', fileName: 'tasks.md' },
+    ],
+  },
+  {
+    workflow: 'raven',
+    directoryName: 'ravenspec',
+    firstArtifactId: 'prd',
+    taskArtifactId: 'task',
+    artifacts: [
+      { id: 'prd', fileName: 'PRD.md' },
+      { id: 'design', fileName: 'DESIGN.md' },
+      { id: 'specs' },
+      { id: 'task', fileName: 'TASK.md' },
+    ],
+  },
+];
+
 function resolveOpenSpecNextAction(
-  artifacts: Record<OpenSpecArtifactId, OpenSpecArtifactStatus>,
+  provider: SddWorkflowProviderConfig,
+  artifacts: Partial<Record<OpenSpecArtifactId, OpenSpecArtifactStatus>>,
   taskProgress: OpenSpecTaskProgress,
 ): OpenSpecNextAction {
-  if (artifacts.proposal.state === 'missing') return 'create-proposal';
-  if (artifacts.design.state === 'missing' || artifacts.specs.state === 'missing') {
+  const firstArtifact = artifacts[provider.firstArtifactId];
+  if (firstArtifact?.state === 'missing') {
+    return provider.firstArtifactId === 'prd' ? 'create-prd' : 'create-proposal';
+  }
+  if (artifacts.design?.state === 'missing' || artifacts.specs?.state === 'missing') {
     return 'continue-design-specs';
   }
-  if (artifacts.tasks.state === 'missing') return 'create-tasks';
+  if (artifacts[provider.taskArtifactId]?.state === 'missing') return 'create-tasks';
   if (!taskProgress.hasCheckboxes) return 'inspect';
   if (taskProgress.completed < taskProgress.total) return 'apply';
   return 'verify-review-archive';
 }
 
-async function readOpenSpecChangeSummary(changePath: string, name: string): Promise<OpenSpecChangeSummary> {
-  const proposalPath = path.join(changePath, 'proposal.md');
-  const designPath = path.join(changePath, 'design.md');
-  const tasksPath = path.join(changePath, 'tasks.md');
+async function readOpenSpecChangeSummary(
+  provider: SddWorkflowProviderConfig,
+  changePath: string,
+  name: string,
+): Promise<OpenSpecChangeSummary> {
   const specsPath = path.join(changePath, 'specs');
-  const [proposalExists, designExists, tasksExists, specFiles, changeStat] = await Promise.all([
-    fileExistsAt(proposalPath),
-    fileExistsAt(designPath),
-    fileExistsAt(tasksPath),
+  const artifactChecks = provider.artifacts.map(async (artifact) => {
+    if (artifact.id === 'specs') {
+      const specFiles = await collectOpenSpecFiles(specsPath);
+      return {
+        artifact,
+        filePath: specFiles[0] ?? null,
+        present: specFiles.length > 0,
+        count: specFiles.length,
+      };
+    }
+
+    const filePath = path.join(changePath, artifact.fileName ?? '');
+    return {
+      artifact,
+      filePath,
+      present: await fileExistsAt(filePath),
+      count: undefined,
+    };
+  });
+  const [artifactResults, specFiles, changeStat] = await Promise.all([
+    Promise.all(artifactChecks),
     collectOpenSpecFiles(specsPath),
     fs.promises.stat(changePath),
   ]);
 
+  const taskResult = artifactResults.find((result) => result.artifact.id === provider.taskArtifactId);
   let tasksContent: string | null = null;
-  if (tasksExists) {
+  if (taskResult?.present && taskResult.filePath) {
     try {
-      tasksContent = await fs.promises.readFile(tasksPath, 'utf-8');
+      tasksContent = await fs.promises.readFile(taskResult.filePath, 'utf-8');
     } catch {
       tasksContent = '';
     }
   }
 
-  const taskProgress = parseOpenSpecTaskProgress(tasksContent, tasksExists);
+  const taskProgress = parseOpenSpecTaskProgress(tasksContent, !!taskResult?.present);
   const specsCount = specFiles.length;
-  const artifacts: Record<OpenSpecArtifactId, OpenSpecArtifactStatus> = {
-    proposal: createOpenSpecArtifactStatus('proposal', proposalPath, proposalExists),
-    design: createOpenSpecArtifactStatus('design', designPath, designExists),
-    specs: createOpenSpecArtifactStatus('specs', specsCount > 0 ? specFiles[0] : null, specsCount > 0, specsCount),
-    tasks: createOpenSpecArtifactStatus('tasks', tasksPath, tasksExists),
-  };
+  const artifacts = artifactResults.reduce<Partial<Record<OpenSpecArtifactId, OpenSpecArtifactStatus>>>(
+    (acc, result) => {
+      acc[result.artifact.id] = createOpenSpecArtifactStatus(
+        result.artifact.id,
+        result.filePath,
+        result.present,
+        result.artifact.id === 'specs' ? specsCount : result.count,
+      );
+      return acc;
+    },
+    {},
+  );
 
   return {
+    workflow: provider.workflow,
     name,
     path: changePath,
     artifacts,
+    artifactIds: provider.artifacts.map((artifact) => artifact.id),
     specsCount,
     taskProgress,
-    nextAction: resolveOpenSpecNextAction(artifacts, taskProgress),
+    nextAction: resolveOpenSpecNextAction(provider, artifacts, taskProgress),
     mtime: changeStat.mtimeMs,
   };
 }
 
 async function readOpenSpecWorkflowSummary(rootPath: string): Promise<OpenSpecWorkflowSummary> {
   const resolvedRoot = path.resolve(rootPath);
-  const changesPath = path.join(resolvedRoot, 'openspec', 'changes');
-  if (!await directoryExistsAt(changesPath)) {
-    return {
-      rootPath: resolvedRoot,
-      changesPath,
-      changes: [],
-    };
-  }
+  const changesPaths: Partial<Record<OpenSpecWorkflowId, string>> = {};
+  const providerChangeGroups = await Promise.all(SDD_WORKFLOW_PROVIDERS.map(async (provider) => {
+    const changesPath = path.join(resolvedRoot, provider.directoryName, 'changes');
+    changesPaths[provider.workflow] = changesPath;
+    if (!await directoryExistsAt(changesPath)) return [];
 
-  const entries = await fs.promises.readdir(changesPath, { withFileTypes: true });
-  const changeDirs = entries
-    .filter((entry) => entry.isDirectory() && entry.name !== 'archive')
-    .map((entry) => ({
-      name: entry.name,
-      path: path.join(changesPath, entry.name),
-    }));
-  const changes = await Promise.all(
-    changeDirs.map((changeDir) => readOpenSpecChangeSummary(changeDir.path, changeDir.name)),
-  );
+    const entries = await fs.promises.readdir(changesPath, { withFileTypes: true });
+    const changeDirs = entries
+      .filter((entry) => entry.isDirectory() && entry.name !== 'archive')
+      .map((entry) => ({
+        name: entry.name,
+        path: path.join(changesPath, entry.name),
+      }));
+
+    return Promise.all(
+      changeDirs.map((changeDir) => readOpenSpecChangeSummary(provider, changeDir.path, changeDir.name)),
+    );
+  }));
+  const changes = providerChangeGroups.flat();
 
   changes.sort((a, b) => b.mtime - a.mtime || a.name.localeCompare(b.name));
   return {
     rootPath: resolvedRoot,
-    changesPath,
+    changesPath: changesPaths.openspec ?? path.join(resolvedRoot, 'openspec', 'changes'),
+    changesPaths,
     changes,
   };
 }

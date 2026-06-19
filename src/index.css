@@ -375,6 +375,232 @@ html, body {
   white-space: nowrap;
 }
 
+.openspec-command-panel {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--color-border-secondary);
+  background: var(--color-surface-sidebar);
+}
+
+.openspec-command-meta {
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.openspec-command-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  gap: 6px;
+  align-items: center;
+}
+
+.openspec-command-input {
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 7px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-content-elevated);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  outline: none;
+}
+
+.openspec-command-input:focus {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-soft);
+}
+
+.openspec-command-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.openspec-command-send,
+.openspec-command-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border-secondary);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-content-elevated);
+  cursor: pointer;
+}
+
+.openspec-command-send {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+}
+
+.openspec-command-close {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.openspec-command-send:hover:not(:disabled),
+.openspec-command-close:hover {
+  color: var(--color-icon-active);
+  background: var(--color-bg-hover);
+}
+
+.openspec-command-send:disabled {
+  cursor: default;
+  opacity: 0.48;
+}
+
+.openspec-command-notice,
+.openspec-command-error,
+.openspec-command-risk,
+.openspec-command-skip {
+  padding: 6px 7px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.openspec-command-notice {
+  color: var(--color-agent-status-completed);
+  background: var(--color-agent-status-completed-soft);
+}
+
+.openspec-command-error,
+.openspec-command-risk {
+  color: var(--color-agent-status-error);
+  background: var(--color-agent-status-error-soft);
+}
+
+.openspec-command-skip {
+  color: var(--color-accent-primary);
+  background: var(--color-focus-soft);
+}
+
+.openspec-command-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.openspec-command-candidate {
+  min-width: 0;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-content-elevated);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.openspec-command-candidate:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+}
+
+.openspec-command-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 8px;
+  background: var(--color-surface-content);
+}
+
+.openspec-command-confirm-header,
+.openspec-command-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.openspec-command-confirm-header {
+  justify-content: space-between;
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.openspec-command-summary {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.openspec-command-payload {
+  width: 100%;
+  min-height: 78px;
+  max-height: 150px;
+  resize: vertical;
+  padding: 7px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 7px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-content-elevated);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  outline: none;
+}
+
+.openspec-command-payload:focus {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-soft);
+}
+
+.openspec-command-action {
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 7px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-content-elevated);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.openspec-command-action.primary {
+  color: var(--color-bg-primary);
+  border-color: var(--color-accent-primary);
+  background: var(--color-accent-primary);
+}
+
+.openspec-command-action:hover:not(:disabled) {
+  filter: brightness(1.03);
+}
+
+.openspec-command-action:disabled {
+  cursor: default;
+  opacity: 0.48;
+}
+
 .openspec-dashboard-state,
 .openspec-dashboard-empty,
 .openspec-dashboard-error {
@@ -418,6 +644,7 @@ html, body {
 }
 
 .openspec-change-card {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -440,8 +667,19 @@ html, body {
   gap: 8px;
 }
 
+.openspec-change-card-status {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
 .openspec-change-title {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   color: var(--color-text-primary);
   font-size: 12px;
   font-weight: 750;
@@ -449,6 +687,19 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.openspec-change-workflow {
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 5px;
+  border-radius: 5px;
+  color: var(--color-text-muted);
+  background: var(--color-bg-pill-hover);
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .openspec-next-action {
@@ -462,6 +713,16 @@ html, body {
   font-weight: 750;
   line-height: 1.2;
   text-align: right;
+}
+
+.openspec-current-change {
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: var(--color-agent-status-completed);
+  background: var(--color-agent-status-completed-soft);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.2;
 }
 
 .openspec-artifact-grid {
@@ -520,6 +781,54 @@ html, body {
   color: var(--color-text-tertiary);
   font-size: 11px;
   font-weight: 650;
+}
+
+.openspec-change-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.openspec-change-action {
+  min-width: 0;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 7px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-terminal-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.openspec-change-action span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.openspec-change-action.primary {
+  color: var(--color-accent-primary);
+  background: var(--color-focus-soft);
+}
+
+.openspec-change-action:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+}
+
+@container (max-width: 220px) {
+  .openspec-change-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .agent-inbox-popover {

@@ -1,9 +1,12 @@
-export type OpenSpecArtifactId = 'proposal' | 'design' | 'specs' | 'tasks';
+export type OpenSpecWorkflowId = 'openspec' | 'raven';
+
+export type OpenSpecArtifactId = 'proposal' | 'prd' | 'design' | 'specs' | 'tasks' | 'task';
 
 export type OpenSpecArtifactState = 'present' | 'missing';
 
 export type OpenSpecNextAction =
   | 'create-proposal'
+  | 'create-prd'
   | 'continue-design-specs'
   | 'create-tasks'
   | 'apply'
@@ -25,9 +28,11 @@ export interface OpenSpecTaskProgress {
 }
 
 export interface OpenSpecChangeSummary {
+  workflow: OpenSpecWorkflowId;
   name: string;
   path: string;
-  artifacts: Record<OpenSpecArtifactId, OpenSpecArtifactStatus>;
+  artifacts: Partial<Record<OpenSpecArtifactId, OpenSpecArtifactStatus>>;
+  artifactIds: OpenSpecArtifactId[];
   specsCount: number;
   taskProgress: OpenSpecTaskProgress;
   nextAction: OpenSpecNextAction;
@@ -37,6 +42,7 @@ export interface OpenSpecChangeSummary {
 export interface OpenSpecWorkflowSummary {
   rootPath: string;
   changesPath: string;
+  changesPaths: Partial<Record<OpenSpecWorkflowId, string>>;
   changes: OpenSpecChangeSummary[];
 }
 

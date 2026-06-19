@@ -1065,6 +1065,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
         ) : rootPath && previewMode === 'openspec' ? (
           <OpenSpecDashboard
             rootPath={rootPath}
+            activeSessionId={activeSessionId}
             onOpenFile={handleSelectFile}
           />
         ) : (

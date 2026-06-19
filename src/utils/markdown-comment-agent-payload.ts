@@ -1,4 +1,5 @@
 import type { MarkdownPreviewComment } from './markdown-comment-types';
+import { wrapBracketedPaste } from './bracketed-paste';
 
 export interface MarkdownCommentAgentPayloadOptions {
   rootPath: string;
@@ -10,9 +11,6 @@ interface CommentWorkflowInfo {
   workflow: 'openspec' | 'raven' | 'unknown';
   changeName?: string;
 }
-
-const BRACKETED_PASTE_START = '\x1b[200~';
-const BRACKETED_PASTE_END = '\x1b[201~';
 
 function normalizePathSeparators(value: string): string {
   return value.replace(/\\/g, '/');
@@ -128,5 +126,5 @@ export function buildMarkdownCommentAgentPayload({
         '',
       ].join('\n');
 
-  return BRACKETED_PASTE_START + payload + BRACKETED_PASTE_END;
+  return wrapBracketedPaste(payload);
 }
