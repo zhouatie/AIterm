@@ -1,0 +1,235 @@
+src/main.ts
+  4dd959216feca7ef 46,1528-1567,1569-1570,1573-1577,1580,1586-1590,1592-1612,1617,1619,1621,1627,1629-1640,1643,1647,1650,1657-1669,1671-1675,1680-1681
+src/utils/markdown-comment-agent-payload.ts
+  4dd959216feca7ef 2,129
+openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/specs/sdd-command-router/spec.md
+  4dd959216feca7ef 1-201
+src/index.css
+  4dd959216feca7ef 378-603,647,670-675,680-682,692-702,718-725,786-831
+openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/design.md
+  4dd959216feca7ef 1-164
+src/components/FilePreviewPanel.tsx
+  4dd959216feca7ef 1068
+src/utils/bracketed-paste.ts
+  4dd959216feca7ef 1-6
+openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/proposal.md
+  4dd959216feca7ef 1-33
+openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/specs/sdd-workflow-panels/spec.md
+  4dd959216feca7ef 1-183
+openspec/specs/sdd-workflow-panels/spec.md
+  4dd959216feca7ef 27,33,35,37-48,54,63,68-69,71-72,77-79,94,96-97,103-105,110-112,115-118,140,142-143,146-149,151-152,155-158,161-162,166-167,173-224
+openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/tasks.md
+  4dd959216feca7ef 1-54
+src/utils/sdd-command-router.ts
+  4dd959216feca7ef 1-504
+src/utils/openspec-workflow.ts
+  4dd959216feca7ef 1,3,9,31,34-35,45
+src/components/OpenSpecDashboard.tsx
+  4dd959216feca7ef 8,10-11,20-31,35,41,51,55,58-65,84-98,102-108,146-153,157-163,170-177,185-313,320,327-328,340-432,449,459-460,462-468,473,475,500-528
+openspec/specs/sdd-command-router/spec.md
+  4dd959216feca7ef 1-262
+openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/.openspec.yaml
+  4dd959216feca7ef 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "d68aef39c1cab663042113d71b08a23bc476eca5",
+  "prompts": {
+    "4b2f84ab766bad16": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edeeb-7530-7503-8242-c3828d3f9adb",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 243,
+      "total_deletions": 0,
+      "accepted_lines": 243,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-menubar-agent-status/tasks.md": {
+          "additions": 34,
+          "accepted_lines": 34
+        },
+        "openspec/changes/add-menubar-agent-status/specs/agent-attention-notifications/spec.md": {
+          "additions": 56,
+          "accepted_lines": 56
+        },
+        "openspec/changes/add-menubar-agent-status/design.md": {
+          "additions": 70,
+          "accepted_lines": 70
+        },
+        "openspec/changes/add-menubar-agent-status/proposal.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "openspec/changes/add-menubar-agent-status/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-menubar-agent-status/specs/electron-shell/spec.md": {
+          "additions": 53,
+          "accepted_lines": 53
+        }
+      }
+    },
+    "4dd959216feca7ef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edee4-ec38-7443-8ff9-6ad601c3fc00",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 4163,
+      "total_deletions": 366,
+      "accepted_lines": 2776,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-sdd-command-router/proposal.md": {
+          "additions": 37,
+          "deletions": 7
+        },
+        "openspec/specs/sdd-workflow-panels/spec.md": {
+          "additions": 120,
+          "deletions": 40,
+          "accepted_lines": 114
+        },
+        "src/main.ts": {
+          "additions": 115,
+          "deletions": 42,
+          "accepted_lines": 115
+        },
+        "openspec/changes/add-ravenspec-sdd-routing/specs/sdd-command-router/spec.md": {
+          "additions": 208,
+          "deletions": 7
+        },
+        "openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/tasks.md": {
+          "additions": 54,
+          "accepted_lines": 54
+        },
+        "openspec/changes/add-ravenspec-sdd-routing/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "src/utils/bracketed-paste.ts": {
+          "additions": 6,
+          "accepted_lines": 6
+        },
+        "src/index.css": {
+          "additions": 313,
+          "deletions": 4,
+          "accepted_lines": 309
+        },
+        "src/components/FilePreviewPanel.tsx": {
+          "additions": 1,
+          "accepted_lines": 1
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-command-router/specs/sdd-command-router/spec.md": {
+          "additions": 185,
+          "accepted_lines": 185
+        },
+        "openspec/changes/add-ravenspec-sdd-routing/design.md": {
+          "additions": 165,
+          "deletions": 1
+        },
+        "openspec/changes/add-ravenspec-sdd-routing/tasks.md": {
+          "additions": 86,
+          "deletions": 32
+        },
+        "openspec/changes/add-ravenspec-sdd-routing/proposal.md": {
+          "additions": 34,
+          "deletions": 1
+        },
+        "openspec/specs/sdd-command-router/spec.md": {
+          "additions": 295,
+          "deletions": 33,
+          "accepted_lines": 262
+        },
+        "src/utils/markdown-comment-agent-payload.ts": {
+          "additions": 2,
+          "deletions": 4,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-command-router/specs/sdd-workflow-panels/spec.md": {
+          "additions": 52,
+          "accepted_lines": 52
+        },
+        "openspec/changes/add-sdd-command-router/design.md": {
+          "additions": 185,
+          "deletions": 20
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-command-router/proposal.md": {
+          "additions": 30,
+          "accepted_lines": 30
+        },
+        "openspec/changes/add-sdd-command-router/specs/sdd-command-router/spec.md": {
+          "additions": 199,
+          "deletions": 14
+        },
+        "src/utils/openspec-workflow.ts": {
+          "additions": 8,
+          "deletions": 2,
+          "accepted_lines": 8
+        },
+        "openspec/changes/add-sdd-command-router/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/utils/sdd-command-router.ts": {
+          "additions": 563,
+          "deletions": 59,
+          "accepted_lines": 504
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-command-router/design.md": {
+          "additions": 165,
+          "accepted_lines": 165
+        },
+        "openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/proposal.md": {
+          "additions": 33,
+          "accepted_lines": 33
+        },
+        "openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/specs/sdd-command-router/spec.md": {
+          "additions": 201,
+          "accepted_lines": 201
+        },
+        "openspec/changes/add-sdd-command-router/specs/sdd-workflow-panels/spec.md": {
+          "additions": 52
+        },
+        "openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/specs/sdd-workflow-panels/spec.md": {
+          "additions": 183,
+          "accepted_lines": 183
+        },
+        "src/components/OpenSpecDashboard.tsx": {
+          "additions": 393,
+          "deletions": 59,
+          "accepted_lines": 343
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-command-router/tasks.md": {
+          "additions": 41,
+          "accepted_lines": 41
+        },
+        "openspec/changes/add-sdd-command-router/tasks.md": {
+          "additions": 78,
+          "deletions": 37
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-command-router/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-19-add-ravenspec-sdd-routing/design.md": {
+          "additions": 164,
+          "accepted_lines": 164
+        },
+        "openspec/changes/add-ravenspec-sdd-routing/specs/sdd-workflow-panels/spec.md": {
+          "additions": 187,
+          "deletions": 4
+        }
+      }
+    }
+  }
+}
