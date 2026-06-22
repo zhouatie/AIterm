@@ -1,0 +1,115 @@
+src/preload.ts
+  f56a56b0203bca6f 120-128,351-354
+openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/specs/electron-shell/spec.md
+  f56a56b0203bca6f 1-25
+openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/specs/terminal-smart-links/spec.md
+  f56a56b0203bca6f 1-19
+openspec/specs/electron-shell/spec.md
+  f56a56b0203bca6f 189-212
+src/main.ts
+  f56a56b0203bca6f 78,118-121,167-176,758-769
+openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/proposal.md
+  f56a56b0203bca6f 1-28
+openspec/specs/terminal-smart-links/spec.md
+  f56a56b0203bca6f 49-66
+src/global.d.ts
+  f56a56b0203bca6f 8,29
+openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/tasks.md
+  f56a56b0203bca6f 1-25
+openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/design.md
+  f56a56b0203bca6f 1-65
+openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/.openspec.yaml
+  f56a56b0203bca6f 1-2
+src/components/TerminalInstance.tsx
+  f56a56b0203bca6f 67-76,318
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "d60701161794c10cf9a48085e59a4f5a6c796921",
+  "prompts": {
+    "f56a56b0203bca6f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eee31-9260-7710-8358-c46eaf911ce9",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 442,
+      "total_deletions": 15,
+      "accepted_lines": 264,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/open-terminal-links-in-default-browser/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/main.ts": {
+          "additions": 31,
+          "accepted_lines": 31
+        },
+        "openspec/specs/terminal-smart-links/spec.md": {
+          "additions": 18,
+          "accepted_lines": 18
+        },
+        "src/global.d.ts": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/open-terminal-links-in-default-browser/tasks.md": {
+          "additions": 39,
+          "deletions": 14
+        },
+        "openspec/changes/open-terminal-links-in-default-browser/proposal.md": {
+          "additions": 28
+        },
+        "openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/proposal.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "src/components/TerminalInstance.tsx": {
+          "additions": 11,
+          "deletions": 1,
+          "accepted_lines": 11
+        },
+        "openspec/changes/open-terminal-links-in-default-browser/design.md": {
+          "additions": 65
+        },
+        "openspec/changes/open-terminal-links-in-default-browser/specs/terminal-smart-links/spec.md": {
+          "additions": 19
+        },
+        "openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/specs/terminal-smart-links/spec.md": {
+          "additions": 19,
+          "accepted_lines": 19
+        },
+        "openspec/specs/electron-shell/spec.md": {
+          "additions": 24,
+          "accepted_lines": 24
+        },
+        "openspec/changes/open-terminal-links-in-default-browser/specs/electron-shell/spec.md": {
+          "additions": 25
+        },
+        "openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/specs/electron-shell/spec.md": {
+          "additions": 25,
+          "accepted_lines": 25
+        },
+        "openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/tasks.md": {
+          "additions": 25,
+          "accepted_lines": 25
+        },
+        "src/preload.ts": {
+          "additions": 14,
+          "accepted_lines": 14
+        },
+        "openspec/changes/archive/2026-06-22-open-terminal-links-in-default-browser/design.md": {
+          "additions": 65,
+          "accepted_lines": 65
+        }
+      }
+    }
+  }
+}
