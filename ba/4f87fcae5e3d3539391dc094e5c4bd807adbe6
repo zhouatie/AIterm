@@ -1,0 +1,28 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "ba4f87fcae5e3d3539391dc094e5c4bd807adbe6",
+  "prompts": {
+    "0d0aa0150fdd6562": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eed98-9663-78c2-a533-62cdb6184068",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 0,
+      "overriden_lines": 1,
+      "per_file_stats": {
+        "package.json": {
+          "additions": 2,
+          "deletions": 2,
+          "overriden_lines": 1
+        }
+      }
+    }
+  }
+}
