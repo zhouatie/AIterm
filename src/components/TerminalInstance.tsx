@@ -64,6 +64,16 @@ function getXtermTheme(theme: 'light' | 'dark'): ITheme {
   return theme === 'dark' ? DARK_THEME : LIGHT_THEME;
 }
 
+function openTerminalLinkInDefaultBrowser(_event: MouseEvent, uri: string): void {
+  void window.externalLinkApi.open(uri).then((result) => {
+    if (!result.ok) {
+      console.warn('[TerminalInstance] Failed to open external link:', result.error);
+    }
+  }).catch((error) => {
+    console.warn('[TerminalInstance] Failed to open external link:', error);
+  });
+}
+
 // --- Renderer type tracking ---
 
 type RendererType = 'webgl' | 'canvas' | 'dom';
@@ -305,7 +315,7 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
       // --- Addon loading ---
 
       // Web links (clickable URLs)
-      terminal.loadAddon(new WebLinksAddon());
+      terminal.loadAddon(new WebLinksAddon(openTerminalLinkInDefaultBrowser));
 
       // Unicode 11 (correct CJK / Emoji width calculation)
       const unicode11 = new Unicode11Addon();

@@ -117,6 +117,15 @@ export interface AppUpdateApi {
   openReleasePage(releaseUrl?: string): Promise<AppUpdateOpenResult>;
 }
 
+export interface ExternalLinkOpenResult {
+  ok: boolean;
+  error?: string;
+}
+
+export interface ExternalLinkApi {
+  open(url: string): Promise<ExternalLinkOpenResult>;
+}
+
 export interface FileApi {
   readDir(dirPath: string): Promise<{ entries?: DirEntry[]; error?: string }>;
   readFile(filePath: string): Promise<{ content?: string; error?: string }>;
@@ -338,6 +347,11 @@ contextBridge.exposeInMainWorld('appUpdateApi', {
   openReleasePage: (releaseUrl?: string) =>
     ipcRenderer.invoke('app:update:open-release-page', releaseUrl),
 } satisfies AppUpdateApi);
+
+contextBridge.exposeInMainWorld('externalLinkApi', {
+  open: (url: string) =>
+    ipcRenderer.invoke('external-link:open', url),
+} satisfies ExternalLinkApi);
 
 contextBridge.exposeInMainWorld('themeApi', {
   setNativeTheme: (mode: 'light' | 'dark' | 'system') =>

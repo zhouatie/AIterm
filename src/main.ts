@@ -75,6 +75,7 @@ const AITERM_RELEASES_URL = 'https://github.com/zhouatie/AIterm/releases';
 const AITERM_LATEST_RELEASE_API_URL = 'https://api.github.com/repos/zhouatie/AIterm/releases/latest';
 const AITERM_RELEASES_HOSTNAME = 'github.com';
 const AITERM_RELEASES_PATH_PREFIX = '/zhouatie/AIterm/releases';
+const EXTERNAL_WEB_URL_PROTOCOLS = new Set(['http:', 'https:']);
 const UPDATE_CHECK_TIMEOUT_MS = 10000;
 const UPDATE_CHECK_MAX_RESPONSE_BYTES = 1024 * 1024;
 
@@ -112,6 +113,10 @@ interface TerminalStreamState {
 
 function getUpdateErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : '检查更新失败';
+}
+
+function getExternalLinkOpenErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : '无法打开外部链接';
 }
 
 function parseReleaseVersion(version: string): [number, number, number] | null {
@@ -157,6 +162,18 @@ function resolveReleaseUrl(url?: string): string | null {
   if (!url) return AITERM_RELEASES_URL;
   if (!isAllowedReleaseUrl(url)) return null;
   return url;
+}
+
+function resolveExternalWebUrl(url: unknown): string | null {
+  if (typeof url !== 'string') return null;
+
+  try {
+    const parsed = new URL(url);
+    if (!EXTERNAL_WEB_URL_PROTOCOLS.has(parsed.protocol)) return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
 }
 
 function requestJson(url: string): Promise<unknown> {
@@ -736,6 +753,20 @@ ipcMain.handle('app:update:open-release-page', async (_event, releaseUrl?: unkno
 
   await shell.openExternal(resolvedUrl);
   return { ok: true };
+});
+
+ipcMain.handle('external-link:open', async (_event, url: unknown) => {
+  const resolvedUrl = resolveExternalWebUrl(url);
+  if (!resolvedUrl) {
+    return { ok: false, error: '只允许打开 http 或 https URL' };
+  }
+
+  try {
+    await shell.openExternal(resolvedUrl);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: getExternalLinkOpenErrorMessage(error) };
+  }
 });
 
 // terminal:create — create a PTY session and return the session ID

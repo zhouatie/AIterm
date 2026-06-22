@@ -5,6 +5,7 @@ import type {
   OpenSpecWorkflowApi,
   AppInfoApi,
   AppUpdateApi,
+  ExternalLinkApi,
   ThemeApi,
   TabStateApi,
   LiveViewApi,
@@ -25,6 +26,7 @@ declare global {
     openspecWorkflowApi: OpenSpecWorkflowApi;
     appInfoApi: AppInfoApi;
     appUpdateApi: AppUpdateApi;
+    externalLinkApi: ExternalLinkApi;
     themeApi: ThemeApi;
     tabStateApi: TabStateApi;
     liveViewApi: LiveViewApi;
