@@ -1,0 +1,148 @@
+openspec/specs/terminal-tabs/spec.md
+  02cf1836cd53fb28 268,271-272,274,277-278,280,283-284,288-289,291-292,295-296,298-323,635,653-657,694,698,705,710-714,716-720,723,729,734,736,738-740,742-772,774-778,783-784
+openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/design.md
+  02cf1836cd53fb28 1-83
+openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/specs/keyboard-shortcuts/spec.md
+  02cf1836cd53fb28 1-60
+openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/proposal.md
+  02cf1836cd53fb28 1-40
+openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/specs/terminal-tabs/spec.md
+  02cf1836cd53fb28 1-182
+openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/tasks.md
+  02cf1836cd53fb28 1-36
+src/components/TerminalPanel.tsx
+  02cf1836cd53fb28 17,69,83-89,124-130,137-138,246-254,274-278,669,687-689,738,766,772-775,1030-1035,1141,1194,1239,1293,1647-1675,1679-1697,1699-1730,1732-1739,1757-1758,1762,1765-1787,1789-1817,1832,1863-1864,1879,1888,1892,1904-1915,1919-1924,1927-1930,1932-1957,1961-1963,1966,1968,1971-2055,2150-2183,2186-2208,2210-2233,2235-2236,2242,2244-2246,2880-2921
+openspec/specs/keyboard-shortcuts/spec.md
+  02cf1836cd53fb28 13,46,58-59,69
+package.json
+  02cf1836cd53fb28 4
+src/index.css
+  02cf1836cd53fb28 1314-1320,1431,1454-1455
+src/ShortcutContext.tsx
+  02cf1836cd53fb28 14,70-73,169
+openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/.openspec.yaml
+  02cf1836cd53fb28 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "8af398ad432975e5578bac41340b9b153cde9fdc",
+  "prompts": {
+    "02cf1836cd53fb28": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edfe2-073f-7322-b676-7a2d050426e3",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1469,
+      "total_deletions": 192,
+      "accepted_lines": 1011,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "src/components/TerminalPanel.tsx": {
+          "additions": 481,
+          "deletions": 113,
+          "accepted_lines": 475
+        },
+        "openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/proposal.md": {
+          "additions": 40,
+          "accepted_lines": 40
+        },
+        "package.json": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        },
+        "openspec/changes/refine-spec-terminal-navigation/tasks.md": {
+          "additions": 69,
+          "deletions": 33
+        },
+        "openspec/changes/refine-spec-terminal-navigation/design.md": {
+          "additions": 85,
+          "deletions": 2
+        },
+        "openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/specs/terminal-tabs/spec.md": {
+          "additions": 182,
+          "accepted_lines": 182
+        },
+        "openspec/changes/refine-spec-terminal-navigation/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/index.css": {
+          "additions": 13,
+          "deletions": 2,
+          "accepted_lines": 12
+        },
+        "src/ShortcutContext.tsx": {
+          "additions": 7,
+          "accepted_lines": 7
+        },
+        "openspec/specs/terminal-tabs/spec.md": {
+          "additions": 108,
+          "deletions": 24,
+          "accepted_lines": 108
+        },
+        "openspec/changes/refine-spec-terminal-navigation/specs/terminal-tabs/spec.md": {
+          "additions": 191,
+          "deletions": 9
+        },
+        "openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/specs/keyboard-shortcuts/spec.md": {
+          "additions": 60,
+          "accepted_lines": 60
+        },
+        "openspec/changes/refine-spec-terminal-navigation/proposal.md": {
+          "additions": 44,
+          "deletions": 4
+        },
+        "openspec/specs/keyboard-shortcuts/spec.md": {
+          "additions": 5,
+          "deletions": 4,
+          "accepted_lines": 5
+        },
+        "openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/design.md": {
+          "additions": 83,
+          "accepted_lines": 83
+        },
+        "openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-19-refine-spec-terminal-navigation/tasks.md": {
+          "additions": 36,
+          "accepted_lines": 36
+        },
+        "openspec/changes/refine-spec-terminal-navigation/specs/keyboard-shortcuts/spec.md": {
+          "additions": 60
+        }
+      }
+    },
+    "4b2f84ab766bad16": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edeeb-7530-7503-8242-c3828d3f9adb",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "4dd959216feca7ef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edee4-ec38-7443-8ff9-6ad601c3fc00",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  }
+}

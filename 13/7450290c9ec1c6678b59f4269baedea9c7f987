@@ -1,0 +1,60 @@
+openspec/changes/write-spec-terminal-patent-disclosure/proposal.md
+  80326d5c27fb2a0d 1-24
+openspec/changes/write-spec-terminal-patent-disclosure/specs/spec-terminal-patent-disclosure/spec.md
+  80326d5c27fb2a0d 1-82
+openspec/changes/write-spec-terminal-patent-disclosure/patent-disclosure.md
+  80326d5c27fb2a0d 1-353
+openspec/changes/write-spec-terminal-patent-disclosure/.openspec.yaml
+  80326d5c27fb2a0d 1-2
+openspec/changes/write-spec-terminal-patent-disclosure/tasks.md
+  80326d5c27fb2a0d 1-31
+openspec/changes/write-spec-terminal-patent-disclosure/design.md
+  80326d5c27fb2a0d 1-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.8",
+  "base_commit_sha": "137450290c9ec1c6678b59f4269baedea9c7f987",
+  "prompts": {
+    "80326d5c27fb2a0d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e623e-be16-7ba2-816e-6a69e04ae510",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 573,
+      "total_deletions": 20,
+      "accepted_lines": 553,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/write-spec-terminal-patent-disclosure/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/write-spec-terminal-patent-disclosure/design.md": {
+          "additions": 61,
+          "accepted_lines": 61
+        },
+        "openspec/changes/write-spec-terminal-patent-disclosure/proposal.md": {
+          "additions": 24,
+          "accepted_lines": 24
+        },
+        "openspec/changes/write-spec-terminal-patent-disclosure/tasks.md": {
+          "additions": 51,
+          "deletions": 20,
+          "accepted_lines": 31
+        },
+        "openspec/changes/write-spec-terminal-patent-disclosure/specs/spec-terminal-patent-disclosure/spec.md": {
+          "additions": 82,
+          "accepted_lines": 82
+        },
+        "openspec/changes/write-spec-terminal-patent-disclosure/patent-disclosure.md": {
+          "additions": 353,
+          "accepted_lines": 353
+        }
+      }
+    }
+  }
+}

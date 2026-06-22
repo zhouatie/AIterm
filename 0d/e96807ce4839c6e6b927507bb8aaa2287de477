@@ -1,0 +1,2990 @@
+src/components/TerminalPanel.tsx
+  4dd959216feca7ef 1,3-4,9,11-12,16,20-26,41-50,61-122,182-208,216-242,245-323,636,648-653,675,685-733,1090-1146,1185-1194,1579-1755,1845-1954,2020-2039,2042,2077-2111,2124,2546-2638
+openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/design.md
+  4dd959216feca7ef 1-90
+openspec/specs/terminal-tabs/spec.md
+  4dd959216feca7ef 603-772
+openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/specs/terminal-tabs/spec.md
+  4dd959216feca7ef 1-171
+openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/tasks.md
+  4dd959216feca7ef 1-50
+src/components/FilePreviewPanel.tsx
+  4dd959216feca7ef 379-384
+openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/proposal.md
+  4dd959216feca7ef 1-34
+src/preload.ts
+  4dd959216feca7ef 136-138,278-289
+openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/.openspec.yaml
+  4dd959216feca7ef 1-2
+src/index.css
+  4dd959216feca7ef 1142-1679
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "0de96807ce4839c6e6b927507bb8aaa2287de477",
+  "prompts": {
+    "05c35b5c62ce02e3": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26c159e40ffeA5FkAz9YiDphpB",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 506,
+      "total_deletions": 146,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "0742876b448b92ee": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8776-7294-7f32-ad84-fab44f79d9c9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 30,
+      "total_deletions": 8,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    },
+    "0fec8fe7f5983e39": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d84fe-2232-7c00-8dfc-fc770e8d7249",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 873,
+      "total_deletions": 83,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    },
+    "14def8aa94ff32de": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e187bbdffeac2RdCxFtMc0Rm",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 343,
+      "total_deletions": 45,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    },
+    "1c82362ce8fc9ffe": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d85db-8e27-7102-b3ea-9e54041556cc",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 322,
+      "total_deletions": 60,
+      "accepted_lines": 170,
+      "overriden_lines": 0
+    },
+    "25165888cbfa336f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb776-0299-7f90-b64d-27d5569a1eaa",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 617,
+      "total_deletions": 65,
+      "accepted_lines": 86,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/tasks.md": {
+          "additions": 29,
+          "accepted_lines": 29
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/design.md": {
+          "additions": 67
+        },
+        "src/components/MarkdownPreview.tsx": {
+          "additions": 162,
+          "deletions": 40,
+          "accepted_lines": 161
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/design.md": {
+          "additions": 67,
+          "accepted_lines": 67
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/specs/file-preview/spec.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/proposal.md": {
+          "additions": 29
+        },
+        "src/index.css": {
+          "additions": 98,
+          "deletions": 5,
+          "accepted_lines": 93
+        },
+        "openspec/specs/file-preview/spec.md": {
+          "additions": 27,
+          "accepted_lines": 27
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/tasks.md": {
+          "additions": 47,
+          "deletions": 18
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/add-markdown-preview-heading-outline/specs/file-preview/spec.md": {
+          "additions": 30,
+          "deletions": 2
+        },
+        "openspec/changes/archive/2026-06-12-add-markdown-preview-heading-outline/proposal.md": {
+          "additions": 29,
+          "accepted_lines": 29
+        }
+      }
+    },
+    "2812facc9451ca8d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2739e17caffeC3LyQ9c7OT1mud",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 0,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    },
+    "2ebddbaf6a04cdf1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d856c-e8b8-7da3-9170-e84c0d0801d9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 48,
+      "total_deletions": 2,
+      "accepted_lines": 29,
+      "overriden_lines": 0
+    },
+    "32aa0907caf91050": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dae2d-5fc3-7c33-ba91-f28678f34664",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 71,
+      "total_deletions": 5,
+      "accepted_lines": 14,
+      "overriden_lines": 0
+    },
+    "3a314cefc543f832": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d85ea-3c4c-7b92-ae9b-06bab1846fb3",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 75,
+      "total_deletions": 31,
+      "accepted_lines": 58,
+      "overriden_lines": 0
+    },
+    "46bf29425ba6feba": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d902d-f696-7582-8a2a-84aa99dbb443",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 593,
+      "total_deletions": 127,
+      "accepted_lines": 384,
+      "overriden_lines": 0
+    },
+    "4a302fdc82a261d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27454b038ffe04PemalnNeGBSX",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 439,
+      "total_deletions": 37,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "4a31963fd89b7688": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_275d335d3ffeuzhzN3n3m9GKwJ",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 58,
+      "total_deletions": 1,
+      "accepted_lines": 55,
+      "overriden_lines": 0
+    },
+    "4b2f84ab766bad16": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edeeb-7530-7503-8242-c3828d3f9adb",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [
+        {
+          "type": "user",
+          "text": "# AGENTS.md instructions\n\n<INSTRUCTIONS>\n- 决策确认：遇到不确定的代码设计问题时，必须先询问 \"atie\" ，不得直接行动\n- 代码兼容性：不能写兼容性代码，除非我主动要求\n- 代码 lint：每次写完代码不需要lint，除非我主动要求\n- Language：用户的主要语言是中文，默认使用中文回复。\n- 修改前先说明计划。\n- 默认不要自动提交 commit。\n- 有figma节点可读取时，禁止臆想绘制UI。\n</INSTRUCTIONS>\n<environment_context>\n  <cwd>/Users/zhoushitie/My/AItem</cwd>\n  <shell>zsh</shell>\n  <current_date>2026-06-19</current_date>\n  <timezone>Asia/Shanghai</timezone>\n  <filesystem><workspace_roots><root>/Users/zhoushitie/My/AItem</root></workspace_roots><permission_profile type=\"managed\"><file_system type=\"restricted\"><entry access=\"read\"><special>:root</special></entry><entry access=\"write\"><path>/Users/zhoushitie/My/AItem</path></entry><entry access=\"write\"><special>:slash_tmp</special></entry><entry access=\"write\"><special>:tmpdir</special></entry><entry access=\"read\"><path>/Users/zhoushitie/My/AItem/.git</path></entry><entry access=\"read\"><path>/Users/zhoushitie/My/AItem/.agents</path></entry><entry access=\"read\"><path>/Users/zhoushitie/My/AItem/.codex</path></entry></file_system></permission_profile></filesystem>\n</environment_context>",
+          "timestamp": "2026-06-19T08:08:24.785Z"
+        },
+        {
+          "type": "user",
+          "text": "使用探索Skill 现在我这个应用已经支持，比如说终端的Tab通知推送，以及应用左上角有个铃铛的一个应用状态。我现在还想在Mac的菜单栏，也就是顶部那一条，加一个应用Icon。这样的话，比如说我一些Agent执行的状态，可以在那个Icon里面可以看到，或者说点击可以跳到打开对应的Tab这样子。因为我有时候应用会切到别的应用，不一定常驻在这个当前的这个AI turn APP",
+          "timestamp": "2026-06-19T08:08:24.933Z"
+        },
+        {
+          "type": "assistant",
+          "text": "我会使用 `openspec-explore`，先按它的流程梳理这个菜单栏状态入口的产品/技术边界，再结合当前仓库结构判断应该落在哪一层。先读取技能说明。",
+          "timestamp": "2026-06-19T08:08:28.740Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,240p' /Users/zhoushitie/My/AItem/.codex/skills/openspec-explore/SKILL.md",
+            "max_output_tokens": 20000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:29.688Z"
+        },
+        {
+          "type": "assistant",
+          "text": "我会先做轻量代码勘察，不改文件：看 OpenSpec 现状，再找应用是 Electron、原生 Mac 还是别的壳，以及现有 Tab 通知/铃铛状态的实现位置。这样可以避免只停留在概念层。",
+          "timestamp": "2026-06-19T08:08:36.984Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec list --json",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:36.984Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "rg --files -g 'package.json' -g 'src/**' -g 'app/**' -g 'electron/**' -g 'main/**' -g 'native/**' -g 'tauri.conf.*' -g '*.swift' -g '*.mm' -g '*.m' -g '*.ts' -g '*.tsx' -g '*.js' -g '*.jsx' -g '!node_modules'",
+            "max_output_tokens": 20000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:36.984Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "rg -n \"notification|notify|bell|Badge|badge|tray|statusItem|MenuBar|menubar|tab|terminal|Agent|agent\" -g '!node_modules' -g '!dist' -g '!build'",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:37.223Z"
+        },
+        {
+          "type": "assistant",
+          "text": "我看到这是 Electron + React/Vite 形态，并且已经有一条 agent status 数据链路：hook CLI 通知主进程，preload 暴露事件，renderer 里的 `AgentStatusProvider` 汇总后驱动标题栏铃铛和 Inbox。接下来我会读这几块，重点看“状态数据在哪里聚合”和“激活 tab 的动作是否已经有 IPC”。",
+          "timestamp": "2026-06-19T08:08:49.763Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,220p' package.json",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:49.763Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,280p' src/main.ts",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:49.763Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,280p' src/preload.ts",
+            "max_output_tokens": 22000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:49.920Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,260p' src/contexts/agent-status.tsx",
+            "max_output_tokens": 22000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:49.921Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,220p' src/terminal-attention.ts",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:49.921Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,180p' scripts/aiterm-notify.mjs",
+            "max_output_tokens": 18000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:08:50.041Z"
+        },
+        {
+          "type": "assistant",
+          "text": "现在看到一个关键点：renderer 已经有 `activateSession(sessionId)`，但菜单栏图标运行在主进程，不能直接调用 React context。所以比较自然的探索方向是让主进程持有“可展示的状态快照”，点击菜单项后通过已有/新增 IPC 通知 renderer 激活对应 session。",
+          "timestamp": "2026-06-19T08:09:00.217Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "rg -n \"attention|agentStatus|agentNotifications|Notification|activateSession|terminal:activateSession|manualInterrupt|notify\" src/main.ts",
+            "max_output_tokens": 22000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:00.217Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "rg -n \"registerSessionActivator|activateSession\\(|setSessionSummaries|onActivateSession|sessionSummaries\" src/App.tsx src/components/TerminalPanel.tsx src/components/AgentInboxPanel.tsx",
+            "max_output_tokens": 18000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:00.218Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '60,180p' src/components/AgentInboxPanel.tsx",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:00.218Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '220,540p' src/App.tsx",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:00.391Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,260p' src/components/TerminalPanel.tsx",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:00.395Z"
+        },
+        {
+          "type": "assistant",
+          "text": "已有通知点击路径比预期更接近目标：系统通知点击后 `mainWindow.webContents.send('terminal:activateSession', { id })`，`TerminalPanel` 已监听并切换 tab。菜单栏入口可以复用这条激活通道，主要新增的是 Tray/Menu 的生命周期和状态同步。",
+          "timestamp": "2026-06-19T08:09:10.913Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '320,540p' src/main.ts",
+            "max_output_tokens": 22000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:11.013Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '540,640p' src/main.ts",
+            "max_output_tokens": 16000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:11.015Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '780,920p' src/components/TerminalPanel.tsx",
+            "max_output_tokens": 22000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:11.015Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '920,1180p' src/components/TerminalPanel.tsx",
+            "max_output_tokens": 26000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:11.016Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "rg -n \"createWindow|BrowserWindow|app\\.whenReady|activate|window-all-closed|setDockBadge|dock|Menu|Tray\" src/main.ts forge.config.ts",
+            "max_output_tokens": 20000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:11.058Z"
+        },
+        {
+          "type": "assistant",
+          "text": "我还需要确认窗口生命周期：如果以后点击菜单栏图标要“唤回应用”，当前关闭窗口会终止终端进程，这和菜单栏常驻可能冲突。这个点会影响需求边界：只是前台窗口存在时辅助跳转，还是希望关掉窗口后也能继续在菜单栏看状态。",
+          "timestamp": "2026-06-19T08:09:19.938Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '632,760p' src/main.ts",
+            "max_output_tokens": 20000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:19.938Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '760,850p' src/main.ts",
+            "max_output_tokens": 16000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:19.938Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '2100,2155p' src/main.ts",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:20.072Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,220p' forge.config.ts",
+            "max_output_tokens": 18000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:20.072Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "rg --files assets src public . | rg \"(icon|tray|template|png|icns|ico|svg)$\"",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:20.072Z"
+        },
+        {
+          "type": "assistant",
+          "text": "为了把结论落到当前代码，我会再取一下关键行号，最后给你一个探索结论：最小可行版本、可能的增强版本、需要你确认的几个产品决策。不会改代码。",
+          "timestamp": "2026-06-19T08:09:34.120Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "nl -ba src/main.ts | sed -n '60,90p'",
+            "max_output_tokens": 8000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:34.120Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "nl -ba src/main.ts | sed -n '458,516p'",
+            "max_output_tokens": 10000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:34.125Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "nl -ba src/main.ts | sed -n '2120,2145p'",
+            "max_output_tokens": 8000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:34.258Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "nl -ba src/contexts/agent-status.tsx | sed -n '54,170p'",
+            "max_output_tokens": 14000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:34.259Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "nl -ba src/components/TerminalPanel.tsx | sed -n '800,900p'",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:34.259Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "nl -ba src/components/AgentInboxPanel.tsx | sed -n '61,132p'",
+            "max_output_tokens": 10000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:09:34.259Z"
+        },
+        {
+          "type": "assistant",
+          "text": "我用 `openspec-explore` 看了一轮，先不改代码。结论：这个功能很适合接在现有 Agent Inbox/通知链路上，范围不大，但有几个产品决策需要 atie 先确认。\n\n当前链路大概是：\n\n```text\nagent hook\n  -> scripts/aiterm-notify.mjs\n  -> main attention server\n  -> agentStatusBySessionId\n  -> renderer AgentStatusProvider\n  -> 标题栏 Bell / AgentInboxPanel\n```\n\n关键代码点：\n\n- 主进程已经持有 agent 状态：[`src/main.ts`](/Users/zhoushitie/My/AItem/src/main.ts:67)\n- 系统通知点击后已经会唤醒窗口并跳转 session：[`src/main.ts`](/Users/zhoushitie/My/AItem/src/main.ts:495)\n- renderer 侧已经能激活对应 terminal tab：[`src/components/TerminalPanel.tsx`](/Users/zhoushitie/My/AItem/src/components/TerminalPanel.tsx:873)\n- Agent Inbox 已经有排序、点击跳转、session label 展示逻辑：[`src/components/AgentInboxPanel.tsx`](/Users/zhoushitie/My/AItem/src/components/AgentInboxPanel.tsx:68)\n\n推荐方案是做一个 Electron `Tray`，不要另起一套状态系统：\n\n```text\nmain Tray/Menu\n   ▲\n   │ 复用 agentStatusBySessionId\n   │ 需要 renderer 同步 session summaries\n   ▼\n点击菜单项\n   -> mainWindow.show/focus\n   -> webContents.send('terminal:activateSession', { id })\n   -> TerminalPanel 切到对应 tab\n```\n\n最小可行版本：\n\n1. 主进程新增 `Tray` 生命周期，app ready 后创建菜单栏 icon。\n2. `sendTerminalAgentStatus()` 和 `clearTerminalAgentStatus()` 后刷新 tray 菜单。\n3. 菜单展示 running / needs_user / error / completed 的 agent 状态。\n4. 点击某个菜单项，复用现有 `terminal:activateSession` IPC 跳转到对应 tab。\n5. renderer 把 `TerminalSessionSummary[]` 同步给 main，否则菜单里只能显示 session id，不能显示 workspace/tab 名称。\n\n需要 atie 确认的设计点：\n\n1. 菜单栏 icon 是“始终显示”，还是只在有 agent 状态时显示？\n2. 状态展示范围：只显示 `needs_user/error`，还是也显示 `running/completed`？我倾向显示全部非 idle，但 badge/高亮只强调待处理和异常。\n3. 点击 icon 默认行为：打开菜单，还是单击直接跳到最高优先级的 agent tab？macOS 常规 Tray 更适合打开菜单。\n4. 关闭主窗口后是否仍希望菜单栏保留状态？当前 `window-all-closed` 会 `disposeAllTerminalSessions()`，也就是关闭窗口会终止终端进程；如果要菜单栏常驻并继续看 agent 状态，这是更大的生命周期改造。\n\n我的建议：第一版先做“窗口存在时的菜单栏状态入口”，不改变关闭窗口会终止终端的现有语义。确认上面 4 点后，就可以进入 OpenSpec proposal/change，再实现。",
+          "timestamp": "2026-06-19T08:09:53.575Z"
+        },
+        {
+          "type": "user",
+          "text": "使用Open Spec Propose Skill 按照你建议的方式实现",
+          "timestamp": "2026-06-19T08:11:48.792Z"
+        },
+        {
+          "type": "assistant",
+          "text": "我会使用 `openspec-propose` 来先生成这个变更的 OpenSpec artifacts，不直接改应用代码。采用上轮建议的第一版边界：菜单栏常驻入口、复用现有 agent status 和 `terminal:activateSession`，不改变关闭窗口会终止 terminal 的现有生命周期。",
+          "timestamp": "2026-06-19T08:11:54.596Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,260p' /Users/zhoushitie/My/AItem/.codex/skills/openspec-propose/SKILL.md",
+            "max_output_tokens": 30000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:11:55.491Z"
+        },
+        {
+          "type": "assistant",
+          "text": "计划是：先创建 `add-menubar-agent-status` 这个 OpenSpec change，再按 schema 依次生成 proposal、design、spec/tasks 等 apply-ready artifacts。过程中只写 `openspec/changes/...` 下的变更文档，不动应用代码。",
+          "timestamp": "2026-06-19T08:12:01.732Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec list --json",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:01.737Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "ls openspec/changes",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:01.821Z"
+        },
+        {
+          "type": "assistant",
+          "text": "当前只有一个无关的活跃 change：`add-sdd-command-router`。我会新建独立 change，避免把菜单栏状态入口混到现有 SDD 命令路由里。",
+          "timestamp": "2026-06-19T08:12:05.624Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec new change \"add-menubar-agent-status\"",
+            "max_output_tokens": 20000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:06.337Z"
+        },
+        {
+          "type": "assistant",
+          "text": "change scaffold 已创建。接下来我会读取 OpenSpec 给出的 artifact 生成顺序和每个 artifact 的写作规则，再按依赖顺序补齐。",
+          "timestamp": "2026-06-19T08:12:10.122Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec status --change \"add-menubar-agent-status\" --json",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:10.851Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "update_plan",
+          "input": {
+            "plan": [
+              {
+                "status": "completed",
+                "step": "创建 add-menubar-agent-status change"
+              },
+              {
+                "status": "in_progress",
+                "step": "生成 proposal artifact"
+              },
+              {
+                "status": "pending",
+                "step": "生成 design artifact"
+              },
+              {
+                "status": "pending",
+                "step": "生成 specs artifact"
+              },
+              {
+                "status": "pending",
+                "step": "生成 tasks artifact 并验证状态"
+              }
+            ]
+          },
+          "timestamp": "2026-06-19T08:12:14.562Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec instructions proposal --change \"add-menubar-agent-status\" --json",
+            "max_output_tokens": 40000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:17.046Z"
+        },
+        {
+          "type": "assistant",
+          "text": "proposal 需要先确认会新增/修改哪些 capability。我会看现有 `openspec/specs`，避免把已有能力误判成新能力。",
+          "timestamp": "2026-06-19T08:12:20.500Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "find openspec/specs -maxdepth 2 -type f -name 'spec.md' -print",
+            "max_output_tokens": 16000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:21.486Z"
+        },
+        {
+          "type": "assistant",
+          "text": "现有 `agent-attention-notifications` 能力已经覆盖 agent 状态提醒，这次更像是在这个能力上增加 macOS 菜单栏入口，而不是创建全新业务能力。我会把它列为 modified capability，并读对应 spec 以保持口径一致。",
+          "timestamp": "2026-06-19T08:12:27.324Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,220p' openspec/specs/agent-attention-notifications/spec.md",
+            "max_output_tokens": 20000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:27.324Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,220p' openspec/specs/electron-shell/spec.md",
+            "max_output_tokens": 16000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:27.324Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "find openspec/changes/add-menubar-agent-status -maxdepth 3 -type f -print",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:27.436Z"
+        },
+        {
+          "type": "assistant",
+          "text": "proposal 会把这次定义为两个既有能力的需求增量：`agent-attention-notifications` 负责状态和跳转语义，`electron-shell` 负责 macOS 菜单栏入口生命周期。没有新增独立 capability。",
+          "timestamp": "2026-06-19T08:12:34.744Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "apply_patch",
+          "input": "*** Begin Patch\n*** Add File: openspec/changes/add-menubar-agent-status/proposal.md\n+## Why\n+\n+用户在使用 AIterm 运行 Codex、Claude Code、OpenCode 等 agent 时，经常会切换到其他应用，当前标题栏 Bell 和系统通知都依赖用户看到窗口或接收到一次性通知。macOS 菜单栏提供一个更持久、低打扰的全局入口，可以让用户随时查看 agent 执行状态并快速回到对应 terminal tab。\n+\n+## What Changes\n+\n+- 在 macOS 顶部菜单栏新增 AIterm 状态图标入口。\n+- 菜单栏入口展示当前 terminal agent status 列表，覆盖 `running`、`completed`、`needs_user`、`error` 等非 idle 状态。\n+- 菜单项按待处理/异常优先、时间倒序展示，并尽量显示 agent 名称、状态、消息和对应 workspace / terminal tab。\n+- 点击某个 agent 状态菜单项时，应用 SHALL 唤起主窗口并跳转到对应 terminal session tab。\n+- 菜单栏入口复用现有 agent status 数据链路和 terminal 激活 IPC，不新增 agent hook 协议。\n+- 第一版不改变现有窗口生命周期：关闭 GUI 仍会终止活跃 PTY，会话关闭后菜单栏不保留已终止 session 状态。\n+\n+## Capabilities\n+\n+### New Capabilities\n+- 无\n+\n+### Modified Capabilities\n+- `agent-attention-notifications`: 增加 macOS 菜单栏 agent status 展示与点击激活对应 terminal session 的需求。\n+- `electron-shell`: 增加 macOS 菜单栏状态入口的创建、刷新和窗口唤起生命周期需求。\n+\n+## Impact\n+\n+- 影响 Electron 主进程：新增 Tray/Menu 生命周期、状态菜单刷新、点击菜单项激活窗口和 terminal session。\n+- 影响 preload / renderer 通信：需要将 renderer 中的 terminal session summary 同步给主进程，供菜单项显示 workspace / tab 标签。\n+- 影响现有 agent status 清除链路：状态新增、清除、session 退出和 GUI 关闭时需要同步刷新菜单栏入口。\n+- 不新增外部依赖；优先使用 Electron 内置 `Tray`、`Menu`、现有应用图标资源和既有 IPC 通道。\n*** End Patch\n",
+          "timestamp": "2026-06-19T08:12:41.273Z"
+        },
+        {
+          "type": "assistant",
+          "text": "proposal 已创建，明确了第一版不改变关闭窗口会终止 PTY 的现有语义。接下来读取 design 和 specs 的生成规则，并基于 proposal 补齐。",
+          "timestamp": "2026-06-19T08:12:44.523Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "update_plan",
+          "input": {
+            "plan": [
+              {
+                "status": "completed",
+                "step": "创建 add-menubar-agent-status change"
+              },
+              {
+                "status": "completed",
+                "step": "生成 proposal artifact"
+              },
+              {
+                "status": "in_progress",
+                "step": "生成 design artifact"
+              },
+              {
+                "status": "pending",
+                "step": "生成 specs artifact"
+              },
+              {
+                "status": "pending",
+                "step": "生成 tasks artifact 并验证状态"
+              }
+            ]
+          },
+          "timestamp": "2026-06-19T08:12:45.386Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec status --change \"add-menubar-agent-status\" --json",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:47.655Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec instructions design --change \"add-menubar-agent-status\" --json",
+            "max_output_tokens": 50000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:52.839Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec instructions specs --change \"add-menubar-agent-status\" --json",
+            "max_output_tokens": 50000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:52.839Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,220p' openspec/changes/add-menubar-agent-status/proposal.md",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:12:52.870Z"
+        },
+        {
+          "type": "assistant",
+          "text": "design 和 specs 会把“菜单栏图标”和“agent 状态语义”分开：Tray 生命周期放到主进程外壳，状态列表/排序/点击跳转放到 agent attention 能力。实现上会要求 renderer 同步 session summary 给 main，但不新增新的 agent hook 协议。",
+          "timestamp": "2026-06-19T08:13:14.775Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "apply_patch",
+          "input": "*** Begin Patch\n*** Add File: openspec/changes/add-menubar-agent-status/design.md\n+## Context\n+\n+AIterm 已经有完整的 agent status 链路：PTY 创建时注入通知环境变量，agent hook 通过本机 HTTP 通知入口推送状态，主进程维护 `agentStatusBySessionId`，再通过 preload 事件推给 renderer。renderer 的 `AgentStatusProvider` 汇总状态后驱动标题栏 Bell 和 Agent Inbox，`TerminalPanel` 已经监听 `terminal:activateSession` 并能切换到对应 terminal tab。\n+\n+这次变更不需要新增 agent hook 协议，也不需要重新设计状态模型。需要补齐的是一个 macOS 菜单栏入口，让主进程能用同一份 agent status 快照构建 Tray 菜单，并在用户点击菜单项时复用现有 session 激活链路。\n+\n+当前 renderer 才知道 workspace 名称、terminal tab 展示名和手动重命名结果；主进程只知道 PTY session id 和部分 session info。因此菜单栏想展示可读的 `workspace / tab` 标签，需要 renderer 将 session summary 同步回主进程。\n+\n+## Goals / Non-Goals\n+\n+**Goals:**\n+- 在 macOS 菜单栏创建 AIterm 状态图标。\n+- 菜单栏展示当前非 idle 的 agent status，覆盖 running、completed、needs_user、error。\n+- 菜单项优先显示 agent 名称、状态、消息和对应 workspace / terminal tab。\n+- 点击 agent 状态菜单项时唤起 AIterm 主窗口，并跳转到对应 terminal session tab。\n+- 状态新增、清除、session 退出、GUI 关闭时刷新菜单栏内容。\n+- 复用现有状态模型、清除策略和 `terminal:activateSession` renderer 事件。\n+\n+**Non-Goals:**\n+- 不改变关闭 GUI 会终止活跃 PTY 的现有生命周期。\n+- 不让菜单栏图标在窗口关闭后继续保留或管理后台 PTY。\n+- 不新增 Windows/Linux 的托盘行为。\n+- 不新增外部依赖或 agent hook 协议。\n+- 不把菜单栏入口做成完整的二级 UI 面板；第一版只使用 Electron 原生菜单。\n+\n+## Decisions\n+\n+### 1. Tray 状态源放在主进程\n+\n+主进程已经维护 `agentStatusBySessionId`，并且 Electron `Tray`/`Menu` 只能在主进程可靠管理。新增 `agentStatusTray`、`sessionSummariesById` 和 `updateAgentStatusTrayMenu()`，在主进程内把状态 map 转换为菜单项。\n+\n+备选方案是让 renderer 驱动菜单栏状态，但 renderer 不能直接访问 Electron Tray，仍然需要 IPC 代理，状态会被拆成两份。主进程作为单一 Tray 状态源更直接，也能在系统通知失败时保持菜单栏入口可用。\n+\n+### 2. renderer 只同步 session summary，不同步 agent status\n+\n+新增 preload API 让 `TerminalPanel` 在已有 `setSessionSummaries()` 同步点附近，把 `TerminalSessionSummary[]` 发送给主进程。主进程只保存展示所需字段：session id、workspaceName、label、cwd。\n+\n+agent status 仍以主进程接收到的 hook 事件为准，避免 renderer 和 main 之间出现双向状态冲突。session summary 只影响菜单文本，不影响状态生命周期。\n+\n+### 3. 点击菜单项复用 `terminal:activateSession`\n+\n+点击菜单项时，主进程执行窗口唤起逻辑：若窗口最小化则恢复，显示并聚焦窗口，然后发送 `terminal:activateSession`。`TerminalPanel` 已经负责切换面板、展开 terminal 侧边栏、选择 session 和聚焦终端，因此不新增第二套 tab 激活逻辑。\n+\n+若对应 session 已不存在，renderer 侧现有激活处理会静默失败。主进程也应在 session 关闭、PTY 退出和状态清除时刷新菜单，降低菜单项指向已关闭 session 的概率。\n+\n+### 4. 菜单排序沿用 Agent Inbox 语义\n+\n+菜单项按状态优先级和时间排序：`needs_user` 高于 `error`，再高于 `running`，最后是 `completed`；同状态内按 timestamp 倒序。这样菜单栏和标题栏 Inbox 的用户感知保持一致。\n+\n+completed 状态仍保留现有清除策略：活跃 tab 的 completed 短暂展示后清除，非活跃 tab 保留至用户查看。菜单栏只是另一个展示入口，不改变状态清除语义。\n+\n+### 5. 菜单栏入口为 macOS 范围\n+\n+需求来自 macOS 顶部菜单栏，第一版只在 macOS 创建 Tray 图标。不为其他平台新增兼容托盘行为，也不改变现有打包配置。图标优先复用现有应用图标资源；若视觉上不适合菜单栏，可在实现时补充 macOS template icon 资源，但不引入新依赖。\n+\n+## Risks / Trade-offs\n+\n+- [Risk] renderer 尚未同步 session summary 时菜单项缺少可读 tab 名称 → 菜单仍显示 agent、状态、消息和 session id；summary 到达后刷新菜单。\n+- [Risk] 菜单项点击时 session 已关闭 → 点击激活指令应被静默忽略，并在下一次状态清除或 summary 刷新后移除对应菜单项。\n+- [Risk] 主进程和 renderer 各自有状态清除逻辑，可能造成重复清除 → 清除操作保持幂等，沿用当前 `clearTerminalAgentStatus` 和 renderer `clearSessionAgentStatus` 的无状态则返回语义。\n+- [Risk] 菜单栏图标视觉不符合 macOS 深浅色菜单栏 → 优先使用 template icon；若使用现有 icon，需要验证浅色/深色菜单栏可见性。\n+- [Risk] 用户误以为关闭窗口后 agent 仍在后台运行 → 菜单文案和行为不表达后台运行能力，关闭 GUI 后仍清理 PTY 并清空菜单状态。\n+\n+## Migration Plan\n+\n+无需数据迁移。该变更只新增运行时 Tray 菜单状态和 renderer 到 main 的 session summary IPC。回滚时移除 Tray 初始化、菜单刷新和 summary IPC 即可，现有 agent hook、系统通知、标题栏 Bell 和 Agent Inbox 不受影响。\n+\n+## Open Questions\n+\n+无。第一版按 proposal 边界实现：macOS 菜单栏状态入口，复用现有状态和 tab 激活链路，不改变关闭窗口生命周期。\n*** End Patch\n",
+          "timestamp": "2026-06-19T08:13:36.410Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "mkdir -p openspec/changes/add-menubar-agent-status/specs/agent-attention-notifications openspec/changes/add-menubar-agent-status/specs/electron-shell",
+            "max_output_tokens": 8000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:13:42.416Z"
+        },
+        {
+          "type": "assistant",
+          "text": "我会新增两个 delta spec 文件，而不是改主 spec：一个描述菜单栏如何展示/激活 agent 状态，另一个描述 macOS Tray 生命周期和 renderer 到 main 的 session summary 同步。",
+          "timestamp": "2026-06-19T08:13:55.683Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "apply_patch",
+          "input": "*** Begin Patch\n*** Add File: openspec/changes/add-menubar-agent-status/specs/agent-attention-notifications/spec.md\n+## ADDED Requirements\n+\n+### Requirement: macOS 菜单栏 agent 状态列表\n+系统 SHALL 在 macOS 菜单栏入口中展示当前 terminal agent status 列表，作为标题栏 Agent Inbox 和系统通知之外的全局状态查看入口。\n+\n+#### Scenario: 展示非 idle agent status\n+- **WHEN** 主进程记录到 terminal session 的 agent status 且 state 不是 `idle`\n+- **THEN** 菜单栏状态菜单 SHALL 展示该 terminal session 的 agent 状态项\n+- **THEN** 状态项 SHALL 表达 agent 名称、state、message 和对应 terminal session 上下文\n+\n+#### Scenario: idle 或清除状态后移除状态项\n+- **WHEN** terminal session 的 agent status 被清除或收到 `idle` 状态\n+- **THEN** 菜单栏状态菜单 SHALL 移除该 terminal session 的 agent 状态项\n+\n+#### Scenario: 按处理优先级排序\n+- **WHEN** 菜单栏状态菜单同时存在多个 agent 状态项\n+- **THEN** 系统 SHALL 按 `needs_user`、`error`、`running`、`completed` 的优先级排序\n+- **THEN** 相同 state 的状态项 SHALL 按 timestamp 倒序排序\n+\n+#### Scenario: 展示 terminal session 标签\n+- **WHEN** 主进程已收到对应 terminal session 的 workspace 和 tab summary\n+- **THEN** 菜单栏状态项 SHALL 显示对应 workspace 名称和 terminal tab 展示名\n+\n+#### Scenario: session summary 尚不可用\n+- **WHEN** 主进程尚未收到对应 terminal session 的 workspace 和 tab summary\n+- **THEN** 菜单栏状态项 SHALL 仍显示 agent 名称、state、message 和 terminal session id\n+- **THEN** 系统 SHALL 在后续 summary 可用时刷新菜单项文本\n+\n+### Requirement: macOS 菜单栏 agent 状态激活\n+系统 SHALL 允许用户从 macOS 菜单栏状态项直接回到对应 terminal session，并复用现有 terminal session 激活和 agent status 清除策略。\n+\n+#### Scenario: 点击菜单栏状态项激活 session\n+- **WHEN** 用户点击菜单栏中的某个 agent 状态项\n+- **THEN** 系统 SHALL 将应用主窗口恢复至可见状态（若已最小化则先还原）\n+- **THEN** 系统 SHALL 将应用主窗口置于前台并获得焦点\n+- **THEN** 系统 SHALL 切换到该状态项对应的 terminal session tab\n+\n+#### Scenario: 激活后显示 terminal 面板\n+- **WHEN** 用户通过菜单栏状态项激活某个 terminal session\n+- **THEN** 系统 SHALL 让该 terminal session 的终端内容显示在 terminal 面板中\n+- **THEN** 若 terminal 侧边栏处于收起状态，系统 SHALL 展开 terminal 侧边栏\n+\n+#### Scenario: 点击待处理或终态状态项后按既有策略清除\n+- **WHEN** 用户点击 state 为 `needs_user`、`completed` 或 `error` 的菜单栏状态项并成功激活对应 terminal session\n+- **THEN** 系统 SHALL 按选择 terminal tab 的既有清除策略清除该 terminal session 的对应 agent status\n+- **THEN** 其他 terminal session 的 agent status SHALL 保持不变\n+\n+#### Scenario: 点击 running 状态项不清除 running 状态\n+- **WHEN** 用户点击 state 为 `running` 的菜单栏状态项并成功激活对应 terminal session\n+- **THEN** 系统 SHALL 激活对应 terminal session\n+- **THEN** 系统 SHALL NOT 仅因为本次菜单栏激活而清除该 `running` agent status\n+\n+#### Scenario: 点击状态项时 session 已不存在\n+- **WHEN** 用户点击菜单栏状态项但对应 terminal session 已关闭或不再存在\n+- **THEN** 系统 SHALL 静默忽略该激活指令\n+- **THEN** 系统 SHALL NOT 产生报错或异常状态\n*** End Patch\n",
+          "timestamp": "2026-06-19T08:14:04.735Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "apply_patch",
+          "input": "*** Begin Patch\n*** Add File: openspec/changes/add-menubar-agent-status/specs/electron-shell/spec.md\n+## ADDED Requirements\n+\n+### Requirement: macOS 菜单栏状态图标\n+应用 SHALL 在 macOS 顶部菜单栏创建 AIterm 状态图标，用于打开应用和查看 agent status；该入口 SHALL 不改变现有窗口关闭与 PTY 生命周期语义。\n+\n+#### Scenario: 应用启动后创建菜单栏图标\n+- **WHEN** 应用在 macOS 上完成主进程 ready 初始化\n+- **THEN** 系统 SHALL 创建 AIterm 菜单栏状态图标\n+- **THEN** 菜单栏状态图标 SHALL 可打开状态菜单\n+\n+#### Scenario: 无 agent 状态时展示空状态\n+- **WHEN** 当前没有任何非 idle 的 terminal agent status\n+- **THEN** 菜单栏状态菜单 SHALL 展示空状态项\n+- **THEN** 空状态项 SHALL NOT 触发 terminal session 激活\n+\n+#### Scenario: 菜单栏入口打开主窗口\n+- **WHEN** 用户在菜单栏状态菜单中触发打开 AIterm 操作\n+- **THEN** 系统 SHALL 创建或显示应用主窗口\n+- **THEN** 若主窗口已最小化，系统 SHALL 先还原主窗口\n+- **THEN** 系统 SHALL 将主窗口置于前台并获得焦点\n+\n+#### Scenario: 关闭 GUI 后不保留后台 PTY 状态\n+- **WHEN** 用户关闭所有应用窗口并触发现有 PTY 清理流程\n+- **THEN** 系统 SHALL 清空菜单栏状态菜单中的 agent status 项\n+- **THEN** 系统 SHALL NOT 在菜单栏入口中保留已终止 PTY 的 agent 状态\n+\n+#### Scenario: 应用退出时清理菜单栏图标\n+- **WHEN** 应用进入退出流程\n+- **THEN** 系统 SHALL 清理菜单栏状态图标相关资源\n+- **THEN** 系统 SHALL NOT 因菜单栏图标导致应用退出流程挂起\n+\n+### Requirement: 菜单栏 terminal session summary 同步\n+主进程 SHALL 通过受控 IPC 接收渲染进程提供的 terminal session summary，用于生成菜单栏状态项的可读标签。\n+\n+#### Scenario: preload 暴露 summary 同步 API\n+- **WHEN** 渲染进程加载完成\n+- **THEN** `window.terminalApi` SHALL 提供同步 terminal session summary 的方法\n+- **THEN** 渲染进程 SHALL NOT 直接访问 `ipcRenderer` 来更新菜单栏状态标签\n+\n+#### Scenario: 渲染进程同步 session summaries\n+- **WHEN** terminal workspace、terminal tab、tab 重命名或 session 列表发生变化\n+- **THEN** 渲染进程 SHALL 通过 preload API 向主进程发送当前 terminal session summary 列表\n+- **THEN** summary SHALL 至少包含 terminal session id、workspace 名称、terminal tab 展示名和 cwd\n+\n+#### Scenario: 主进程替换 summary 快照\n+- **WHEN** 主进程收到合法 terminal session summary 列表\n+- **THEN** 主进程 SHALL 使用该列表替换菜单栏展示所需的 session summary 快照\n+- **THEN** 主进程 SHALL 刷新菜单栏状态菜单\n+\n+#### Scenario: 拒绝无效 summary payload\n+- **WHEN** 主进程收到格式无效的 terminal session summary payload\n+- **THEN** 主进程 SHALL 忽略该 payload\n+- **THEN** 应用 SHALL NOT 崩溃或清空当前有效 summary 快照\n*** End Patch\n",
+          "timestamp": "2026-06-19T08:14:17.750Z"
+        },
+        {
+          "type": "assistant",
+          "text": "specs 已补齐，覆盖菜单栏状态展示、点击激活、Tray 生命周期和 session summary IPC。接下来验证状态，如果 tasks 解锁，就按 schema 生成实现任务清单。",
+          "timestamp": "2026-06-19T08:14:21.190Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "update_plan",
+          "input": {
+            "plan": [
+              {
+                "status": "completed",
+                "step": "创建 add-menubar-agent-status change"
+              },
+              {
+                "status": "completed",
+                "step": "生成 proposal artifact"
+              },
+              {
+                "status": "completed",
+                "step": "生成 design artifact"
+              },
+              {
+                "status": "in_progress",
+                "step": "生成 specs artifact"
+              },
+              {
+                "status": "pending",
+                "step": "生成 tasks artifact 并验证状态"
+              }
+            ]
+          },
+          "timestamp": "2026-06-19T08:14:22.134Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec status --change \"add-menubar-agent-status\" --json",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:14:25.591Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "update_plan",
+          "input": {
+            "plan": [
+              {
+                "status": "completed",
+                "step": "创建 add-menubar-agent-status change"
+              },
+              {
+                "status": "completed",
+                "step": "生成 proposal artifact"
+              },
+              {
+                "status": "completed",
+                "step": "生成 design artifact"
+              },
+              {
+                "status": "completed",
+                "step": "生成 specs artifact"
+              },
+              {
+                "status": "in_progress",
+                "step": "生成 tasks artifact 并验证状态"
+              }
+            ]
+          },
+          "timestamp": "2026-06-19T08:14:30.173Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec instructions tasks --change \"add-menubar-agent-status\" --json",
+            "max_output_tokens": 50000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:14:35.556Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,260p' openspec/changes/add-menubar-agent-status/design.md",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:14:35.558Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,260p' openspec/changes/add-menubar-agent-status/specs/agent-attention-notifications/spec.md",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:14:35.558Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "sed -n '1,260p' openspec/changes/add-menubar-agent-status/specs/electron-shell/spec.md",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:14:35.558Z"
+        },
+        {
+          "type": "assistant",
+          "text": "tasks 会按实现依赖拆：先主进程 Tray 基础和窗口唤起，再 session summary IPC，然后接入状态刷新和验证行为。不会把 lint 作为默认任务。",
+          "timestamp": "2026-06-19T08:14:40.329Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "apply_patch",
+          "input": "*** Begin Patch\n*** Add File: openspec/changes/add-menubar-agent-status/tasks.md\n+## 1. 主进程菜单栏入口\n+\n+- [ ] 1.1 在 `src/main.ts` 引入 Electron `Tray`、`Menu` 和必要的原生图像能力，新增菜单栏状态入口的主进程状态变量\n+- [ ] 1.2 实现 macOS 菜单栏图标创建逻辑，并在应用 ready 初始化阶段创建 Tray\n+- [ ] 1.3 实现打开/聚焦 AIterm 主窗口的主进程 helper，覆盖窗口已存在、最小化和无窗口时重新创建窗口的情况\n+- [ ] 1.4 实现应用退出时的 Tray 资源清理，避免退出流程被菜单栏图标保活\n+\n+## 2. 状态菜单构建\n+\n+- [ ] 2.1 在主进程实现 agent status 菜单项排序，顺序为 `needs_user`、`error`、`running`、`completed`，同状态按 timestamp 倒序\n+- [ ] 2.2 实现菜单项文案格式化，展示 agent 名称、状态、message，并在可用时展示 workspace / terminal tab\n+- [ ] 2.3 实现无 agent 状态时的空状态菜单项和打开 AIterm 菜单项\n+- [ ] 2.4 在 agent status 新增、更新、清除、session dispose、PTY exit、关闭所有窗口清理时刷新菜单栏状态菜单\n+\n+## 3. Session Summary IPC\n+\n+- [ ] 3.1 在 preload 的 `TerminalApi` 中新增同步 terminal session summaries 的方法\n+- [ ] 3.2 在主进程注册受控 IPC 接收 session summary 列表，并校验 payload 格式\n+- [ ] 3.3 在 `TerminalPanel` 现有 summary 生成位置调用 preload API，将当前 session summaries 同步给主进程\n+- [ ] 3.4 在主进程收到合法 summary 快照后替换本地缓存并刷新 Tray 菜单\n+\n+## 4. 菜单项激活行为\n+\n+- [ ] 4.1 实现点击 agent 状态菜单项时唤起主窗口并发送 `terminal:activateSession` 到 renderer\n+- [ ] 4.2 确保点击 `running` 状态项只激活 session，不主动清除 running 状态\n+- [ ] 4.3 确保点击 `needs_user`、`completed`、`error` 状态项后复用现有 terminal tab 选择路径清除对应状态\n+- [ ] 4.4 确保菜单项指向已关闭 session 时激活指令被静默忽略，应用不报错\n+\n+## 5. 行为验证\n+\n+- [ ] 5.1 手动启动应用，确认 macOS 菜单栏出现 AIterm 状态图标且无状态时显示空状态\n+- [ ] 5.2 触发 running、needs_user、completed、error 状态，确认菜单项排序和文案符合 spec\n+- [ ] 5.3 点击菜单栏状态项，确认应用窗口被唤起、terminal 面板显示、侧边栏展开并跳转到对应 tab\n+- [ ] 5.4 关闭 session、关闭所有窗口和退出应用，确认菜单栏状态项清理且不保留已终止 PTY 状态\n*** End Patch\n",
+          "timestamp": "2026-06-19T08:14:49.699Z"
+        },
+        {
+          "type": "assistant",
+          "text": "tasks 已生成。现在我会跑最终 OpenSpec 状态检查，确认这个 change 已经 apply-ready。",
+          "timestamp": "2026-06-19T08:14:55.451Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec status --change \"add-menubar-agent-status\" --json",
+            "max_output_tokens": 24000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:14:55.451Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "openspec status --change \"add-menubar-agent-status\"",
+            "max_output_tokens": 16000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:14:55.452Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "exec_command",
+          "input": {
+            "cmd": "find openspec/changes/add-menubar-agent-status -maxdepth 4 -type f -print | sort",
+            "max_output_tokens": 12000,
+            "workdir": "/Users/zhoushitie/My/AItem",
+            "yield_time_ms": 10000
+          },
+          "timestamp": "2026-06-19T08:14:55.487Z"
+        },
+        {
+          "type": "assistant",
+          "text": "已使用 `openspec-propose` 创建并补齐变更 `add-menubar-agent-status`，当前 OpenSpec 状态是 `4/4 artifacts complete`，已经 ready for implementation。\n\n生成的 artifacts：\n\n- [proposal.md](/Users/zhoushitie/My/AItem/openspec/changes/add-menubar-agent-status/proposal.md)\n- [design.md](/Users/zhoushitie/My/AItem/openspec/changes/add-menubar-agent-status/design.md)\n- [agent-attention-notifications spec](/Users/zhoushitie/My/AItem/openspec/changes/add-menubar-agent-status/specs/agent-attention-notifications/spec.md)\n- [electron-shell spec](/Users/zhoushitie/My/AItem/openspec/changes/add-menubar-agent-status/specs/electron-shell/spec.md)\n- [tasks.md](/Users/zhoushitie/My/AItem/openspec/changes/add-menubar-agent-status/tasks.md)\n\n边界按上轮建议写入：第一版只做 macOS 菜单栏 agent 状态入口，复用现有 agent status 和 `terminal:activateSession`，不改变关闭 GUI 会终止 PTY 的生命周期。未修改应用代码，也没有提交 commit。下一步可以运行 `/opsx:apply add-menubar-agent-status` 或让我继续进入实现。",
+          "timestamp": "2026-06-19T08:15:05.293Z"
+        }
+      ],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 243,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-menubar-agent-status/proposal.md": {
+          "accepted_lines": 28
+        },
+        "openspec/changes/add-menubar-agent-status/specs/agent-attention-notifications/spec.md": {
+          "accepted_lines": 56
+        },
+        "openspec/changes/add-menubar-agent-status/specs/electron-shell/spec.md": {
+          "accepted_lines": 53
+        },
+        "openspec/changes/add-menubar-agent-status/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-menubar-agent-status/tasks.md": {
+          "accepted_lines": 34
+        },
+        "openspec/changes/add-menubar-agent-status/design.md": {
+          "accepted_lines": 70
+        }
+      }
+    },
+    "4dd959216feca7ef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edee4-ec38-7443-8ff9-6ad601c3fc00",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2355,
+      "total_deletions": 160,
+      "accepted_lines": 2159,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-terminal-sidebar-spec-mode/design.md": {
+          "additions": 104,
+          "deletions": 14
+        },
+        "openspec/changes/add-terminal-sidebar-spec-mode/tasks.md": {
+          "additions": 107,
+          "deletions": 57
+        },
+        "openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/tasks.md": {
+          "additions": 50,
+          "accepted_lines": 50
+        },
+        "package.json": {
+          "additions": 2,
+          "deletions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-terminal-sidebar-spec-mode/specs/terminal-tabs/spec.md": {
+          "additions": 192,
+          "deletions": 21
+        },
+        "openspec/specs/terminal-tabs/spec.md": {
+          "additions": 170,
+          "accepted_lines": 170
+        },
+        "src/index.css": {
+          "additions": 542,
+          "deletions": 4,
+          "accepted_lines": 538
+        },
+        "openspec/changes/add-terminal-sidebar-spec-mode/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/add-terminal-sidebar-spec-mode/proposal.md": {
+          "additions": 40,
+          "deletions": 6
+        },
+        "openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/proposal.md": {
+          "additions": 34,
+          "accepted_lines": 34
+        },
+        "openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/design.md": {
+          "additions": 90,
+          "accepted_lines": 90
+        },
+        "src/preload.ts": {
+          "additions": 15,
+          "accepted_lines": 15
+        },
+        "src/components/FilePreviewPanel.tsx": {
+          "additions": 6,
+          "accepted_lines": 6
+        },
+        "openspec/changes/archive/2026-06-19-add-terminal-sidebar-spec-mode/specs/terminal-tabs/spec.md": {
+          "additions": 171,
+          "accepted_lines": 171
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 828,
+          "deletions": 56,
+          "accepted_lines": 786
+        }
+      }
+    },
+    "4ea44e5c435dadd4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27edc069effe74tGu1AnMl86bT",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    },
+    "50a441f2d7549acc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d866c-1f94-7b60-a64d-569261eed7d5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 169,
+      "total_deletions": 15,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    },
+    "56183c44e3425a6f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_28014c8e6ffe0t5hmw9Ah0LxBf",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 179,
+      "total_deletions": 8,
+      "accepted_lines": 346,
+      "overriden_lines": 0
+    },
+    "59897ad8b7bcc688": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ed4a4-9e37-7c20-9f02-abda81d5b8d2",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2081,
+      "total_deletions": 200,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        ".npm-cache/_cacache/index-v5/61/80/8048339f39887e1c95c8f68c70cdd744145bc982af24c34d23a408fb2448": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/de/5d/5ffbf7636442f2990087d5e47dd47c275e746dec632303816b6c1d96fb3b58d666dd93ce300ca4bc88cd3c2fd5845183193bd7f6ff78cde75a2de921f73a": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/2a/42/3e9993fc6113f420d7f0ccd01de845853714f803727aadc2a3e31ee36fe1": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/31/23/97160f17b8ae0d32f6e8c2596dbd3cacfe6526dd0bd04a6fcd9706dd21c2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/91/25/b2baef7c74dc77dbdc65a5730e0b9fb68011a5e4bc5e57cf430b4608138e": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/df/af/b9a794ea6647360d441b9ac6993208ac0ea1ecd85286b727641c7dda091f": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/2e/1e/2c5c8ed8a044d0ca4bfcd1aa00efd0c80a56136e94f5d217115bbd99a354": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/20/a7/a5c3772f51cc537c441ecb6db804a83c0495f9fefb162e941fd51a80ace8": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/9b/15/5235488a74a117ecede0b28f1770ba60145f45be0da2d86116456496f2bf": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/aa/ec/2958e379cf347f0496caf9af55c0c65cef2f7283347311bbdc61f80623ba": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/48/f8/7c95d2f2e24d88a57eb23f05cd27e8914447b8ea188ab688ee4aa6686c453bc2175d084e3d02f33ae4bdccfcd3db49a1134f0267e763ba1fae0849d796de": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/b5/b1/ee2b8c9ecf709b23563a9eb3a8bc3fb54b7e91db77d3379012626696f119": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/7d/bd/efd84f6336eb88df831f8ba448e2fe538b173aaa485c7a4a4b43eadf43f1": {
+          "additions": 2
+        },
+        "package.json": {
+          "additions": 1,
+          "accepted_lines": 1
+        },
+        ".npm-cache/_cacache/index-v5/49/ee/4cb41181f727db03ac72930bd87478b41a835cec957b99f66361b8ed50a1": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/3f/ff/3f0b5ba94731fddcf9f23f72069a64dc413416b8cae685bbf54f710dd5d5": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/fa/bc/7fd6803ee6f39bb5bacef11537c3109ddfc5a413b389a954c920ed138ec630b73e589d1dd3fc215cca73f5e64f90e9b1ba503684a27e19a870d40f64fe4e": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/5b/fc/8887b2de7ad4dfdd3ede50880ac664006ab7ab5f150c53d03a69a2b74600": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/8d/14/c0b656725ccf3351da5ceca30bf289a9611022d1ca4deeda8b45c91070dca5890f8bd9473bb409ccf953d6bba52759c26e074094822ac239475c01b15e59": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/27/78/228679eb5bb0bbeff79a9eb485fbf6181cda421c9dc2eb5e1631047e7999": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/93/86/92df61865fef9b441dcd0b0c12327a133c6632d474d2c95736b44926751f46d7959f80576df327b03e30281082b6fc52ac6e4e14d631d4102130709bc062": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/3d/fc/23fef6a3db47b7b50957fcebb1a21d6de39dadf2e4795a95e4b01d8cec8b2fadc01539aaea3e260c09a77def6ab7b3467b1a7c43368ef06fcd6c2ef530e7": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/54/0d/a4909047714a0a7198bb9bd37020992464e47c79a791889919b84d90aab0": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/51/fd/144d4995efbd4bcd406904dbdfb3d462a40535c8806b886c362e479540150381aa6ba0b243fe1c200a5badfa1d9eb81527c9553ebce90d758cb9af32c530": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/48/27/c23aa4a47b2b335fef625070cde04a713a74770c9f0288a9f415addcdf52": {
+          "additions": 2,
+          "deletions": 2
+        },
+        "openspec/changes/add-titlebar-utility-tools/design.md": {
+          "additions": 129,
+          "deletions": 10
+        },
+        ".npm-cache/_cacache/content-v2/sha512/20/45/6457e44d11649778cbfdabc5dd59d5ad6aee265d2037126d1bb6c0649710340a6c2ea98a8629957ea668eaea5ad81c129188cb5c683f2978434ee46bd83b": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/a6/e7/378a051afb91394e868fcef5960cfe9c35304694a441a4feded783723229": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/28/eb/7a16e84671563de17fd8f3ac226c77a5c8cb7fc00908d6c021420fbd8dea": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/0b/8f/ff795e5f1b56e31d4fb85a33b78c7bb9baf872eda988e0e33d94688d7f68313680fb8d3b3cbd6c8e3feab398b99ad8081ee106b04dfb2224715c18206878": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/14/b4/76cafb21175d62d555f40aa4e7f1477759a81a4dfabc7b8173d9eb32c54a152b163d1523b29c4ec55eab4605e727a329cc871e8027908cd99cf67b82316f": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/67/b7/45e2dc6c4d16efabb06c9cb03b0df62b6f4866a4e42a813746480b2e6319": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/59/b5/802fd94cd83ded338d0dbc45a45e2b190506044ecd048941315525228586": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/b2/54/c49b0a80ec3bda1809c5f308d04bdea49eaaa7d76346c205fd7c5a7233a6100e410c714310d5fa928552af719ca04de95d6e91a44a4ce3cb99a72b05e248": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/f0/f7/a3e9c707cc50a197d515049ce4d6a88cad3e3c9493573457ea9186fd8103": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/ee/c1/32854c1431e78069bf394999986ddb7465169a71be8cffbaa7ab52e24e53": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/cd/50/1c674d3e9cd8129ef49b4a17988969371405c0156d16fbd51b29e70f9837": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/8a/f6/e76d950ac716bfed5dfbe1617283cac8407e39a8eabf3c9fd089941a8a8978771159fac63fd6f1aa5d12e20a9d69eac020fa311fb508e101f61fad453578": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/85/51/1bd22c356c4417966902ab49fa54df641703bff7aa148ec71af299cb0bd094723642c3742b95d1355829f2a8e1913b1556d4e3ad07de4855005aec3f120d": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/0a/37/fa8239b177a58e2db7f6bd4d5ac0c0225387600783a164bc4ef7bfc93d19": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/4f/ce/2810c2e947d4cccac5e37a95f242e85779975d6a0afbb4ffb4bdd16810decae775df75411c7fd633bf170f07d17cba60990a3c46aac51089c01c0ce7f038": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/77/b3/d364b17e4dae359465894d54a6b3c218dc3a5f8edf6b9e60b09d66f15a72": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/bb/64/3512dfc2b6d5f59e2206ae9e88312be8121a3eb1cff1ec315325cfe9892d": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/c4/ae/720e873e3c841c4e47091beaeb70301c2f8beb3fc74dd0ce6de34ab9e161": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/60/3d/d4eec63ff8ea3c2f36f4caea4f0703a2a35a468b498f429cfa2da0b9ebe016c0702f03dda7759f5500707ee5eb126bbc6739002a5a4df8a233e9a429b51e": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/1e/41/7ebdbf23933d75c51b4126aeccc9184eaf93b5d2418071655c3f9f77ce85038108d9f0d582ba3a836b7019a0772bfa3a693df877f70dbc4cc088dc9fcaad": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/94/18/2aec07bab233bbf45cc37734ab900904b5018c4cdb541060eee568ddf1bc": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/28/00/37758e4e4f08c90e95d14cf8d3526b5601c196a297de001aeb3885c8af87": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/83/ac/af6368f6e4f97d0070312e05eee44eedd9e3404ba572644c2e1e6cc0410b": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/bf/14/57fa5490d2b07743bc50f21ecd669fdfdd0344d5843d9b7b199f6520b17a": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/74/13/40dd4f42497f66d2b6f24e8c7e82cb9d406f48d3eb64526f35d6a3960e2d": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/c3/2d/21b20cf77f47704c4f2e2656109a95fd0e9dfd81266206c0249a4e4d181b": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/8e/61/36f8b813714736380f77b4e7348bed9f23e36aa48b3822415939f8270dc667e20ecbd5991fbefdfc2f3a5ca438dcfd8564c01644cc347d61759c117b5fb6": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/85/7e/506bded0dd6b1ba38b5d9974df4e65ee1fd123678ff358faeae5206a478f69d34dc686b3fdded9904dd3b721c9d5adf1f6b1d7b096c274e91499b4c63796": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/27/7f/2cc0961ade8002b61246dd52f8a248debbec6c0e1cd93ea25b43f88629fb": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/e7/73/05765d74417b1069b70ff7c1d4896df5459e8e9edffccd1ae1642d110a20": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/f9/f9/722bffafe4fc3b64054219afc5a569ea0e71ce069ac881621063eb15e58a": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/8b/a8/9106a2b0f5b203615c9843b9fbdd732291e75acc92d2f2e010c9cb16e9bc9a1e8aa963a30283fe1a27d27e3be5042fb510b4c15f303b37c5c97f28d0f438": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/04/69/dcf77b016bab368a5edb2a07ca3db6753c60bb74cc6a2b91f8c8ede9270f": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/f6/f8/8a4135fadd42d7a654ff162d22161d5ea535b52eb2af8c9b3981b49535f2d4509177c2f77bc477c459f00281301e1d4f1131ec4e93749456aa50ed365015": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/37/d5/5f985159d0aef958a9f0fb4a8fd9e026eb969f7f72a88c5db29de9576592": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-17-add-titlebar-utility-tools/specs/utility-tools/spec.md": {
+          "additions": 117,
+          "accepted_lines": 117
+        },
+        ".npm-cache/_cacache/index-v5/58/6e/5263e9b1b0c78c837adb7e82f6e69362c15ea82d11c5a061750ae9036d01": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/03/6a/ea75b3c7d66890802bb671f1dcdb880327f0134994ed4017bd21a44eca17": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/dc/23/54a4fbae865e36d4a3356bc58bf9b16dc35d4703c4ff67b1c0a4bafa197033edcc00ed677464ef710ec9b66aed8d71a15e367ccfc331431563d675983e27": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/5c/cc/f383483b207abc9936d49d56260ae9be21cbd5e67118bb9f232708267b93": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/40/03/d2bf9a8de794f54367ad96e0ac10ed40d9f5996f8ce3c484d92b7b35da65": {
+          "additions": 2,
+          "deletions": 2
+        },
+        "openspec/changes/archive/2026-06-17-add-titlebar-utility-tools/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        ".npm-cache/_cacache/index-v5/65/34/f8b9165b242d2cda30d000b663465ca66df431c77b03f34a76f11230188f": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/68/f7/2a81dcd9e48be764ce664fa34226dd243e3fca8411d3c50899f796e0a5f8": {
+          "additions": 2
+        },
+        "src/App.tsx": {
+          "additions": 78,
+          "deletions": 46,
+          "accepted_lines": 37
+        },
+        ".npm-cache/_cacache/index-v5/91/56/9d955d6ea0c5aabb4fc8fb42f6baa78b6d9ee582865ea79704dd12c7618c": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/01/59/e61e1124c3e3fdfd1b7368db69eb04a30b7e802e281d615a8da6fbe9c322": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/5d/65/bb88a37df21da409b406be3ba715ae80f9abba0fafbec6581d0f949b08767b3645e60f58f59759f25b34b5d10841e0d19108e89a882010c9d07aa3b7f23c": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/94/c5/e06e0977a47b59aa923bba0ad00a6253badb7dd2d35ab8a80d33e456a3c2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/c7/c5/86c410bc9458152b4c9f216c41b6ff973774f1780cec551b08a1e6642f26": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/90/1a/3c5f1d83c2929219ae0c56583a2e62542e79a2ab534f5097461b6fb9db29": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/20/77/64cc05128ca60ac5fdd505a22a972b4f961a56074506c348fc6c6bba2f07": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/e1/4c/c10586193b68d0e40fa89f1cc92e4fcfec6daeb32764ce41c7bbfe0c2c89": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/61/bb/6869808f38e83c5523ee7d6c6fa7192d536b6aca55b315b4bc4873970e27": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/c1/20/3b39268d0a078b462d4673ee5071921ca4c9168a277bb2731d546c088e7977a03d8e6e7d5cc17c089800ca5075368ea6b534a47c5bb5c0726ffec1efde24": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/2f/da/0f65d9d971b5c95df5b97e58cab7dafbd761841323d512c66f640fa58975": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/61/dc/58ec6f267aa711aeb6166711a11b90bda4486a0780d6059e9bc77cb0bce2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/5e/8e/8d440a14ba3e49cd93cee951ee3a79ec98e98598599672b1eda8bdf5bc25": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/b3/42/031d6c8547a62f5a8ad045a76f23c9830166fe352a489069849a3a22ccf9efa70ca1db746cf5e33d2bf5a0dc665737f2ed3fe032f66d560a6be1091f8fc8": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/db/68/f9f731e770597d5f543119120a647ff88da85e763047cd87f88c1f1eeb5d941004ad76b6047f3c4e1e038689ede01b393883329a0bbcba873740b9719425": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/ad/36/644e68cc9a0935877700f9c0d55e6bb51a468d2fe193dadef8ebd95059f69ee133fe0ead90ad4f23d86c836b34d652430e94c81d525b09f930dec4d53a91": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/a2/ab/09d079114cc763a7b49401e9912801ed092c5fa7e7a9ad5afe5f940508b28be16a789fc5523b291c3ec73c8af7d5f37a994079d9e01bbb0025663a9779d1": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/9a/f2/a10ae8634267d3d772df3533ee2b6803f3b833e9710226706fd5e0cb6bf853df86661b2e07cbecd1a7588e52f506592c4811913649b4042856eaeef7537a": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/7b/08/e5250f54d4ee3c7d4bfec5ccff11f92a295675b30257344845a5fe1a33a2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/51/a2/1a0a75ae495896d4d3c623dbac01fade7ba0f5c69f88b109e469fb999b13": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/61/c8/9d3a04c48cc9c25308a60c5f44887c6a090d32bbc3ff238ca9eeed615fe6": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/c5/04/033488a08e9408e94432563bfb6cf79e56b05ddc6a888d08f94469c6e87b": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/60/6a/868368ab4cde847d0120c0b42d8448bbe119ed783528c5c980cfb70ff278": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/41/47/9cd280ade2f1f9e9993d7bccd3dbf7c955ac88757a6303799c9995cb9ea7": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/d1/12/6d9a97540a7aa78e443acc30ef2eaa05df3755cd7f92976b5b3b5fc0ec8007a73ebcaad94da3833069d02861e0d9d15e92982583a72ba34d87c1118f7487": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/4c/db/e7d60dd49c72cce4d22ab3c74ffded03aabe32af6ede8be279a722f98588c574a8684265813eb4c8091846b18ccd84c963df96d2fe632819629c48a48279": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/dc/a2/9f84d94894d4aeb9f152b065f3637f84205f59fd74186d0ab387ad0abc25": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/0e/d7/71f4ca49107df28a69e39e43630a287f00b42eecae4b23cfe050b2e64c32": {
+          "additions": 2
+        },
+        "openspec/changes/add-titlebar-utility-tools/proposal.md": {
+          "additions": 33,
+          "deletions": 4
+        },
+        ".npm-cache/_cacache/index-v5/43/9a/010be595aedef59715337f418b205fd0579b103a2d2aeaaee783ffdbf3f9": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-17-add-titlebar-utility-tools/specs/panel-layout/spec.md": {
+          "additions": 24,
+          "accepted_lines": 24
+        },
+        ".npm-cache/_cacache/content-v2/sha512/e1/49/1d09f18b413a56bd962bf3f0e9ec32ae9326d2b904cfd3bc2feac5cbff165226750d2a340ceff35ee46f90fab4ae899fcb76d3e640a8513d7e37329ceb3b": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/d6/74/db7cd738ec69855aec0067a816769a7be656bacce9e750fb809b4953f872": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/d3/0f/4c67716ca951eeeaab83fffd3e1077f8095124644e44c8bb58afa5c48005": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/ae/37/30b216587637d0dacf3b61d9417cc035b0814849402ddc29678afdebd4c2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/64/df/b161f2c875d956ce9369e40dda763248f3cd0ee12106c050401bb652f48b": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/6e/03/d9490a53df006bad72af24c6f93622237a44df4c20b504486f2b8ab837db": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/58/95/f206b938607ff8b48e0e030a54b7ad6fdcc0bdfb525d5aeb2c58e500840d5398a0cca9614dc8876c960bae55c84b259a157fa118c3beef9e4bcd7f991309": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/ba/24/877b153e379abce01cbad179415df0276ca172881d5758b71d7d51d47c58": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/74/34/22c89fd5973bd31e38c48c509b232a9c956a81d47ce702529eb1ce1c8b74": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/0c/8c/87a6a751b04e2e7f143ca5efcd1e7ffc4475b0e9795172bbf86aca3cfc15a227854abcae08764dc0a83041ac59214124f8f7833d1422d04a01cfc6417e26": {
+          "additions": 1
+        },
+        "openspec/changes/archive/2026-06-17-add-titlebar-utility-tools/tasks.md": {
+          "additions": 41,
+          "accepted_lines": 41
+        },
+        ".npm-cache/_cacache/index-v5/2a/ec/7ae4d7b21db9222dca189a495400c5e7e2237f4abb0b5a9ba0241ff475be": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/32/70/96a23e64965a582326bf95a7eb80a414820009dd1b78c73687b62cd4200ec5e376b1a7e3932d536d2043f6fd0eb9c13d6d1622034cd34c77668907dcf63c": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/5f/7e/36957c2763c88fc55c635da488bc4542b126464f634670f7af0a0a2f9a00": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/37/9e/7514c5a9825b03382d7d4c81b60c1af6a8eb27a69d678b2abed345df44ec18f01797af42bbf7698cb8536314f9e0c31023c461cf4ba24aaa47c811901b07": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/24/e7/f9032432bab756fed4d3bbcb4814eddebf81fa8b7227f5b5579fcc576ac3": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/0f/b5/8ce048c4fee5f785ec8cda1ef60548d2e3795281164e2e50e5df0878acf1b915f810aa8e89818b7c40c926a5de3701be63ca62152f26abbb50337372aef8": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/ac/1f/050ce0a14677e88827babb004715ff2194bd5237944a09a7932f7137a36f": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/ea/f9/cd3cce249fbe7328bc4961668e840a95352f0199e56026aba7b2976e49e5487f52de6710da0c26e79e41cf3d5d788df193dce9c4559f7c043fdeb55040c8": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/df/35/11417e6b6b166613ec858a9b70782a6f04c0b135ccc6b64b0f6f72103822": {
+          "additions": 2
+        },
+        "openspec/specs/utility-tools/spec.md": {
+          "additions": 121,
+          "accepted_lines": 121
+        },
+        ".npm-cache/_cacache/index-v5/f7/46/97a765885858a5b288b507b24f4a7e45038eb002ce699dd88cd29dc5b663": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/73/4f/294e39a310cbae55271364295fa2e66862add4767d409d5ca001737506cf": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/1f/4b/935e31552198015dddab3877df4246609098aecadb62104e1e7f45f40743": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/a3/8f/c5891554373065dcee4f8e6f1105a1dcc9b54f1bd47bafe54442fa40200b": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/aa/07/fb7db61958b1b1bb1c4ada31e19e4a9d8abfec511445aadaeb8d6b48b340": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/44/fb/7517a3dce81630d67305c53a3a9ae0454d8d8449c7a2a36c75ab05184aa1a5698bc1c16b0623db0bfdb83b1baea2526d7c54dde66d536c66d9167e8d7df5": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/a4/a2/a2383c7cd1c16a25bef9ef63231b30bed17e1835ba51ecbdf94454b0d129": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/4a/c5/60081283d0865fb6aabc9336e899973c25ec577a874d6c250b6480f863edaa3e42a1d5dc620a617f087da868eb891f4d300e3b26aa854204cf579bd2363f": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/0c/65/e058991b899f85faf52cbfef6a9d8a83bdd2dadab1e13ae35edad38c5b88": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-17-add-titlebar-utility-tools/proposal.md": {
+          "additions": 29,
+          "accepted_lines": 29
+        },
+        ".npm-cache/_cacache/content-v2/sha512/c1/f9/72f7b934c74eb99a7aa574ee0aef11a6a901474b76b4fc56ee84e348a393403291ad97928b3da7e7aa7cb01f68437b0a462bc201190a00242147b1fc8642": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/aa/2c/363590b9125ae02b716d0b7d854980a2971dfff7d7b2d4846e5c6f48f1e1": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/f4/c3/0cb5cc9125965fe356617be386826dcf7d452ee44eb665e184f07006d002fc4f2e61c2c2ec4ddfe40df28fc8a8fd4cdd03347f348dcacc900ed9dc8b5c92": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/a5/c6/9b4ced8003b54f1b190589250f3c8ad61a57029e7555e1ffbfd1609dfaf5810b597ed54802fd2d0c9d1f5d5e308e3823be9e691efe52de614bdeaa89ad12": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/72/c9/0a7b0657f467de841baddba56dc50cb7f2dd6be2ef0b3272eb86973717f4": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/d2/f5/26c9de08bbdb32fbabd7ab04917ab02ef0ddea63ffd3f16de5a947decb0629d8472b133ceedee24854de4986702ecd4a93f116be621d9f8019faabe14b40": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/07/d5/a36a656328646149bf251e2130facc61fdc299bf2ebc2362d660d7434fc4e93d2a7c0494c8926d5ea462f3cee2b250e0a96f63b7dffc803769f69da0bf1f": {
+          "additions": 1
+        },
+        "openspec/changes/add-titlebar-utility-tools/specs/utility-tools/spec.md": {
+          "additions": 134,
+          "deletions": 17
+        },
+        ".npm-cache/_cacache/index-v5/3e/55/ff056d2cd7a9d055e172b9c2dd174c0410d3a3b49696b09e285e161c5fa9": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/10/33/3098500084956c478986021c96ba002e8e616ecf05f69a20920880d4176c": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/d0/5b/0850f9203f19c5637e2ca745991c4c7224586cb4aa2deca2c2206f81f2f0": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/85/2d/b1ab9a92979e2b8eeebe9cd7856b4ecfeaaa78e576ac3048312e3b0bb91c": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/d7/c7/f0906bcdeecc28ce4d06a97696df4317c9267deaa574def9edea4ac56317": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/2a/34/7e2b44753fca1d58c6ef9b0497c872ab70ebae39571174a77046615d22e3": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/8e/8a/bbca89cfb50a54a974fae16d92773590572c2b9ada597b5bf28263451207": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/3b/d3/2b1e232c55f7f79e3fd9c645837cd727dcc5812a71d96c4bc431c80170b9bca4fd2cc5d48dab782f4d3d83f8deaadbc2ea3f0cf09aede28ca4640aaa9e1e": {
+          "additions": 1
+        },
+        "src/components/UtilityToolsPanel.tsx": {
+          "additions": 597,
+          "deletions": 17,
+          "accepted_lines": 580
+        },
+        ".npm-cache/_cacache/index-v5/2d/7a/58faf404cf938ffe65324bda7365edab5906d5ccc6c73d55d0a054f6397c": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/08/1e/f37e86015c0499093a8af2533d6ea410c75e9a2f7c8cb1af3adcc763ae31": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/83/f9/99b0dea0ec2aa3ade8b32d3da954d7fe970446301beb7748b08bd4c7540b": {
+          "additions": 3,
+          "deletions": 3
+        },
+        ".npm-cache/_cacache/index-v5/ef/07/50d6d94a1f2bc9e0318d09830a2d5e40b98371f5cfa2f018a0d302931e05": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/cf/58/a710546c23c0dc740fabd7a14bc63cf41835544d96923e4b529cb238de0f": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/65/0d/8b9772e6dac77046b57b9821ee5466a7467b6e2fe92016202d4ae01eadb349a8a0de743e24a47ee52c6165ceb7d0d60629ddc03ac85b0bfaf6ce55fd5b5b": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/84/8c/f98b25124a0d96f211c0bf7f8af0a1f92453efdedc9e02172f1e730e82c4": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/82/e0/9c1529f4356df24760af44ee5e6771cea27942eb818edceed5d03c3eaffbf89d08723e812810e48bdc1d407baf1e90e5da758e800ef94a8b17fc1e01dfa0": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/ad/5c/31a069470b3d2b232d6d2fde54af6406a97a65be32acdcfec2854eb02f07488c0bf07ae689c5f07bc491cbdb901e0c4660b7a0fde38846016033f71fb171": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/50/67/861dfc13d99a76e4dc33f50a04dd59e4bb7f1e7274298de4c9a5522a9842beef1cdf251af8baddb0ef9053d79716bb3cb8065e128cca6ec4965308dc40df": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/9f/ef/c7f3064a8e65a0ac08005907f7ac8a98ce35f222af947cb08eb739eada81d18989fa4649d7c89ce0e1313650ec89473d78930524bf7349231baf2ac6ba56": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/28/ed/4a82f9b6ba1b9249d3701fc5df3324d0a9168820a3a000a4aec8f970a4dbbb8cd574ec4201095dbbe191dda33cff48406d721f7f08489b788691e94bdbd8": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/e2/67/a47853348dc493f53f709dd98b45ba06eda9a0dc9983c82c3c8bc36af6dd48d4b10639604bb7bb6b95b1de76e92e19d79041f27707f874022b540601e72b": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/42/89/51840713043e6c0b0a3b248827ced73be3c417c3cba90dd1a61f4d7429df44fa8a9f43edfbdb0cf053747a81d505541b28381d2dcdc0f28bef45feb640f5": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/a8/4f/3ed2f85c8c47dbaee9078a80903ab4c3b5b253f57cd6a21e466d5293c241": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/1b/16/17b0ff8626995a8b66674fc44297e5428cb778105f67322c28ecadf821d8": {
+          "additions": 2,
+          "deletions": 2
+        },
+        "openspec/specs/panel-layout/spec.md": {
+          "additions": 24,
+          "deletions": 1,
+          "accepted_lines": 24
+        },
+        ".npm-cache/_cacache/content-v2/sha512/a9/c7/41b7b52dc49d8d96870da20f4ba558c52ed93c1d8993e311182807764618fad51e846a6f8e4404789ff0bcc383fd3766a351b8af31430e2846e1a6faaa77": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/62/c1/3f6306234c11f5a9ad6f55a5a56e9eaf2b54183df1d584a8782685d4d0638b3238ed701012d3147d03398dc52e7ebaf04a971d5053917d66f5ac47f46a05": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/1d/9e/9fd20a3925758ccb5aaa79258d4ceace000c09113048e669e6685a26bcd2": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/0e/74/e599081798a1573b3179cc7b70ab5c6e3830ad4f4683e423a38f7abb7a210a9ec79200d44a6e35747c7c0ad8d0819080372f5f3d84abc427ba5ea0f91de1": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/e1/db/4a5a63158c7bbd4bab2007001e7013af1befe30de53c1f12c4207eeb80df": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/e9/89/4fd40f7b39e747e8b2c31db300a2c40a49c768c21e07fb6945b595e1ac9b": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/97/c5/17d87ae0b109c07ddfc266a459ebba854c2fc3e37ba47da295abacbcd89ad3c120762c9cbfe2d0fab7c3ff893118cb8cec54556d65a3b24f168b9ab67921": {
+          "additions": 1
+        },
+        "openspec/changes/add-titlebar-utility-tools/.openspec.yaml": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/35/73/69009bb4be56b096e160ab574c5694a9ca91be97ba8aac8909e0de606439": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/ec/0d/19a9c8ffb2668a19a970d561d3bb9847156e41056cae2b96048d58fee875": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/cb/6d/d7e8eea803dcc1741c9a966bab6c1e10633893b5ea95a5914bfa0d57a82d": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/38/ac/3bd4e3d602d3247db6fb38487624d2da0840a83e52960b518a8070a5fadb": {
+          "additions": 2
+        },
+        "openspec/changes/add-titlebar-utility-tools/tasks.md": {
+          "additions": 74,
+          "deletions": 33
+        },
+        ".npm-cache/_cacache/index-v5/0a/f6/bf42c659fd9ece1ac457fb961a9154ac18e0ccc8dc9b02dac2203df41589": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/ce/13/812ceb59627db033f640b0939323f1ac77c1b4fab0d5f2adfd2547a726f0": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/8d/83/50d2d88bc1c94a18720188e496a24ac4634b3ef772242332e7f15e90e60b": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/98/14/4a2d8bdf21ef3ef021c863030f39d5be4f74a126a411135fc2797a64ac93": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/ce/ac/b2c47dc1ec975a55637b5fad776bdf1051e804e271098ea6c3206948a3bc": {
+          "additions": 3
+        },
+        ".npm-cache/_cacache/index-v5/09/43/46a0becde314966703ef68be3c00547118848ed86a570db97a0be85aeef9": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/75/86/5c0d1fb4c3a79aa26913905a8cbfd6e46aaabf92be14c97d716e785fc8d1": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/17/bb/461c624b9d9553f553a994d885bb4b5b2116cd57c35c00b764fd86a1e60871a8fc67c27e2c6ad3d5735fa6558048bca41f59e955339a336a7d34951b65fa": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/8c/5b/85330b4d7d948e9cd1ca0435999fbea34490df0345635b729312c695c539": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/44/d8/ffb3bfdec7e54cf70ffcdee32cfb2dbc7dbe1bf878354c3401b2d4ec80c3": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/cc/cc/fecca2af79d23c7a63157209b3e0e6608b2dbc3ca55627232e47876a8cfc": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/36/7b/043f88e03663280dbbb972fa90c8b6a21a2be46f6bea25ee0e73e4a7b11f": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/0c/7d/42645d7aa9ad06873418db74655bcd015b458633384be6783d760710989892b0d437d1c37d3bf4d765240f78cacc106d74003480449713d59bf58d83874c": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/ff/d3/fdabc6bdf6782131c2f9038c12e3ea22de48fa5fffb615e0c161c072d534cccaefe43c11b89e6cee24f60d2226ea9e53ee23685d55b845945c9bfebffa4f": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/d7/05/662576c63ead9b7a47f21c731f1607a3df73a6d4c4ea1249e3d48abd2b3c": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/56/63/32053b3be4cc4e71a873d2c064db2c8aaad48ad447388ac7209786fb9f48": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/a2/69/3f5c12088aff211f01c5e502a90a93b97ecdb3a2ded58c96e91b76528ade631301c06ab8efa021a8b879250250144bea4af1c07fb2ecff7f4c7f92c81c5f": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/79/8a/b92b48a388c234bab17ef91149863ff090c068cabffcaaf0bf3ad524da54": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/a6/d0/3bf55fb28528f094d3673a557f5e8213fc382c93d3369b8e370335556cf0": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/37/66/06429e1cbf1019752db1b076b118399895ebac834c95c68d9c2e1519c2cf1bce6ffdbd0ee0c0146d3199fce4025cee92276336be9816f0ced0d6c701660f": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/01/9c/7468ca4f81b6f22e3461391365ed60d65cea8080b98dd96910d305f95906": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/12/3f/836e8cd13083fa6f026af23a6f85de92a370c64c8de3912535225d040afc": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/a8/da/74b5c5a6c2a2acc066a6083aabcb076e5edd2e9ae83ef9620d317f95cb96": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/17/5e/8126ec56c8228246f27f2a44ee181fd220267a882ad3dcd939f3b027b9c58cc0153cc00f0c3582aba0603376f879a3f884a110daf63319f7395cf290ce70": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/e1/43/345dbd56b8c08632960e35a081cc0dd1148d320ac2a83dcbc31f1d726f1f69823aa949874e853c67c516f5b96eae606704e27ff1e235c87c3a78b99c95a6": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/fd/c6/c32509dcf53091ff10196f3cef77e357cf7f8176c35dccb953b9ef2d1670": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/ee/ab/757c8f29c58892c5ec8c663d686dad6bb51720187ad255d0e0d3d82a0f7e": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/e7/d9/b17a7302498a48fe8664365ca4e47382ee1f52e319b412bf2f3e637d2802": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/d6/78/d9a37fa1c467b7926cb61724ae0c7e051db8e0ef4a21e81e7644c9d235ac263fe28712cb2192f094ae45dc58104ed656d3466a7a5b8f6e6bb6f405227012": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/8e/8b/cb12caa8f832bbe42e7a867b517e8c79ca90213b1877b27a26168b107105": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/5c/34/fd2d018b7306787d9efaf2baa0a263928e4b0882ea3be202aeed66f144f08e5e6f2480bd6d6c4cf27f6f04f0a889ebaa2a8b1e6b271b01baf50d82f5ba0e": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/c3/a4/7dc40ce9d81a3e2416220a739d508263844e3a0828f8a1d6ef0d3bc8cbb4": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/90/dc/0411b3d5b07a157575074530019b753ff1ff407ab542467f9953d2f13d0f": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/2e/cf/57565c8d007baff97bf7bd87c73b5e097602f1679e5c4ddbf3f6ca05f3ed76e78ecafac4c7e222b92ce0911a9e0ceddfdb7f68dfd2acdbccac7958c88960": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/d1/0d/534f4470b5d7fba0130ec6e549bd37d80b41d483b387840888d5cead83e3fd70ba9f5b5d2c32d905f55ea2bf17235461ab0b85a3874d4ebbcbb831b7c6a6": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/ee/4c/9b8a88ce4c0ea62178d0b01935718f17e2945866b26e440de191a4e40c18": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/49/4d/741f4ce92dc175cbe10d3af63a98e743e0b34df3c3a8e13981d1ac623b2a94f463399be6610963e774bda817ffc8b3c4c4c3eeb3fa03d922398ce85f1591": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/ff/37/95a4e96990254f67c2ec568a64454d0b7d486cb5104b4d304e037238ee37": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/52/fc/f7520fc8a8246b25eebbcfd34b4ae0116933df21b062aaf82007556a2add": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/be/ee/5fcdef9fa1f4d008a487497796580a5d113e6d483a7cf46201a7bf93c0e0": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/98/3f/595a9919de1dbe4554801ff38eedbff46f713f5937d60db9a07c479b1005c349ff2cd47066443fcccbd1692368555bd8833db17b190e321cf9aeddf0bbc3": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/0d/67/7c17b4ad6cd0f21b32ae025d0572fb42129c8f2dd386f7deb97eaddfb138": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/f3/d6/b8761c31035076cef340f70c77ad2c41b5bc734071a9996dee8a9731a819": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/b3/b3/090f7585f95fd6e09225a3c0cbce1a68511aeaa62d83ae216261bb8b32b2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/92/6a/de9ed97cd305401f2fe2d172cd171ea7a2d4e8c8ca4553e27de83df44cbd": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/76/b4/9fd8360f8955b887fd8bf75bdca6692fc13a5e95c44b2ceb7edaf76738d3": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/2b/1a/bad00bb74f02dbf052ee9ead91fccd4dda13952eef2ae6c00970f74714f8cf351aad29c144b0fc8b1b8d8c4cacd3f4d8f04d66ee91f89e7f597ef2cb391a": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/c0/1f/0d7bf07080c53573b13c87bc0c3906dc150c16a80dfc7604e63248c04847c6594b54fcded2a578ee62af483af7f02577bf9772292feb29662913eba53dea": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/c1/52/97037aa00d920cdc2b7e36a57eab703cae5adf82d659b3adc662b097971bdb5d0ed879318b53c6f2eb6044ab0524dca404139381aeaa9f5ddd8224228bbe": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/b6/97/71d8f3f9eea3d413ac6c9756317ca070959606aa0ed5f9be7e308c9d7cd3": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/66/16/ed390c3c77d6e31c42e4c8544a72831f7a10f3a33333779a98e90ade1b55df4fac9a18d699f13a72983a6d856ab7e158a40974941e8a5e379b4db7d050c1": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/80/10/e399adb7c4e59ce52dfbe6a8f9467c7d6b3a9ac04a445d48720e9f5144a4": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/4c/5a/9ae58b681b74f1a656eda34428319e90ba511b2edb9c0c5cc62e1edf7285dfc8a2330d58db2c3658f945c6fe97d53657184bfe67eccccdfec1972ff31bf3": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/9b/19/0ef0a113c5648fe869957d4a4c29f8b5faf802f5d7e772dbedb2c6b8bf3dfe23feba58c18e2deccbda8db8aac5a0a3b188ea9ddf529fad1d811455ac09c7": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/71/e2/c4e03cdcc88de35fa929364995cc280a77bcb3ddb898b9e62dad3f12b1b0": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/58/67/c5704ea4f9461527476e98170f838f24b6d980bc25ae1831e093fb1ddace": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/89/77/ad4ab4dc521c58fdace9e6aea9af7fc5b6817476e8df191eb696f386f4aaff0000dadf02479b30a70dde5f2acf0c222498146377a6ed4fdb8a0a6d5e5172": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/a1/fa/61cc2cbe9e9942495277f8e2c736798c03f9afee4650d954d5727c91c7e50a5f9245d912ddb4661d9cc27aba9c835d6d97b589e30cebdc352859548a29aa": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/25/79/330c93c956eaa4b9a8303a6a890a59497b11bf22f7aea0686f42b6f4612d": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/a8/7a/1d768f9da6b75bfbd10c64d1608a9fc95a8340489d0f5d8011dd1338e7cf608213eb0ebcfb23f2c7b981e735c41f5d59b2565eba2792336f3275ea052cce": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/14/2a/b0db81e2b00fb5df80578d2a59c4fe86b7f5fc533dee0615714b09866b3b": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/92/0b/527d9604aa204a6cc648dcadb426b7d3fa0a4690b39506c46109abd92cd8": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/b2/20/a5aedd6db13c75f17ed685902e292ef2e3c46f9df7f283cc326166353013": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/15/3a/14ece601303d307aba9e877250cfc4df9d9ca5c8f0c09fee009cd5e1cf217cdaf4a2a38cfa9f9e7b2cad2a28688a217842f6607d9ad5111659382dbf03ef": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/36/90/95ad5f57071a12c6a4454e4b79b29c5ac64fd436a1ee25abc9757ee76efb": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/b5/95/33a9f9330c23e8d1bdf5968f0a4ba07e0d2a2766c968ffe2dd9fd75d854a": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/4d/3d/4aa3c64426836f68d88c48b1fcbe8006c6ab6d0858368959d53878369580d0a5023df8269ac52dc6fbce6c43f1709e98b8499be705b339c30d968a192b00": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/f3/4c/cc1ee237135e826364b6f6bae40b5110dccfdb84ba206c2b18139557a7fe": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/37/0b/b3cad8b6cb8cd0273b638e1090ca8d6e5b8ee74048c409b1d7b98be2f936": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/9d/4a/5a03f89d729cb6f4866a94dcae854ff950e15067e542e4569c5e696837f1": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/2f/6d/e4b3da1d6da062570a00ef29ee8edaaf2c8d3d5a7b007b1174d9e473ac85e2d21a65c3219af516d964d7b0493e3f5974111730a7c985102cd2510db7b564": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/1b/80/476d7593e3c574b50b8d36f1adb2876538a26e58b485b57a02dfaead5a4e": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/33/2a/f8d6ce6f26d83a9d350084f113be27a47f5612db5bd7db3f3fb418d49c92": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/54/21/a5937b3b0e8ea1f5dc768f4ceb2ae575a06ce408fc88062b4ea2a11736c6": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/ca/71/e06c1eca2b8965d903929d8a1bfe4e0d01cca9deb92aad7b3ff34c8e8487": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/9c/62/52058e0a2ef6fbd38777be09c509353acb3247d46d72e53f3b27321bb81a": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/f1/0e/6a68319d1ef4e8a1e68821b24a33d82a5751de8f7d4d497c751f3d651b6d": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/eb/2e/55b0fd7904023dc397da9a4e425002683dfca64d5b2710f669e0b644efebd9a2993996794a65f48f962302a19b2b40e42be245e4dc7432b86bbbaa87b1d1": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/cb/11/8a35afa5164b6e1016e68585ac86b762cd78507830c7cae9306681462c36": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/97/b5/e683dbfb843192bbfa1e142a6c530893ffe9deaed1f5f718336772043e00": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/a5/26/6333a8f48f44805f8fa06fc7f33cd81e5d6c723e7d9c59559081606be06160ca56ec4c7ea56a7635768b948539708cc5512082b49e9bcabaa2ec7d0c5a5f": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/8e/7a/4514a746fcc1b8daec3e3211aaf7f8dae86318aa138e5c8da9441b2d142a": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/ff/7a/ffa018fe750273a5b55db2136c41419a37804e3ed300b4ddf3c0859a0008f6bce6740a8f26d0078aeff3169d0972b4b9f0f8eb7bdbe99c1f3a4b397afe54": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/43/fe/d09e39bfb4cba64cafdc2243280b55a2d798f07a0f68985a71d9771147fe": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/8c/4d/052d5d6d2c9dc068c8bbf9bb200425ff6e9d4e216d52633741f39dfca015": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/e9/47/918ac6a1965f051f2e2f1b949b2cd257041cf8f459a0e95193c949974ce04e18ba57edd91ace50cac6d699f50bdedc6d265a649e907a9b6f5408998df36b": {
+          "additions": 1
+        },
+        "openspec/changes/add-titlebar-utility-tools/specs/panel-layout/spec.md": {
+          "additions": 29,
+          "deletions": 5
+        },
+        ".npm-cache/_cacache/content-v2/sha512/25/5c/e340e2d6c7b0004d1203e37ed34ccd59306fdb348b77f754c58075776fca05d707f1360b4e6095a94c453a2cd7e1a2645e0bd5938f3ee242878d20432dc2": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/ab/97/bb043f345304338cbcbcbad2db1a2cdd30b6e4f20e7714bc1cb232f776ef": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/4b/5e/af39d9af20264e3e5de78a2e5d6bfcd3458eef3c5accde05d0557529b616": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/a8/d4/77ded36ec21beff9afd1ed6e9a046527ac5eb7d81d835314392cb03113db": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/75/45/c2e61f39bf603a8d5ef0162d8e5a70b4faf2337fd2b683357bf7ea4f7b6c": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/c6/b5/b644142fdd6eada09c805fbc31054e5ed67c771bbd22d71c2ec5cebd3adf": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/9b/d0/d8d0a205abe404e54e417bd3db19a3aed2adf471c36124d4365319088c25": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/b9/90/e06e4452f90066e7cea7babfb048bc953c604073681faf0c53038e18e07c": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/b5/0a/d46f3c48710a92f73c53485dcf1715517441a81d5cafe0db6aa0337a4aba": {
+          "additions": 3
+        },
+        ".npm-cache/_cacache/content-v2/sha512/58/02/f643eb92e6712c4aad3358f7873ec85c0cbeca71f8b7a69af8b1a28822aabf2df7757711cf2170a24ae999349c44de59fe1b1309956028a2c2ee129f1be9": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/5d/6e/4ddbd3be4d9bfb63dd7d10c5f23e88c16f3592717785c42c4c06ca43bb6d": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/b3/18/eac3d6a3fd05f58c702a5eec07b8217354cc330604623df7a9a90feda2e2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/b9/57/7744213c44092a7b480c0662d7c4843431700f4601616cc87212a2d740c01d4ed93327e4af2d8a0f2e24867300de2cd6dd3b60e6fb66d5721f30d8c8b7d1": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/62/6f/247091cf8c6d57ebcd100e33a7389b999c25f3948ff9008979e57bb1aa29": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/b0/2d/f5ffa0eb0b6d46798be21bd2943c8b1dbe5eddfd51928def5ad00577243d": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/83/94/36e7968c8232c69dc577448b00447d9407ef5447f5aa113c6c29d4bd8455": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/e3/48/d1c503674c844d75c179471d80602569125a5a86c2dc4f60493624c26568": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/15/bf/7b5d26b884e23dce06b5510a8b8dace0ababe732ab26867430323fa09d6803f02ac0e3f477f955a9a363fe7621af4454d1519617dcf6c3d680f3301e9e47": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/82/57/b17f94198c14946f42bb1f80be7c24ac35fe9c3187d6f7a0d8202d1e588e": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/56/a2/24196c0617b008677b1c42f02e816b2cf5d968d1480268c7a4fd436fbc8b": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/a9/f1/415e898a91b26c0b5da756fe19612b8a792b5a073d53e476ae13e62e514eec2a5290ac925c2d37bce33dae7e5e4587391fd9ba7fb49af2f4213e4d9a469a": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/ce/84/e96897431e05af88f718442e5900385e004089f664b71b4147e87d5294a6": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/ed/56/6dda29e62a9f8621849374ad8d49fed1c338d324d1509f6a117001fb24b3": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/ed/b3/06d1e0d87b3da0bc15382a96a9ec8b2af3264769d4c0085d3c5d524a6a4512c566f1ed033df0c997433e8915303a82d1922cd20ec52061af5ff40f1772ab": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/57/3c/3d3d4f8992bdb2147611ea40b79db10e432ece764ddba16bc4f778b4be68": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/30/70/e6b1bf9aa87afbb26e32a4b6193e4ea2cdded156c74465ca94124265cc7ea83a22d6f493ecfae2e0de164713c6d5b60d0dbfeb44fcf0640c0ec4ef8b18b3": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/c5/50/510b57b5a3193338fbe59145c89a889a335bdb78c86dcaf14d5daa6b8422": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/82/47/94d900e7c7f282a2d01fc74829b2123e8528bf2dfa07f6c60b1893b097b0": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/3a/34/38bef1f0edcce7337de4b74d5ad29b22363ca8d1740b8382a86fe04bf8c5": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/7d/9c/a071ba9ab6700870837f0e2b221342ab9b04f1a4e20b378326d425693120ecf75cba1e96902225b318e5a89d635141a419335750187c88fd0b51049165fd": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/9a/47/a6db5b0987263ff694ab347dedf537538e447f3f1bb954a8cce1b10a1d2a": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/19/21/9debe898b78864fe71b1e86778c17df5c0ff3709fcb0f0d984ca433de197": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/96/eb/335b56204ad662a91dd2b34e304a7a3791c361652d74910449bb816e78eb": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/e0/b7/87047160243de72b304d6591e01378c6657e91a04f0590608cf1f87742f8": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/7d/27/78670eac9eb7dd5b8020e3eb9fabcacd895dcc9bca777adf9b2bd426b91b8ff99c73b07d73414507db7745dc8c4880e70beda0662807475e5fb2cec8dd5c": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/0d/81/971364f2d1997875adae2dd9a23b3da583d37032184c8df4fb567bd63226": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/d1/c4/31ac25ada18a8213e2347dac0be076f3ea37c23d2354bc90c65b8633e4d1edd795f08a04fa5236b069835502d1a77b6cd03156ca6d996aee43bdd1509086": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/f5/cf/811cf0ad2f523cf249b90acef5369ef1e9a0ac17ab7b2da0f662cd9c324f": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/8d/f5/eb9ef2c7ac7149a4c465eaeb34f25bfcb97ecc33023719359e4834f64142": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/9e/07/141fa5b2aa6b4551c81170cfc66402c993db95eb92cb7f6dfdd96d11fda1": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/d2/84/25f4c61b832480ef9933af8e4c2c9fdd0e03cf7917dbbec3a9194d5c9b128485be7d67c0566ce95eca3d97e764cb56d6846f07b23d785e1a52a85118c0b7": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/0f/ed/d438bf7f0eb944207f5e3e411005e4d2aaf6798db4b2c97208f3d6865ecf": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/a8/13/0acd0479c6033f9236415f5591ef8959790b413d5e40b7a51afae88e7290": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/42/2a/a5becf8b4c12a70d6719d64b6ca5b3f4ddf9c22c3bb692ee46f59891fa4a6253b7ad9dbcc3ecb16dfaa8c380622ba37f89545ab1cf40b255732c10885b1d": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/content-v2/sha512/35/43/55611ffe4dee8caa69d0339abceb6323dca9de1530f88c2360cb0706915a27b09dff38d567f950a5e8fd448de3e4e1af0491f533f0bd161a1c5d7dfd5d83": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/15/3f/ff60ab5df0b1cbea6dea0d88045aced246152a24fb039f8cca15d4059c2a": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/f1/9c/cb3523a18acd88b7b411c42b3a67a9ce77bfb49840bf220732e4d7ec16e2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/08/4d/6c1cc521267fcec3bbc845599fa14e73391c7efb337c6893abd2b0a64bccbec4a7ec9abb276f00a410f3fd1ea2a7eb46d8d3404e544efb12dce919680b06": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/60/af/6efd1491e87e6bdb9431eb040e8dae5d786868d4491f514b239593577efb": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/54/1e/23b4405e3ff2ebf5725d96afa70b30cbafc40fd59d5363dcb2def2cb8f094cbab90e4e8a4a5647fdaac0a7a147a4301de3658200951c018dd0d8e9ad4bdb": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/e4/d5/b9a2158819b3bb1f42e5f035cad83dfb585dcbc2c30b0615b558f1acfad5": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-17-add-titlebar-utility-tools/design.md": {
+          "additions": 119,
+          "accepted_lines": 119
+        },
+        ".npm-cache/_cacache/index-v5/7e/f4/bf550965c294aabf492a9c28a7a8731f5e6b5189f0062d75c9d0a8e71eef": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/04/34/312df2d0f92bf8a86379c6699808944de75a4454beabf43f9a62a07894e2": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/f0/94/1f4a01eefd7ecda0776ecafe704af468282c50b9c05ba62a7ea1f77e5fdb": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/85/c1/40be036e465949410673c6629ef81c732a2d20ecd54d3f4b96a2c30b3971": {
+          "additions": 2,
+          "deletions": 2
+        },
+        ".npm-cache/_cacache/index-v5/32/24/83ea7fb7a1b58044175b6b110281ee6901014f05ca44383eb5732c957aff": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/92/ae/c42b5ce5f973a57c58d96e2e5944e02aafbccd9e3e86e2e6d3ad75581454": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/content-v2/sha512/08/c9/48f4d00986d0c281f09ad30b8abd764aab7b28457b4dccf32886c76d0678ac592a5a5f2384f467cc25b68ed8cda5b61026a0fc55b2e72e2ac35ff5beccfa": {
+          "additions": 1
+        },
+        ".npm-cache/_cacache/index-v5/e5/3b/8847778029ecf269cc3df0171b5a3d53fda4046690d45ea93dded133954a": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/50/7a/e1be42fae2f743c9a63c1f75ddae71727d1545e46d2fb37813b426874bbd": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/a3/8b/fa689e7efdd82726dfee1f125b1ec2fae661be6915b48b8dbaaa3e62ee9a": {
+          "additions": 2
+        },
+        ".npm-cache/_cacache/index-v5/7a/9d/432699fea8c59742258dbf7de70539c89f943579e5e49a3c3e2ad02de58a": {
+          "additions": 2,
+          "deletions": 2
+        }
+      }
+    },
+    "5e5647c74dd9a4db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9083-5653-7b20-86db-013b1dd00e38",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 676,
+      "total_deletions": 9,
+      "accepted_lines": 217,
+      "overriden_lines": 0
+    },
+    "5f250a7e4284b945": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27ddb2051ffe1TWPq25lNlFOvY",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 155,
+      "total_deletions": 16,
+      "accepted_lines": 5,
+      "overriden_lines": 0
+    },
+    "5f888b248539dd12": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27dde14a1ffewoWyAQfeptTXJV",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 281,
+      "total_deletions": 12,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    },
+    "5fcfed45dd6815b5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_276217e73ffeVz8fHuPL9rrMgv",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 708,
+      "total_deletions": 149,
+      "accepted_lines": 157,
+      "overriden_lines": 0
+    },
+    "63d27c9fd748bd51": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27dfc37a2ffeuOEwgR90A6JaKL",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 70,
+      "total_deletions": 34,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "6d7e90c5cd771440": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_273683694ffeoeOEQGIxqSKePS",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 100,
+      "total_deletions": 14,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    },
+    "6e3fbceab1b3f9dc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d86fd-c923-7b91-a31c-48e626ac96c1",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 198,
+      "total_deletions": 21,
+      "accepted_lines": 85,
+      "overriden_lines": 0
+    },
+    "6f91cb6a8de66484": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ed366-f339-7b71-a679-6c01bc48ac1d",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 397,
+      "total_deletions": 53,
+      "accepted_lines": 58,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/compact-terminal-sidebar-tabs/specs/terminal-tabs/spec.md": {
+          "additions": 62
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 46,
+          "deletions": 46,
+          "accepted_lines": 46
+        },
+        "openspec/specs/terminal-tabs/spec.md": {
+          "additions": 13,
+          "deletions": 1,
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/tasks.md": {
+          "additions": 22,
+          "accepted_lines": 18,
+          "overriden_lines": 4
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/specs/terminal-tabs/spec.md": {
+          "additions": 62,
+          "accepted_lines": 62
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/compact-terminal-sidebar-tabs/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/compact-terminal-sidebar-tabs/proposal.md": {
+          "additions": 28
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/proposal.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "openspec/changes/compact-terminal-sidebar-tabs/tasks.md": {
+          "additions": 28,
+          "deletions": 6
+        },
+        "openspec/changes/compact-terminal-sidebar-tabs/design.md": {
+          "additions": 52
+        },
+        "openspec/changes/archive/2026-06-17-compact-terminal-sidebar-tabs/design.md": {
+          "additions": 52,
+          "accepted_lines": 52
+        }
+      }
+    },
+    "7311ca3fd5bee82a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e97da08ffeRfBCvmPl11H70l",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 533,
+      "total_deletions": 18,
+      "accepted_lines": 19,
+      "overriden_lines": 0
+    },
+    "7fab35e0da7eba2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb5b2-7d82-7b93-886b-bcccf6a371d7",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 183,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/settings-panel/spec.md": {
+          "accepted_lines": 23
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/git-diff-panel/spec.md": {
+          "accepted_lines": 25
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/keyboard-shortcuts/spec.md": {
+          "accepted_lines": 48
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-storage/spec.md": {
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-autosave/spec.md": {
+          "accepted_lines": 21
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/browser-url-autocomplete/spec.md": {
+          "accepted_lines": 21
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/proposal.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-editor/spec.md": {
+          "accepted_lines": 13
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/tasks.md": {
+          "accepted_lines": 39
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-navigation/spec.md": {
+          "accepted_lines": 5
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-panel/spec.md": {
+          "accepted_lines": 61
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/electron-shell/spec.md": {
+          "accepted_lines": 26
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/design.md": {
+          "accepted_lines": 85
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/browser-panel/spec.md": {
+          "accepted_lines": 41
+        },
+        "openspec/changes/archive/2026-06-11-remove-note-browser-git-diff-features/specs/note-vault-switching/spec.md": {
+          "accepted_lines": 9
+        }
+      }
+    },
+    "83f8c82fd10034e9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27def41deffeVnlgmDZ9i5yshK",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 46,
+      "total_deletions": 3,
+      "accepted_lines": 38,
+      "overriden_lines": 0
+    },
+    "847a223c4a651af2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2759913b3ffevsZZRM6c2O6sdW",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 64924,
+      "total_deletions": 505,
+      "accepted_lines": 39,
+      "overriden_lines": 0
+    },
+    "86838cad221a30b2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_26444f48bffent9sHrs1JdaliV",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1993,
+      "total_deletions": 208,
+      "accepted_lines": 43,
+      "overriden_lines": 0
+    },
+    "8e33258dad8e0b02": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edb5f-f4a3-71d2-be6a-5660f643924e",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 2554,
+      "total_deletions": 128,
+      "accepted_lines": 574,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/tasks.md": {
+          "additions": 49,
+          "accepted_lines": 49
+        },
+        "src/components/FilePreviewPanel.tsx": {
+          "additions": 33,
+          "deletions": 3,
+          "accepted_lines": 33
+        },
+        "openspec/changes/add-sdd-workflow-panels/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/global.d.ts": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/add-sdd-workflow-panels/design.md": {
+          "additions": 87
+        },
+        "src/components/TerminalInstance.tsx": {
+          "additions": 8,
+          "deletions": 1,
+          "accepted_lines": 8
+        },
+        "openspec/specs/sdd-workflow-panels/spec.md": {
+          "additions": 251,
+          "accepted_lines": 251
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/design.md": {
+          "additions": 87,
+          "accepted_lines": 87
+        },
+        "openspec/changes/add-sdd-workflow-panels/specs/sdd-workflow-panels/spec.md": {
+          "additions": 247
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/proposal.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "src/utils/openspec-workflow.ts": {
+          "additions": 46,
+          "accepted_lines": 46
+        },
+        "src/components/OpenSpecDashboard.tsx": {
+          "additions": 204,
+          "accepted_lines": 204
+        },
+        "src/main.ts": {
+          "additions": 210,
+          "deletions": 2,
+          "accepted_lines": 208
+        },
+        "src/App.tsx": {
+          "additions": 41,
+          "deletions": 9,
+          "accepted_lines": 40
+        },
+        "src/components/AgentInboxPanel.tsx": {
+          "additions": 146,
+          "deletions": 2,
+          "accepted_lines": 144
+        },
+        "src/index.css": {
+          "additions": 502,
+          "accepted_lines": 502
+        },
+        "openspec/changes/add-sdd-workflow-panels/proposal.md": {
+          "additions": 28
+        },
+        "src/contexts/agent-status.tsx": {
+          "additions": 210,
+          "accepted_lines": 210
+        },
+        "openspec/changes/archive/2026-06-19-add-sdd-workflow-panels/specs/sdd-workflow-panels/spec.md": {
+          "additions": 247,
+          "accepted_lines": 247
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 31,
+          "deletions": 79,
+          "accepted_lines": 31
+        },
+        "openspec/changes/add-sdd-workflow-panels/tasks.md": {
+          "additions": 81,
+          "deletions": 32
+        },
+        "src/preload.ts": {
+          "additions": 12,
+          "accepted_lines": 12
+        }
+      }
+    },
+    "93df86d8df2ecb3c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e70a595ffeLeambh2Bu16l7d",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 496,
+      "total_deletions": 72,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "955a66f0674bd4b4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9e23-98c2-7010-a4c7-cdd6d0cf0bae",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 5,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    },
+    "95f8bb1fa0dacf3b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8646-4dc9-7063-8453-0bcf5a800ee7",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 115,
+      "total_deletions": 32,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    },
+    "a0206c08d77bd684": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8737-2989-70c2-a882-dceca7b5967d",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 658,
+      "total_deletions": 201,
+      "accepted_lines": 240,
+      "overriden_lines": 0
+    },
+    "a32f94bd91213955": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ec65a-68c8-73b0-a9b5-87d1906bd5b1",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 12,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "package.json": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        }
+      }
+    },
+    "a87e82358b024322": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2641a404bffee2pr7Tis1QyT4p",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    },
+    "aba905160470d728": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_275d18ef5ffeq1C5DNyXqnta2R",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 332,
+      "total_deletions": 19,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    },
+    "b369bdbdf312e1cf": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9ea1-2ca7-7af0-88aa-dd9dd1ea785e",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 287,
+      "total_deletions": 78,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    },
+    "b661d60c91719f0b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27df3ff57ffes3DyzGlQEJVpLe",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 61,
+      "total_deletions": 3,
+      "accepted_lines": 7,
+      "overriden_lines": 0
+    },
+    "b684315a67e4a3c5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2751d2178ffea5TBC8Gd1K4Z2a",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 542,
+      "total_deletions": 50,
+      "accepted_lines": 113,
+      "overriden_lines": 0
+    },
+    "bfb58b8ce6c206b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8565-6ca6-7701-ba59-61c9bc4d0e81",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1090,
+      "total_deletions": 273,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    },
+    "c31651804d2f7b60": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d9e2b-4877-7d80-b643-ff5e8a4305f3",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 518,
+      "total_deletions": 158,
+      "accepted_lines": 188,
+      "overriden_lines": 0
+    },
+    "c5111cad0106f539": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d84fb-ab85-7653-943e-0dcc3698e89a",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 121,
+      "total_deletions": 94,
+      "accepted_lines": 38,
+      "overriden_lines": 0
+    },
+    "c78b20228173c4b2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d874d-4b1b-7d92-a43d-681b6f896d82",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 146,
+      "total_deletions": 82,
+      "accepted_lines": 145,
+      "overriden_lines": 0
+    },
+    "c8442143ca6376c8": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_273b4c311ffeUpZ2OEFCJURZYN",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 169,
+      "total_deletions": 16,
+      "accepted_lines": 24,
+      "overriden_lines": 0
+    },
+    "c8aa9ac069079b1d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ec8e0-784c-74b0-be9c-43eaa7f9664f",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 34,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "package.json": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        }
+      }
+    },
+    "cebd22d1e180559b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8482-72c3-7ef2-a0c6-98fc2a12d1c1",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 1482,
+      "total_deletions": 542,
+      "accepted_lines": 491,
+      "overriden_lines": 0
+    },
+    "d0e687716fcd1d8c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_27e76e893ffeG3nY7d97JEZBsy",
+        "model": "unknown"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 693,
+      "total_deletions": 67,
+      "accepted_lines": 110,
+      "overriden_lines": 0
+    },
+    "ea34f82bcf6cc76b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2738edddeffeOdmEdJjF3231O0",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 752,
+      "total_deletions": 251,
+      "accepted_lines": 51,
+      "overriden_lines": 0
+    },
+    "ed404e5644d3fb6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_271a1d049ffev403O4XjSsUCtl",
+        "model": "unknown"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 1,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    },
+    "f5cfc2a515196199": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8716-73dd-73d1-8e59-2da1fc7c3137",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhoushitie",
+      "messages": [],
+      "total_additions": 301,
+      "total_deletions": 12,
+      "accepted_lines": 15,
+      "overriden_lines": 0
+    }
+  }
+}
