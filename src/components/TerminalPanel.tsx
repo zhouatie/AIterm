@@ -271,11 +271,6 @@ function getArtifactPath(artifact: OpenSpecArtifactStatus): string | null {
   return artifact.path;
 }
 
-function hasPresentSpecsArtifact(change: OpenSpecChangeSummary): boolean {
-  const specsArtifact = change.artifacts.specs;
-  return specsArtifact?.state === 'present' && (specsArtifact.count ?? 0) > 0;
-}
-
 function shouldConfirmSpecAction(intent: SddCommandIntent): boolean {
   return isHighRiskSddAction(intent.action)
     || intent.skippedActions.length > 0
@@ -1975,7 +1970,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       const projectState = specProjectStates[project.rootPath];
       if (!projectState || projectState.loading || projectState.error) continue;
 
-      const changes = (projectState.summary?.changes ?? []).filter(hasPresentSpecsArtifact);
+      const changes = projectState.summary?.changes ?? [];
       if (changes.length === 0) continue;
 
       for (const change of changes) {
@@ -2239,7 +2234,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     const projectState = specProjectStates[project.rootPath];
     const loading = projectState?.loading ?? false;
     const error = projectState?.error ?? null;
-    const changes = (projectState?.summary?.changes ?? []).filter(hasPresentSpecsArtifact);
+    const changes = projectState?.summary?.changes ?? [];
 
     if (!loading && !error && changes.length === 0) {
       return null;
