@@ -1,0 +1,82 @@
+openspec/changes/archive/2026-06-23-add-qr-history-pins/tasks.md
+  975e8c0cd6e1a768 1-33
+src/components/UtilityToolsPanel.tsx
+  975e8c0cd6e1a768 2-16,31-43,56-59,278-402,423-510,534,542-592,625-632,688-728,788-801,808,810-846
+openspec/specs/utility-tools/spec.md
+  975e8c0cd6e1a768 101-169
+openspec/changes/archive/2026-06-23-add-qr-history-pins/.openspec.yaml
+  975e8c0cd6e1a768 1-2
+openspec/changes/archive/2026-06-23-add-qr-history-pins/design.md
+  975e8c0cd6e1a768 1-86
+openspec/changes/archive/2026-06-23-add-qr-history-pins/proposal.md
+  975e8c0cd6e1a768 1-27
+openspec/changes/archive/2026-06-23-add-qr-history-pins/specs/utility-tools/spec.md
+  975e8c0cd6e1a768 1-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "c3ed14c4b734787b476b7b103b06d3c03cd457ad",
+  "prompts": {
+    "975e8c0cd6e1a768": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef248-67dc-7d22-a76e-3a0b94ba1fa5",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 924,
+      "total_deletions": 21,
+      "accepted_lines": 687,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/specs/utility-tools/spec.md": {
+          "additions": 69,
+          "accepted_lines": 69
+        },
+        "openspec/changes/archive/2026-06-23-add-qr-history-pins/specs/utility-tools/spec.md": {
+          "additions": 70,
+          "accepted_lines": 70
+        },
+        "openspec/changes/archive/2026-06-23-add-qr-history-pins/proposal.md": {
+          "additions": 27,
+          "accepted_lines": 27
+        },
+        "openspec/changes/add-qr-history-pins/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/add-qr-history-pins/tasks.md": {
+          "additions": 52,
+          "deletions": 19
+        },
+        "openspec/changes/add-qr-history-pins/specs/utility-tools/spec.md": {
+          "additions": 70
+        },
+        "openspec/changes/archive/2026-06-23-add-qr-history-pins/tasks.md": {
+          "additions": 33,
+          "accepted_lines": 33
+        },
+        "openspec/changes/add-qr-history-pins/proposal.md": {
+          "additions": 27
+        },
+        "openspec/changes/add-qr-history-pins/design.md": {
+          "additions": 86
+        },
+        "openspec/changes/archive/2026-06-23-add-qr-history-pins/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "src/components/UtilityToolsPanel.tsx": {
+          "additions": 400,
+          "deletions": 2,
+          "accepted_lines": 400
+        },
+        "openspec/changes/archive/2026-06-23-add-qr-history-pins/design.md": {
+          "additions": 86,
+          "accepted_lines": 86
+        }
+      }
+    }
+  }
+}
