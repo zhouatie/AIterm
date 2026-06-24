@@ -1,0 +1,59 @@
+openspec/changes/add-task-apply-button/design.md
+  a59945050aece1d4 1-118
+openspec/changes/add-task-apply-button/tasks.md
+  a59945050aece1d4 1-22
+openspec/changes/add-task-apply-button/.openspec.yaml
+  a59945050aece1d4 1-2
+openspec/changes/add-task-apply-button/specs/file-preview/spec.md
+  a59945050aece1d4 1-54
+openspec/changes/add-task-apply-button/proposal.md
+  a59945050aece1d4 1-34
+openspec/changes/add-task-apply-button/specs/sdd-command-router/spec.md
+  a59945050aece1d4 1-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "2477d1940d3fc5afd5ff7d34e868fb7042ae1eb7",
+  "prompts": {
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 270,
+      "total_deletions": 0,
+      "accepted_lines": 270,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-task-apply-button/design.md": {
+          "additions": 118,
+          "accepted_lines": 118
+        },
+        "openspec/changes/add-task-apply-button/proposal.md": {
+          "additions": 34,
+          "accepted_lines": 34
+        },
+        "openspec/changes/add-task-apply-button/tasks.md": {
+          "additions": 22,
+          "accepted_lines": 22
+        },
+        "openspec/changes/add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "additions": 40,
+          "accepted_lines": 40
+        },
+        "openspec/changes/add-task-apply-button/specs/file-preview/spec.md": {
+          "additions": 54,
+          "accepted_lines": 54
+        },
+        "openspec/changes/add-task-apply-button/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        }
+      }
+    }
+  }
+}
