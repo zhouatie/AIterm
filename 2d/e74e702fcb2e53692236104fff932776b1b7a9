@@ -1,0 +1,102 @@
+openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/design.md
+  a59945050aece1d4 1-43
+openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/specs/utility-tools/spec.md
+  a59945050aece1d4 1-34
+src/components/UtilityToolsPanel.tsx
+  a59945050aece1d4 593-601,698-708,811-812,814-816,818-819
+openspec/specs/utility-tools/spec.md
+  a59945050aece1d4 139,158-163
+openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/proposal.md
+  a59945050aece1d4 1-26
+openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/.openspec.yaml
+  a59945050aece1d4 1-2
+openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/tasks.md
+  a59945050aece1d4 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "2de74e702fcb2e53692236104fff932776b1b7a9",
+  "prompts": {
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 282,
+      "total_deletions": 28,
+      "accepted_lines": 422,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/file-preview/spec.md": {
+          "accepted_lines": 54
+        },
+        "openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/design.md": {
+          "accepted_lines": 118
+        },
+        "openspec/changes/fix-qr-pin-toggle/proposal.md": {
+          "additions": 26
+        },
+        "openspec/specs/utility-tools/spec.md": {
+          "additions": 8,
+          "deletions": 7,
+          "accepted_lines": 8
+        },
+        "openspec/changes/fix-qr-pin-toggle/design.md": {
+          "additions": 43
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/design.md": {
+          "additions": 43,
+          "accepted_lines": 43
+        },
+        "src/components/UtilityToolsPanel.tsx": {
+          "additions": 27,
+          "deletions": 8,
+          "accepted_lines": 27
+        },
+        "openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/specs/utility-tools/spec.md": {
+          "additions": 34,
+          "accepted_lines": 34
+        },
+        "openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/tasks.md": {
+          "additions": 12,
+          "accepted_lines": 12
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/tasks.md": {
+          "accepted_lines": 22
+        },
+        "openspec/changes/fix-qr-pin-toggle/specs/utility-tools/spec.md": {
+          "additions": 40,
+          "deletions": 6
+        },
+        "openspec/changes/fix-qr-pin-toggle/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-24-fix-qr-pin-toggle/proposal.md": {
+          "additions": 26,
+          "accepted_lines": 26
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/proposal.md": {
+          "accepted_lines": 34
+        },
+        "openspec/changes/fix-qr-pin-toggle/tasks.md": {
+          "additions": 19,
+          "deletions": 7
+        }
+      }
+    }
+  }
+}
