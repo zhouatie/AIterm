@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Check,
   ChevronDown,
@@ -19,8 +19,17 @@ import CodePreview from './CodePreview';
 import SplitLayout from './SplitLayout';
 import OpenSpecDashboard from './OpenSpecDashboard';
 import { isMarkdownFile } from '../utils/file-types';
-import { toggleMarkdownTaskMarker } from '../utils/markdown-task';
+import {
+  resolveSddTaskDocumentContext,
+  toggleMarkdownTaskMarker,
+  type MarkdownTaskApplyTarget,
+} from '../utils/markdown-task';
 import { buildMarkdownCommentAgentPayload } from '../utils/markdown-comment-agent-payload';
+import {
+  buildScopedSddApplyPayload,
+  type SddCommandPayload,
+} from '../utils/sdd-command-router';
+import { wrapBracketedPaste } from '../utils/bracketed-paste';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import { useKeyboardShortcuts } from '../ShortcutContext';
 import type {
@@ -132,6 +141,10 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [commentDraft, setCommentDraft] = useState<MarkdownCommentDraft | null>(null);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [selectedCommentIds, setSelectedCommentIds] = useState<string[]>([]);
+  const [pendingTaskApplyPayload, setPendingTaskApplyPayload] = useState<SddCommandPayload | null>(null);
+  const [taskApplyDraft, setTaskApplyDraft] = useState('');
+  const [taskApplyError, setTaskApplyError] = useState<string | null>(null);
+  const [taskApplyNotice, setTaskApplyNotice] = useState<string | null>(null);
   const fileTreeActive = visible && fileTreeVisible;
   const rootPathRef = useRef(rootPath);
   const snapshotRef = useRef<Record<string, FilePreviewSnapshot>>({});
@@ -431,6 +444,58 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     }
   }, [fileContent, selectedFile, writingTask]);
 
+  const sddTaskContext = useMemo(() => (
+    resolveSddTaskDocumentContext(rootPath, selectedFile)
+  ), [rootPath, selectedFile]);
+
+  useEffect(() => {
+    setPendingTaskApplyPayload(null);
+    setTaskApplyDraft('');
+    setTaskApplyError(null);
+    setTaskApplyNotice(null);
+  }, [rootPath, selectedFile]);
+
+  const handleTaskApply = useCallback((target: MarkdownTaskApplyTarget) => {
+    if (!sddTaskContext) return;
+
+    try {
+      const payload = buildScopedSddApplyPayload({
+        context: sddTaskContext,
+        target,
+      });
+      setPendingTaskApplyPayload(payload);
+      setTaskApplyDraft(payload.preview);
+      setTaskApplyError(null);
+      setTaskApplyNotice(null);
+    } catch (err) {
+      setPendingTaskApplyPayload(null);
+      setTaskApplyDraft('');
+      setTaskApplyNotice(null);
+      setTaskApplyError((err as Error).message);
+    }
+  }, [sddTaskContext]);
+
+  const handleConfirmTaskApply = useCallback(() => {
+    if (!pendingTaskApplyPayload || !taskApplyDraft.trim()) return;
+    if (!activeSessionId) {
+      setTaskApplyNotice(null);
+      setTaskApplyError('当前没有可用的 terminal tab，无法执行。');
+      return;
+    }
+
+    window.terminalApi.input(activeSessionId, `${wrapBracketedPaste(taskApplyDraft)}\r`);
+    setPendingTaskApplyPayload(null);
+    setTaskApplyDraft('');
+    setTaskApplyError(null);
+    setTaskApplyNotice('已在当前 terminal tab 执行。');
+  }, [activeSessionId, pendingTaskApplyPayload, taskApplyDraft]);
+
+  const handleCancelTaskApply = useCallback(() => {
+    setPendingTaskApplyPayload(null);
+    setTaskApplyDraft('');
+    setTaskApplyError(null);
+  }, []);
+
   const persistMarkdownComments = useCallback(async (nextComments: MarkdownPreviewComment[]) => {
     if (!rootPath || !selectedFile || !isMarkdownFile(selectedFile)) return false;
 
@@ -675,6 +740,53 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
     ? `显示 Markdown 评论，${unlocatedCommentCount} 条未定位`
     : '显示 Markdown 评论';
   const reloadPreviewButtonRight = selectedMarkdownFile ? 74 : 44;
+
+  const taskApplyFeedback = (taskApplyError || taskApplyNotice) ? (
+    <div className={'markdown-task-apply-feedback ' + (taskApplyError ? 'error' : 'notice')}>
+      {taskApplyError ?? taskApplyNotice}
+    </div>
+  ) : null;
+
+  const taskApplyConfirmPanel = pendingTaskApplyPayload ? (
+    <div className="markdown-task-apply-confirm" role="dialog" aria-label="确认执行 task apply">
+      <div className="markdown-task-apply-confirm-header">
+        <span>{pendingTaskApplyPayload.title}</span>
+        <button
+          type="button"
+          className="markdown-task-apply-confirm-close"
+          onClick={handleCancelTaskApply}
+          title="取消"
+          aria-label="取消 task apply"
+        >
+          <X size={12} />
+        </button>
+      </div>
+      <div className="markdown-task-apply-risk">高风险 action，需要确认后才会执行。</div>
+      {taskApplyError && <div className="markdown-task-apply-feedback error inline">{taskApplyError}</div>}
+      <textarea
+        className="markdown-task-apply-payload"
+        value={taskApplyDraft}
+        onChange={(event) => setTaskApplyDraft(event.target.value)}
+      />
+      <div className="markdown-task-apply-actions">
+        <button
+          type="button"
+          className="markdown-task-apply-action primary"
+          onClick={handleConfirmTaskApply}
+          disabled={!taskApplyDraft.trim()}
+        >
+          执行
+        </button>
+        <button
+          type="button"
+          className="markdown-task-apply-action"
+          onClick={handleCancelTaskApply}
+        >
+          取消
+        </button>
+      </div>
+    </div>
+  ) : null;
 
   useEffect(() => {
     if (selectAllCommentsInputRef.current) {
@@ -1158,6 +1270,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
         </button>
       )}
       {commentPanel}
+      {!pendingTaskApplyPayload && taskApplyFeedback}
+      {taskApplyConfirmPanel}
       {loadingFile ? (
         <div
           style={{
@@ -1205,6 +1319,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
             filePath={selectedFile}
             onTaskCheckboxToggle={handleTaskCheckboxToggle}
             taskCheckboxDisabled={writingTask}
+            sddTaskContext={sddTaskContext}
+            onTaskApply={sddTaskContext ? handleTaskApply : undefined}
             searchQuery={findQuery}
             currentSearchIndex={currentSearchIndex}
             onSearchMatchCountChange={handleSearchMatchCountChange}

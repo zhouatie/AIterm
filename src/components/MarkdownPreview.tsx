@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Check, Copy, ListTree, MessageSquare, Plus } from 'lucide-react';
+import { Check, Copy, ListTree, MessageSquare, Play, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -20,12 +20,19 @@ import type {
   MarkdownCommentLocationStatus,
   MarkdownPreviewComment,
 } from '../utils/markdown-comment-types';
+import {
+  parseMarkdownTaskDocument,
+  type MarkdownTaskApplyTarget,
+  type SddTaskDocumentContext,
+} from '../utils/markdown-task';
 
 interface MarkdownPreviewProps {
   content: string | null;
   filePath: string | null;
   onTaskCheckboxToggle?: (taskIndex: number) => void;
   taskCheckboxDisabled?: boolean;
+  sddTaskContext?: SddTaskDocumentContext | null;
+  onTaskApply?: (target: MarkdownTaskApplyTarget) => void;
   searchQuery?: string;
   currentSearchIndex?: number;
   onSearchMatchCountChange?: (count: number) => void;
@@ -83,6 +90,13 @@ const MARKDOWN_COMMENT_CURRENT_NAME = 'markdown-comment-current';
 const CODE_COPY_FEEDBACK_MS = 1400;
 
 interface MarkdownCodeBlockProps extends React.HTMLAttributes<HTMLPreElement> {
+  children?: React.ReactNode;
+}
+
+type MarkdownHeadingTagName = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+
+interface MarkdownHeadingComponentProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  node?: unknown;
   children?: React.ReactNode;
 }
 
@@ -209,6 +223,8 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   filePath,
   onTaskCheckboxToggle,
   taskCheckboxDisabled = false,
+  sddTaskContext = null,
+  onTaskApply,
   searchQuery = '',
   currentSearchIndex = 0,
   onSearchMatchCountChange,
@@ -231,6 +247,10 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   const [previewWidth, setPreviewWidth] = useState(0);
   const [commentLayoutVersion, setCommentLayoutVersion] = useState(0);
   const commentGutterAvailable = !commentGutterHidden && previewWidth >= MARKDOWN_COMMENT_GUTTER_MIN_WIDTH;
+  const taskDocument = useMemo(() => (
+    sddTaskContext && content ? parseMarkdownTaskDocument(content) : null
+  ), [content, sddTaskContext]);
+  const taskApplyAvailable = !!taskDocument && !!sddTaskContext && !!onTaskApply;
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -474,7 +494,58 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   }
 
   let taskCheckboxIndex = 0;
+  let headingApplyIndex = 0;
   const outlineClassName = 'markdown-heading-outline' + (outlineExpanded ? ' is-expanded' : '');
+  const renderTaskApplyButton = (target: MarkdownTaskApplyTarget, title: string) => (
+    <button
+      type="button"
+      className={'markdown-task-apply-button ' + target.kind}
+      aria-label={title}
+      title={title}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onTaskApply?.(target);
+      }}
+      onMouseDown={(event) => event.stopPropagation()}
+    >
+      <Play size={11} />
+      <span>Apply</span>
+    </button>
+  );
+  const renderHeading = (tagName: MarkdownHeadingTagName, headingProps: MarkdownHeadingComponentProps) => {
+    const { node, children, className, ...props } = headingProps;
+    void node;
+    const group = taskDocument?.groups[headingApplyIndex] ?? null;
+    headingApplyIndex += 1;
+    const canApplyGroup = taskApplyAvailable && !!group && group.incompleteTasks.length > 0;
+    const HeadingTag = tagName;
+
+    if (!canApplyGroup || !group) {
+      return (
+        <HeadingTag {...props} className={className}>
+          {children}
+        </HeadingTag>
+      );
+    }
+
+    return (
+      <HeadingTag
+        {...props}
+        className={
+          'markdown-task-heading'
+          + (canApplyGroup ? ' has-task-apply' : '')
+          + (className ? ` ${className}` : '')
+        }
+      >
+        <span className="markdown-task-heading-text">{children}</span>
+        {canApplyGroup && renderTaskApplyButton(
+          { kind: 'group', group },
+          `Apply task group：${group.title}`,
+        )}
+      </HeadingTag>
+    );
+  };
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -525,6 +596,12 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight]}
             components={{
+              h1: (props) => renderHeading('h1', props),
+              h2: (props) => renderHeading('h2', props),
+              h3: (props) => renderHeading('h3', props),
+              h4: (props) => renderHeading('h4', props),
+              h5: (props) => renderHeading('h5', props),
+              h6: (props) => renderHeading('h6', props),
               pre: ({ children, node, ...props }) => {
                 void node;
                 return <MarkdownCodeBlock {...props}>{children}</MarkdownCodeBlock>;
@@ -536,8 +613,9 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
 
                 const taskIndex = taskCheckboxIndex;
                 taskCheckboxIndex += 1;
-
-                return (
+                const item = taskDocument?.items[taskIndex] ?? null;
+                const canApplyItem = taskApplyAvailable && !!item && !item.completed;
+                const checkbox = (
                   <input
                     {...props}
                     type="checkbox"
@@ -550,6 +628,18 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
                       }
                     }}
                   />
+                );
+
+                if (!canApplyItem || !item) return checkbox;
+
+                return (
+                  <span className="markdown-task-checkbox-control">
+                    {checkbox}
+                    {canApplyItem && renderTaskApplyButton(
+                      { kind: 'item', item },
+                      `Apply task item：${item.text}`,
+                    )}
+                  </span>
                 );
               },
             }}

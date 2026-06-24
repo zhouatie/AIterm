@@ -3,6 +3,10 @@ import type {
   OpenSpecChangeSummary,
   OpenSpecNextAction,
 } from './openspec-workflow';
+import type {
+  MarkdownTaskApplyTarget,
+  SddTaskDocumentContext,
+} from './markdown-task';
 import { wrapBracketedPaste } from './bracketed-paste';
 
 export type SddWorkflow = 'openspec' | 'raven' | 'unknown';
@@ -68,6 +72,11 @@ export interface SddCommandPayload {
   preview: string;
   terminalInput: string;
   risk: SddCommandRisk;
+}
+
+export interface ScopedSddApplyPayloadOptions {
+  context: SddTaskDocumentContext;
+  target: MarkdownTaskApplyTarget;
 }
 
 const ACTION_LABELS: Record<SddCommandAction, string> = {
@@ -448,6 +457,45 @@ function buildRavenSpecCommand(intent: SddCommandIntent): string {
   }
 }
 
+function buildApplyCommandForWorkflow(context: SddTaskDocumentContext): string {
+  return context.workflow === 'raven'
+    ? `$sdd-apply-change ${context.changeName}`
+    : `$openspec-apply-change ${context.changeName}`;
+}
+
+function formatTaskLine(lineNumber: number, text: string): string {
+  return `L${lineNumber}: ${text}`;
+}
+
+function buildScopedApplyPreview({ context, target }: ScopedSddApplyPayloadOptions): string {
+  const command = buildApplyCommandForWorkflow(context);
+  if (target.kind === 'item') {
+    return [
+      command,
+      '',
+      '只执行以下选中的 task item，不要执行该 change 的其他任务：',
+      `- 文件：@${context.taskFilePath}`,
+      `- 行号：${target.item.lineNumber}`,
+      `- 任务：${target.item.text}`,
+      target.item.groupTitle ? `- 所属 task group：${target.item.groupTitle}` : null,
+    ].filter((line): line is string => line !== null).join('\n');
+  }
+
+  const incompleteTaskLines = target.group.incompleteTasks.map((item) => (
+    `- ${formatTaskLine(item.lineNumber, item.text)}`
+  ));
+  return [
+    command,
+    '',
+    `只执行 task group「${target.group.title}」内所有未完成 task item，不要执行该 change 的其他任务。`,
+    `- 文件：@${context.taskFilePath}`,
+    `- task group 行号：${target.group.lineNumber}`,
+    '',
+    '未完成任务：',
+    ...incompleteTaskLines,
+  ].join('\n');
+}
+
 function extractUpdateChangeDetail(originalText: string): string {
   const trimmed = originalText.trim();
   const colonIndexes = [trimmed.indexOf('：'), trimmed.indexOf(':')]
@@ -489,6 +537,18 @@ export function buildSddCommandPayload(intent: SddCommandIntent): SddCommandPayl
     preview,
     terminalInput: wrapBracketedPaste(preview),
     risk: intent.risk,
+  };
+}
+
+export function buildScopedSddApplyPayload(options: ScopedSddApplyPayloadOptions): SddCommandPayload {
+  const { context, target } = options;
+  const preview = buildScopedApplyPreview(options);
+  const scopeLabel = target.kind === 'group' ? 'task group' : 'task item';
+  return {
+    title: `${getWorkflowLabel(context.workflow)} · ${getSddActionLabel('apply')} · ${context.changeName} · ${scopeLabel}`,
+    preview,
+    terminalInput: wrapBracketedPaste(preview),
+    risk: 'high',
   };
 }
 

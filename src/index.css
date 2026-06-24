@@ -1896,6 +1896,212 @@ html, body {
   margin-right: 0.5em;
 }
 
+.markdown-task-checkbox-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 0.35em;
+  vertical-align: baseline;
+}
+
+.markdown-task-checkbox-control input[type="checkbox"] {
+  margin-right: 0;
+}
+
+.markdown-task-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.markdown-task-heading-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.markdown-task-apply-button {
+  flex: 0 0 auto;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-content-elevated);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.markdown-task-apply-button svg {
+  flex: 0 0 auto;
+}
+
+.markdown-task-apply-button.item {
+  transform: translateY(-1px);
+}
+
+.markdown-task-apply-button.group {
+  margin-left: auto;
+}
+
+.markdown-task-apply-button:hover,
+.markdown-task-apply-button:focus-visible {
+  color: var(--color-bg-primary);
+  border-color: var(--color-accent-primary);
+  background: var(--color-accent-primary);
+  outline: none;
+}
+
+.markdown-task-apply-confirm {
+  position: absolute;
+  top: 46px;
+  right: 14px;
+  z-index: 19;
+  width: min(420px, calc(100% - 28px));
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 8px;
+  background: var(--color-surface-content-elevated);
+  box-shadow: 0 14px 28px var(--color-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.markdown-task-apply-confirm-header,
+.markdown-task-apply-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.markdown-task-apply-confirm-header {
+  justify-content: space-between;
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.markdown-task-apply-confirm-close {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-content);
+  cursor: pointer;
+}
+
+.markdown-task-apply-confirm-close:hover,
+.markdown-task-apply-confirm-close:focus-visible {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+  outline: none;
+}
+
+.markdown-task-apply-risk,
+.markdown-task-apply-feedback {
+  padding: 6px 7px;
+  border-radius: 7px;
+  font-size: 10.5px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.markdown-task-apply-risk,
+.markdown-task-apply-feedback.error {
+  color: var(--color-agent-status-error);
+  background: var(--color-agent-status-error-soft);
+}
+
+.markdown-task-apply-feedback.notice {
+  color: var(--color-agent-status-completed);
+  background: var(--color-agent-status-completed-soft);
+}
+
+.markdown-task-apply-feedback:not(.inline) {
+  position: absolute;
+  top: 46px;
+  right: 14px;
+  z-index: 18;
+  max-width: min(360px, calc(100% - 28px));
+  box-shadow: 0 8px 18px var(--color-shadow);
+}
+
+.markdown-task-apply-payload {
+  width: 100%;
+  min-height: 112px;
+  max-height: 240px;
+  resize: vertical;
+  padding: 7px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 7px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-content);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  outline: none;
+}
+
+.markdown-task-apply-payload:focus {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-soft);
+}
+
+.markdown-task-apply-actions {
+  justify-content: flex-end;
+}
+
+.markdown-task-apply-action {
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 7px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-content);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.markdown-task-apply-action.primary {
+  color: var(--color-bg-primary);
+  border-color: var(--color-accent-primary);
+  background: var(--color-accent-primary);
+}
+
+.markdown-task-apply-action:hover,
+.markdown-task-apply-action:focus-visible {
+  filter: brightness(1.04);
+  outline: none;
+}
+
+.markdown-task-apply-action:disabled {
+  cursor: default;
+  opacity: 0.45;
+  filter: none;
+}
+
 .markdown-heading-outline {
   position: absolute;
   top: 10px;
