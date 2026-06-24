@@ -1,0 +1,68 @@
+openspec/changes/add-task-apply-button/tasks.md
+  a59945050aece1d4 3-5,9-11,15-17,21-22
+src/index.css
+  a59945050aece1d4 1899-2104
+src/utils/sdd-command-router.ts
+  a59945050aece1d4 6-9,77-81,460-481,483-496,543-551
+test/markdown-task.test.cjs
+  a59945050aece1d4 1-126
+src/components/MarkdownPreview.tsx
+  a59945050aece1d4 2,23-27,34-35,96-99,226-227,250-253,497,499-548,599-604,616-618,632-633,636-642
+src/utils/markdown-task.ts
+  a59945050aece1d4 6-52,54-55,58-213
+src/components/FilePreviewPanel.tsx
+  a59945050aece1d4 1,22-26,28-32,144-147,447-484,486-498,744-789,1273-1274,1322-1323
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "cfe8998b521e4065358ddc4e18de79ff41f19964",
+  "prompts": {
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 846,
+      "total_deletions": 42,
+      "accepted_lines": 830,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "src/utils/sdd-command-router.ts": {
+          "additions": 60,
+          "accepted_lines": 60
+        },
+        "src/index.css": {
+          "additions": 206,
+          "accepted_lines": 206
+        },
+        "test/markdown-task.test.cjs": {
+          "additions": 126,
+          "accepted_lines": 126
+        },
+        "openspec/changes/add-task-apply-button/tasks.md": {
+          "additions": 11,
+          "deletions": 11,
+          "accepted_lines": 11
+        },
+        "src/components/FilePreviewPanel.tsx": {
+          "additions": 118,
+          "deletions": 2,
+          "accepted_lines": 118
+        },
+        "src/utils/markdown-task.ts": {
+          "additions": 206,
+          "accepted_lines": 206
+        },
+        "src/components/MarkdownPreview.tsx": {
+          "additions": 119,
+          "deletions": 29,
+          "accepted_lines": 103
+        }
+      }
+    }
+  }
+}
