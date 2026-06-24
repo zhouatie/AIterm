@@ -590,6 +590,15 @@ const UtilityToolsPanel: React.FC<UtilityToolsPanelProps> = ({ isOpen, onClose }
     }));
   }, [updateQrStorage]);
 
+  const unpinQrText = useCallback((text: string) => {
+    if (text.length === 0) return;
+
+    updateQrStorage((storage) => ({
+      ...storage,
+      pinned: storage.pinned.filter((item) => item.text !== text),
+    }));
+  }, [updateQrStorage]);
+
   useEffect(() => {
     const input = qrInput;
     const version = qrRenderVersionRef.current + 1;
@@ -685,8 +694,18 @@ const UtilityToolsPanel: React.FC<UtilityToolsPanelProps> = ({ isOpen, onClose }
     pointerEvents: isOpen ? 'auto' : 'none',
   };
 
-  const canPinCurrentQr = qrInput.length > 0 && qrState === 'ready' && Boolean(qrSvg);
   const currentQrPinned = qrStorage.pinned.some((item) => item.text === qrInput);
+  const canPinCurrentQr = qrInput.length > 0 && qrState === 'ready' && Boolean(qrSvg);
+  const canToggleCurrentQrPin = currentQrPinned || canPinCurrentQr;
+
+  const handleCurrentQrPinClick = () => {
+    if (currentQrPinned) {
+      unpinQrText(qrInput);
+      return;
+    }
+
+    pinCurrentQrText();
+  };
 
   const renderQrRecordList = (
     items: QrToolItem[],
@@ -789,15 +808,15 @@ const UtilityToolsPanel: React.FC<UtilityToolsPanelProps> = ({ isOpen, onClose }
             type="button"
             style={{
               ...actionButtonStyle,
-              opacity: canPinCurrentQr ? 1 : 0.48,
-              cursor: canPinCurrentQr ? 'pointer' : 'default',
+              opacity: canToggleCurrentQrPin ? 1 : 0.48,
+              cursor: canToggleCurrentQrPin ? 'pointer' : 'default',
             }}
-            disabled={!canPinCurrentQr}
-            title={currentQrPinned ? '更新固定时间' : '固定当前文本'}
-            onClick={pinCurrentQrText}
+            disabled={!canToggleCurrentQrPin}
+            title={currentQrPinned ? '取消固定当前文本' : '固定当前文本'}
+            onClick={handleCurrentQrPinClick}
           >
-            <Pin size={13} />
-            固定
+            {currentQrPinned ? <PinOff size={13} /> : <Pin size={13} />}
+            {currentQrPinned ? '取消固定' : '固定'}
           </button>
         </div>
         <textarea
