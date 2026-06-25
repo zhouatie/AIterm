@@ -1,0 +1,321 @@
+openspec/specs/utility-tools/spec.md
+  c5eb665234c5bb88 172,192-250
+src/index.css
+  c5eb665234c5bb88 1851-2218
+src/components/UtilityToolsPanel.tsx
+  c5eb665234c5bb88 20,912
+openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/specs/file-preview/spec.md
+  c5eb665234c5bb88 1-125
+openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/proposal.md
+  c5eb665234c5bb88 1-33
+openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/.openspec.yaml
+  c5eb665234c5bb88 1-2
+src/components/MermaidDiagramViewer.tsx
+  c5eb665234c5bb88 1-484
+openspec/specs/file-preview/spec.md
+  c5eb665234c5bb88 139,173-252
+src/components/MarkdownPreview.tsx
+  c5eb665234c5bb88 3,7-8,94,100-104,112-126,179-196,264-339,343-466,695,702,791-798
+openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/specs/utility-tools/spec.md
+  c5eb665234c5bb88 1-82
+openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/design.md
+  c5eb665234c5bb88 1-109
+openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/tasks.md
+  c5eb665234c5bb88 1-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "3fd123388ea847da4004688e1d386aaa98b6a989",
+  "prompts": {
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 270,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/proposal.md": {
+          "accepted_lines": 34
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/design.md": {
+          "accepted_lines": 118
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/file-preview/spec.md": {
+          "accepted_lines": 54
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/tasks.md": {
+          "accepted_lines": 22
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/.openspec.yaml": {
+          "accepted_lines": 2
+        }
+      }
+    },
+    "c5eb665234c5bb88": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efe78-4b45-7d50-98db-107e5885ec86",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 241340,
+      "total_deletions": 417,
+      "accepted_lines": 1665,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-markdown-mermaid-preview/design.md": {
+          "additions": 127,
+          "deletions": 18
+        },
+        "dist/assets/cose-bilkent-S5V4N54A-CJWjYmWI.js": {
+          "additions": 4933
+        },
+        "openspec/changes/add-markdown-mermaid-preview/tasks.md": {
+          "additions": 109,
+          "deletions": 51
+        },
+        "dist/assets/flowDiagram-I6XJVG4X-CF5f-RTO.js": {
+          "additions": 2337
+        },
+        "dist/assets/sankeyDiagram-5OEKKPKP-CESou6cZ.js": {
+          "additions": 1263
+        },
+        "dist/assets/journeyDiagram-JHISSGLW-CZAwdR6M.js": {
+          "additions": 1255
+        },
+        "dist/assets/chunk-QZHKN3VN-BK5m7hGD.js": {
+          "additions": 17
+        },
+        "openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/proposal.md": {
+          "additions": 33,
+          "accepted_lines": 33
+        },
+        "dist/assets/channel-CWfr_Yaz.js": {
+          "additions": 7
+        },
+        "dist/index.html": {
+          "additions": 6,
+          "deletions": 6,
+          "accepted_lines": 3
+        },
+        "openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/design.md": {
+          "additions": 109,
+          "accepted_lines": 109
+        },
+        "dist/assets/index-Dn_i4-ak.css": {
+          "additions": 3341
+        },
+        "dist/assets/c4Diagram-AAUBKEIU-DjdYzGNP.js": {
+          "additions": 2478
+        },
+        "openspec/changes/add-markdown-mermaid-preview/proposal.md": {
+          "additions": 38,
+          "deletions": 5
+        },
+        "dist/assets/classDiagram-v2-Q7XG4LA2-DKHA0Id7.js": {
+          "additions": 23
+        },
+        "src/index.css": {
+          "additions": 451,
+          "deletions": 83,
+          "accepted_lines": 368
+        },
+        "dist/assets/cytoscape.esm--2g_iLnI.js": {
+          "additions": 30342
+        },
+        "src/components/MarkdownPreview.tsx": {
+          "additions": 264,
+          "deletions": 114,
+          "accepted_lines": 257
+        },
+        "openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/tasks.md": {
+          "additions": 58,
+          "accepted_lines": 58
+        },
+        "dist/assets/infoDiagram-5YYISTIA-CmTOt3dB.js": {
+          "additions": 31
+        },
+        "openspec/changes/add-markdown-mermaid-preview/specs/utility-tools/spec.md": {
+          "additions": 93,
+          "deletions": 11
+        },
+        "dist/assets/quadrantDiagram-W4KKPZXB-DUmY6Viy.js": {
+          "additions": 1341
+        },
+        "dist/assets/chunk-727SXJPM-CyH3sd2u.js": {
+          "additions": 2012
+        },
+        "dist/assets/arc-uRkLF7WP.js": {
+          "additions": 131
+        },
+        "openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "src/components/MermaidDiagramViewer.tsx": {
+          "additions": 588,
+          "deletions": 104,
+          "accepted_lines": 484
+        },
+        "dist/assets/pieDiagram-4H26LBE5-phgeKOZ0.js": {
+          "additions": 247
+        },
+        "dist/assets/diagram-LMA3HP47-D1d5mKZx.js": {
+          "additions": 211
+        },
+        "openspec/changes/add-markdown-mermaid-preview/specs/file-preview/spec.md": {
+          "additions": 136,
+          "deletions": 11
+        },
+        "dist/assets/sequenceDiagram-3UESZ5HK-D3X0GyBm.js": {
+          "additions": 4522
+        },
+        "dist/assets/ishikawaDiagram-YF4QCWOH-ktDApBV7.js": {
+          "additions": 966
+        },
+        "dist/assets/stateDiagram-AJRCARHV-Db6sH99j.js": {
+          "additions": 450
+        },
+        "dist/assets/chunk-FMBD7UC4-BK2tGG7H.js": {
+          "additions": 19
+        },
+        "dist/assets/chunk-AQP2D5EJ-BP1LY_KL.js": {
+          "additions": 1960
+        },
+        "dist/assets/dagre-BM42HDAG-BWsJ-NX-.js": {
+          "additions": 708
+        },
+        "dist/assets/stateDiagram-v2-BHNVJYJU-DrXhi0dr.js": {
+          "additions": 21
+        },
+        "dist/assets/requirementDiagram-4Y6WPE33-CH5Rcv5M.js": {
+          "additions": 1204
+        },
+        "openspec/specs/file-preview/spec.md": {
+          "additions": 82,
+          "deletions": 1,
+          "accepted_lines": 82
+        },
+        "dist/assets/chunk-55IACEB6-Dxngnv8o.js": {
+          "additions": 13
+        },
+        "dist/assets/architectureDiagram-3BPJPVTR-BQRdcOhd.js": {
+          "additions": 8716
+        },
+        "dist/assets/diagram-OG6HWLK6-Je04QO7M.js": {
+          "additions": 851
+        },
+        "dist/assets/erDiagram-TEJ5UH35-n50YT24w.js": {
+          "additions": 1226
+        },
+        "openspec/changes/add-markdown-mermaid-preview/.openspec.yaml": {
+          "additions": 2
+        },
+        "dist/assets/kanban-definition-UN3LZRKU-BfmmSAPo.js": {
+          "additions": 1053
+        },
+        "dist/assets/index-BVNFQtJK.js": {
+          "additions": 99046
+        },
+        "dist/assets/xychartDiagram-2RQKCTM6-DVxSElmk.js": {
+          "additions": 1903
+        },
+        "dist/assets/classDiagram-4FO5ZUOK-DKHA0Id7.js": {
+          "additions": 23
+        },
+        "dist/assets/mindmap-definition-RKZ34NQL-D67HW-2p.js": {
+          "additions": 1181
+        },
+        "dist/assets/ordinal-DSZU4PqD.js": {
+          "additions": 76
+        },
+        "dist/assets/gitGraphDiagram-PVQCEYII-L5QqwZP-.js": {
+          "additions": 1384
+        },
+        "openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/specs/utility-tools/spec.md": {
+          "additions": 82,
+          "accepted_lines": 82
+        },
+        "openspec/specs/utility-tools/spec.md": {
+          "additions": 60,
+          "deletions": 1,
+          "accepted_lines": 60
+        },
+        "dist/assets/vennDiagram-CIIHVFJN-vk8IRwSB.js": {
+          "additions": 2493
+        },
+        "dist/assets/wardley-L42UT6IY-BZ6MXG5W.js": {
+          "additions": 30101
+        },
+        "dist/assets/graph-Bu313kMd.js": {
+          "additions": 2042
+        },
+        "dist/assets/diagram-2AECGRRQ-DXGodsM-.js": {
+          "additions": 305
+        },
+        "dist/assets/chunk-4BX2VUAB-BUp_Tppo.js": {
+          "additions": 17
+        },
+        "dist/assets/defaultLocale-B2RvLBDe.js": {
+          "additions": 206
+        },
+        "dist/assets/chunk-2J33WTMH-MMEDHqNy.js": {
+          "additions": 25
+        },
+        "dist/assets/layout-B7LS34TW.js": {
+          "additions": 2643
+        },
+        "dist/assets/chunk-ND2GUHAM-Ky8_-SXV.js": {
+          "additions": 116
+        },
+        "dist/assets/ganttDiagram-6RSMTGT7-Ch09luSa.js": {
+          "additions": 3692
+        },
+        "dist/assets/wardleyDiagram-YWT4CUSO-Nei6jLJa.js": {
+          "additions": 977
+        },
+        "dist/assets/blockDiagram-GPEHLZMM-BMXwKtWh.js": {
+          "additions": 3801
+        },
+        "dist/assets/katex-GJw3bfr-.js": {
+          "additions": 14498
+        },
+        "dist/assets/diagram-KO2AKTUF-DUBXWStq.js": {
+          "additions": 635
+        },
+        "dist/assets/diagram-5GNKFQAL-Db4lEKTo.js": {
+          "additions": 169
+        },
+        "openspec/changes/archive/2026-06-25-add-markdown-mermaid-preview/specs/file-preview/spec.md": {
+          "additions": 125,
+          "accepted_lines": 125
+        },
+        "dist/assets/init-ZxktEp_H.js": {
+          "additions": 16
+        },
+        "dist/assets/linear-CKLZPL_C.js": {
+          "additions": 340
+        },
+        "src/components/UtilityToolsPanel.tsx": {
+          "additions": 3,
+          "deletions": 12,
+          "accepted_lines": 2
+        },
+        "dist/assets/timeline-definition-PNZ67QCA-DKIciWlJ.js": {
+          "additions": 1605
+        }
+      }
+    }
+  }
+}
