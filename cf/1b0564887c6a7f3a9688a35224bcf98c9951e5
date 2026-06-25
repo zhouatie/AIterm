@@ -1,0 +1,105 @@
+openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/proposal.md
+  a59945050aece1d4 1-27
+openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/.openspec.yaml
+  a59945050aece1d4 1-2
+openspec/specs/terminal-tabs/spec.md
+  a59945050aece1d4 7,41-53,57-58
+src/components/TerminalPanel.tsx
+  a59945050aece1d4 181,2626,2687-2688,2728-2742,2746,2752,2757-2758,2830-2831,2857
+openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/specs/terminal-tabs/spec.md
+  a59945050aece1d4 1-75
+openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/design.md
+  a59945050aece1d4 1-45
+openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/tasks.md
+  a59945050aece1d4 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "cf1b0564887c6a7f3a9688a35224bcf98c9951e5",
+  "prompts": {
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 390,
+      "total_deletions": 212,
+      "accepted_lines": 477,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/file-preview/spec.md": {
+          "accepted_lines": 54
+        },
+        "openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/design.md": {
+          "additions": 45,
+          "accepted_lines": 45
+        },
+        "openspec/changes/tighten-terminal-tab-density/design.md": {
+          "additions": 49,
+          "deletions": 49
+        },
+        "openspec/changes/tighten-terminal-tab-density/specs/terminal-tabs/spec.md": {
+          "additions": 77,
+          "deletions": 77
+        },
+        "openspec/changes/tighten-terminal-tab-density/proposal.md": {
+          "additions": 27,
+          "deletions": 27
+        },
+        "openspec/specs/terminal-tabs/spec.md": {
+          "additions": 16,
+          "deletions": 3,
+          "accepted_lines": 16
+        },
+        "openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/tasks.md": {
+          "additions": 15,
+          "accepted_lines": 15
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/proposal.md": {
+          "additions": 27,
+          "accepted_lines": 27
+        },
+        "openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/tighten-terminal-tab-density/tasks.md": {
+          "additions": 27,
+          "deletions": 27
+        },
+        "openspec/changes/archive/2026-06-25-tighten-terminal-tab-density/specs/terminal-tabs/spec.md": {
+          "additions": 75,
+          "accepted_lines": 75
+        },
+        "openspec/changes/tighten-terminal-tab-density/.openspec.yaml": {
+          "additions": 2,
+          "deletions": 2
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/proposal.md": {
+          "accepted_lines": 34
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/design.md": {
+          "accepted_lines": 118
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/tasks.md": {
+          "accepted_lines": 22
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 28,
+          "deletions": 27,
+          "accepted_lines": 27
+        }
+      }
+    }
+  }
+}
