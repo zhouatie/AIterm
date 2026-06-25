@@ -1,0 +1,150 @@
+src/components/TerminalPanel.tsx
+  1966a785598845d4 40,60,63-69,363-364,367-371,375,706,734-737,862,881,884-885,913,916-926,958,968,972-977,979-983,987-992,994-998,1025,1057-1061,1072,1145,1409-1416,1418-1420,1437-1442,1495,1498-1502,2369,3190,3212-3234,3295-3296,3307-3312
+src/preload.ts
+  1966a785598845d4 16,35-39,57-107,210-211,311-325
+openspec/specs/terminal-session-transcript/spec.md
+  1966a785598845d4 1-81
+openspec/changes/archive/2026-06-25-add-terminal-session-transcript/.openspec.yaml
+  1966a785598845d4 1-2
+openspec/changes/archive/2026-06-25-add-terminal-session-transcript/proposal.md
+  1966a785598845d4 1-29
+package.json
+  1966a785598845d4 4
+src/components/TerminalTranscriptViewer.tsx
+  1966a785598845d4 1-463
+openspec/changes/archive/2026-06-25-add-terminal-session-transcript/specs/terminal-session-transcript/spec.md
+  1966a785598845d4 1-77
+src/utils/tab-persistence.ts
+  1966a785598845d4 1,11,82-86
+openspec/changes/archive/2026-06-25-add-terminal-session-transcript/design.md
+  1966a785598845d4 1-82
+openspec/changes/archive/2026-06-25-add-terminal-session-transcript/tasks.md
+  1966a785598845d4 1-42
+src/main.ts
+  1966a785598845d4 1-10,123-157,322-324,410-627,1043-1060,1063,1067,1097-1098,1108,1152,1203-1227
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "49c54374d1453877c4872111e6d30b881f3b15f2",
+  "prompts": {
+    "1966a785598845d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efd7c-6958-7e83-8f16-8d323d31be64",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1594,
+      "total_deletions": 71,
+      "accepted_lines": 1313,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/add-terminal-session-transcript/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/preload.ts": {
+          "additions": 74,
+          "deletions": 3,
+          "accepted_lines": 74
+        },
+        "openspec/changes/archive/2026-06-25-add-terminal-session-transcript/design.md": {
+          "additions": 82,
+          "accepted_lines": 82
+        },
+        "src/components/TerminalTranscriptViewer.tsx": {
+          "additions": 474,
+          "deletions": 11,
+          "accepted_lines": 463
+        },
+        "openspec/changes/archive/2026-06-25-add-terminal-session-transcript/proposal.md": {
+          "additions": 29,
+          "accepted_lines": 29
+        },
+        "openspec/changes/archive/2026-06-25-add-terminal-session-transcript/tasks.md": {
+          "additions": 42,
+          "accepted_lines": 42
+        },
+        "openspec/changes/add-terminal-session-transcript/specs/terminal-session-transcript/spec.md": {
+          "additions": 77
+        },
+        "openspec/changes/archive/2026-06-25-add-terminal-session-transcript/specs/terminal-session-transcript/spec.md": {
+          "additions": 77,
+          "accepted_lines": 77
+        },
+        "openspec/changes/add-terminal-session-transcript/proposal.md": {
+          "additions": 29
+        },
+        "openspec/specs/terminal-session-transcript/spec.md": {
+          "additions": 81,
+          "accepted_lines": 81
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 141,
+          "deletions": 20,
+          "accepted_lines": 134
+        },
+        "src/main.ts": {
+          "additions": 324,
+          "deletions": 6,
+          "accepted_lines": 321
+        },
+        "src/utils/tab-persistence.ts": {
+          "additions": 7,
+          "deletions": 2,
+          "accepted_lines": 7
+        },
+        "openspec/changes/archive/2026-06-25-add-terminal-session-transcript/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "package.json": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        },
+        "openspec/changes/add-terminal-session-transcript/design.md": {
+          "additions": 82
+        },
+        "openspec/changes/add-terminal-session-transcript/tasks.md": {
+          "additions": 70,
+          "deletions": 28
+        }
+      }
+    },
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 270,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/tasks.md": {
+          "accepted_lines": 22
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/file-preview/spec.md": {
+          "accepted_lines": 54
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/design.md": {
+          "accepted_lines": 118
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/proposal.md": {
+          "accepted_lines": 34
+        }
+      }
+    }
+  }
+}
