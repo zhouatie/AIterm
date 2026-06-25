@@ -17,6 +17,7 @@ import {
 import mermaid from 'mermaid';
 import QRCode from 'qrcode';
 import { useTheme } from '../ThemeContext';
+import MermaidDiagramViewer from './MermaidDiagramViewer';
 
 export type UtilityToolId = 'json' | 'qr' | 'mermaid';
 
@@ -398,16 +399,6 @@ const qrRecordClearButtonStyle: React.CSSProperties = {
   fontWeight: 650,
   letterSpacing: 0,
   fontFamily: 'inherit',
-};
-
-const mermaidPreviewStyle: React.CSSProperties = {
-  width: '100%',
-  minHeight: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minWidth: 0,
-  color: 'var(--color-text-primary)',
 };
 
 function getButtonCopyTitle(state: CopyState): string {
@@ -918,7 +909,7 @@ const UtilityToolsPanel: React.FC<UtilityToolsPanelProps> = ({ isOpen, onClose }
         </div>
         <div style={previewWrapStyle}>
           {mermaidState === 'ready' && mermaidSvg ? (
-            <div style={mermaidPreviewStyle} dangerouslySetInnerHTML={{ __html: mermaidSvg }} />
+            <MermaidDiagramViewer svg={mermaidSvg} source={mermaidInput} label="Mermaid 工具图表" />
           ) : mermaidState === 'loading' ? (
             <div style={emptyStateStyle}>渲染中</div>
           ) : (

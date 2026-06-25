@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Check, Copy, ListTree, MessageSquare, Play, Plus } from 'lucide-react';
+import mermaid from 'mermaid';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import { useTheme } from '../ThemeContext';
+import MermaidDiagramViewer from './MermaidDiagramViewer';
 import {
   collectPreviewFindMatches,
   applyPreviewFindHighlights,
@@ -88,9 +91,15 @@ const MARKDOWN_COMMENT_GUTTER_MIN_WIDTH = 420;
 const MARKDOWN_COMMENT_HIGHLIGHT_NAME = 'markdown-comment-highlight';
 const MARKDOWN_COMMENT_CURRENT_NAME = 'markdown-comment-current';
 const CODE_COPY_FEEDBACK_MS = 1400;
+let markdownMermaidRenderCounter = 0;
 
 interface MarkdownCodeBlockProps extends React.HTMLAttributes<HTMLPreElement> {
   children?: React.ReactNode;
+}
+
+interface MarkdownCodeElementProps extends React.HTMLAttributes<HTMLElement> {
+  children?: React.ReactNode;
+  className?: string;
 }
 
 type MarkdownHeadingTagName = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -98,6 +107,22 @@ type MarkdownHeadingTagName = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 interface MarkdownHeadingComponentProps extends React.HTMLAttributes<HTMLHeadingElement> {
   node?: unknown;
   children?: React.ReactNode;
+}
+
+interface MarkdownMermaidBlockProps {
+  source: string;
+}
+
+type MermaidRenderState = 'loading' | 'ready' | 'error';
+type MarkdownTaskDocument = ReturnType<typeof parseMarkdownTaskDocument>;
+
+interface MarkdownRenderedContentProps {
+  content: string;
+  taskDocument: MarkdownTaskDocument | null;
+  taskApplyAvailable: boolean;
+  taskCheckboxDisabled: boolean;
+  onTaskCheckboxToggle?: (taskIndex: number) => void;
+  onTaskApply?: (target: MarkdownTaskApplyTarget) => void;
 }
 
 function getHighlightConstructor(): HighlightConstructor {
@@ -149,6 +174,24 @@ function getTextFromReactNode(node: React.ReactNode): string {
     return getTextFromReactNode(node.props.children);
   }
   return '';
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function getCodeElementFromPreChildren(children: React.ReactNode): React.ReactElement<MarkdownCodeElementProps> | null {
+  const childArray = React.Children.toArray(children);
+  if (childArray.length !== 1) return null;
+
+  const child = childArray[0];
+  if (!React.isValidElement<MarkdownCodeElementProps>(child) || child.type !== 'code') return null;
+
+  return child;
+}
+
+function isMermaidCodeElement(codeElement: React.ReactElement<MarkdownCodeElementProps> | null): boolean {
+  return !!codeElement?.props.className?.split(/\s+/).includes('language-mermaid');
 }
 
 const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({ children, ...preProps }) => {
@@ -217,6 +260,210 @@ const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({ children, ...preP
     </div>
   );
 };
+
+const MarkdownMermaidBlock: React.FC<MarkdownMermaidBlockProps> = ({ source }) => {
+  const { theme } = useTheme();
+  const [renderState, setRenderState] = useState<MermaidRenderState>('loading');
+  const [svg, setSvg] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const renderVersionRef = useRef(0);
+  const renderIdRef = useRef('');
+
+  if (!renderIdRef.current) {
+    markdownMermaidRenderCounter += 1;
+    renderIdRef.current = 'markdown-mermaid-' + markdownMermaidRenderCounter;
+  }
+
+  useEffect(() => {
+    const nextSource = source.trim();
+    const version = renderVersionRef.current + 1;
+    renderVersionRef.current = version;
+    let cancelled = false;
+
+    if (!nextSource) {
+      setSvg('');
+      setRenderState('error');
+      setErrorMessage('Mermaid 源码为空');
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setSvg('');
+    setErrorMessage('');
+    setRenderState('loading');
+
+    const render = async () => {
+      try {
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'strict',
+          theme: theme === 'dark' ? 'dark' : 'default',
+        });
+        const result = await mermaid.render(`${renderIdRef.current}-${version}`, nextSource);
+        if (cancelled || renderVersionRef.current !== version) return;
+
+        setSvg(result.svg);
+        setRenderState('ready');
+      } catch (error: unknown) {
+        if (cancelled || renderVersionRef.current !== version) return;
+
+        setSvg('');
+        setRenderState('error');
+        setErrorMessage(getErrorMessage(error));
+      }
+    };
+
+    void render();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [source, theme]);
+
+  return (
+    <div className="markdown-mermaid-block">
+      {renderState === 'ready' && svg ? (
+        <MermaidDiagramViewer svg={svg} source={source} label="Markdown Mermaid 图表" />
+      ) : renderState === 'loading' ? (
+        <div className="markdown-mermaid-status">Mermaid 图表渲染中...</div>
+      ) : (
+        <>
+          <div className="markdown-mermaid-error" role="alert">
+            Mermaid 渲染失败{errorMessage ? '：' + errorMessage : ''}
+          </div>
+          <pre className="markdown-mermaid-source">
+            <code>{source}</code>
+          </pre>
+        </>
+      )}
+    </div>
+  );
+};
+
+const MarkdownRenderedContent = React.memo(function MarkdownRenderedContent({
+  content,
+  taskDocument,
+  taskApplyAvailable,
+  taskCheckboxDisabled,
+  onTaskCheckboxToggle,
+  onTaskApply,
+}: MarkdownRenderedContentProps) {
+  let taskCheckboxIndex = 0;
+  let headingApplyIndex = 0;
+  const renderTaskApplyButton = (target: MarkdownTaskApplyTarget, title: string) => (
+    <button
+      type="button"
+      className={'markdown-task-apply-button ' + target.kind}
+      aria-label={title}
+      title={title}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onTaskApply?.(target);
+      }}
+      onMouseDown={(event) => event.stopPropagation()}
+    >
+      <Play size={11} />
+      <span>Apply</span>
+    </button>
+  );
+  const renderHeading = (tagName: MarkdownHeadingTagName, headingProps: MarkdownHeadingComponentProps) => {
+    const { node, children, className, ...props } = headingProps;
+    void node;
+    const group = taskDocument?.groups[headingApplyIndex] ?? null;
+    headingApplyIndex += 1;
+    const canApplyGroup = taskApplyAvailable && !!group && group.incompleteTasks.length > 0;
+    const HeadingTag = tagName;
+
+    if (!canApplyGroup || !group) {
+      return (
+        <HeadingTag {...props} className={className}>
+          {children}
+        </HeadingTag>
+      );
+    }
+
+    return (
+      <HeadingTag
+        {...props}
+        className={
+          'markdown-task-heading'
+          + (canApplyGroup ? ' has-task-apply' : '')
+          + (className ? ` ${className}` : '')
+        }
+      >
+        <span className="markdown-task-heading-text">{children}</span>
+        {canApplyGroup && renderTaskApplyButton(
+          { kind: 'group', group },
+          `Apply task group：${group.title}`,
+        )}
+      </HeadingTag>
+    );
+  };
+
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeHighlight]}
+      components={{
+        h1: (props) => renderHeading('h1', props),
+        h2: (props) => renderHeading('h2', props),
+        h3: (props) => renderHeading('h3', props),
+        h4: (props) => renderHeading('h4', props),
+        h5: (props) => renderHeading('h5', props),
+        h6: (props) => renderHeading('h6', props),
+        pre: ({ children, node, ...props }) => {
+          void node;
+          const codeElement = getCodeElementFromPreChildren(children);
+          if (isMermaidCodeElement(codeElement)) {
+            return <MarkdownMermaidBlock source={getTextFromReactNode(codeElement.props.children)} />;
+          }
+
+          return <MarkdownCodeBlock {...props}>{children}</MarkdownCodeBlock>;
+        },
+        input: ({ type, checked, disabled, ...props }) => {
+          if (type !== 'checkbox') {
+            return <input type={type} checked={checked} disabled={disabled} {...props} />;
+          }
+
+          const taskIndex = taskCheckboxIndex;
+          taskCheckboxIndex += 1;
+          const item = taskDocument?.items[taskIndex] ?? null;
+          const canApplyItem = taskApplyAvailable && !!item && !item.completed;
+          const checkbox = (
+            <input
+              {...props}
+              type="checkbox"
+              checked={checked}
+              disabled={taskCheckboxDisabled}
+              onChange={(event) => {
+                event.preventDefault();
+                if (!taskCheckboxDisabled) {
+                  onTaskCheckboxToggle?.(taskIndex);
+                }
+              }}
+            />
+          );
+
+          if (!canApplyItem || !item) return checkbox;
+
+          return (
+            <span className="markdown-task-checkbox-control">
+              {checkbox}
+              {canApplyItem && renderTaskApplyButton(
+                { kind: 'item', item },
+                `Apply task item：${item.text}`,
+              )}
+            </span>
+          );
+        },
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+});
 
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   content,
@@ -445,13 +692,14 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
 
   const handlePreviewScroll = useCallback(() => {
     setSelectionCommentAction(null);
+    if (!commentGutterAvailable || comments.length === 0) return;
     if (scrollFrameRef.current !== null) return;
 
     scrollFrameRef.current = window.requestAnimationFrame(() => {
       scrollFrameRef.current = null;
       setCommentLayoutVersion((version) => version + 1);
     });
-  }, []);
+  }, [commentGutterAvailable, comments.length]);
 
   const scrollToHeading = useCallback((headingId: string) => {
     const container = containerRef.current;
@@ -493,59 +741,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
     );
   }
 
-  let taskCheckboxIndex = 0;
-  let headingApplyIndex = 0;
   const outlineClassName = 'markdown-heading-outline' + (outlineExpanded ? ' is-expanded' : '');
-  const renderTaskApplyButton = (target: MarkdownTaskApplyTarget, title: string) => (
-    <button
-      type="button"
-      className={'markdown-task-apply-button ' + target.kind}
-      aria-label={title}
-      title={title}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onTaskApply?.(target);
-      }}
-      onMouseDown={(event) => event.stopPropagation()}
-    >
-      <Play size={11} />
-      <span>Apply</span>
-    </button>
-  );
-  const renderHeading = (tagName: MarkdownHeadingTagName, headingProps: MarkdownHeadingComponentProps) => {
-    const { node, children, className, ...props } = headingProps;
-    void node;
-    const group = taskDocument?.groups[headingApplyIndex] ?? null;
-    headingApplyIndex += 1;
-    const canApplyGroup = taskApplyAvailable && !!group && group.incompleteTasks.length > 0;
-    const HeadingTag = tagName;
-
-    if (!canApplyGroup || !group) {
-      return (
-        <HeadingTag {...props} className={className}>
-          {children}
-        </HeadingTag>
-      );
-    }
-
-    return (
-      <HeadingTag
-        {...props}
-        className={
-          'markdown-task-heading'
-          + (canApplyGroup ? ' has-task-apply' : '')
-          + (className ? ` ${className}` : '')
-        }
-      >
-        <span className="markdown-task-heading-text">{children}</span>
-        {canApplyGroup && renderTaskApplyButton(
-          { kind: 'group', group },
-          `Apply task group：${group.title}`,
-        )}
-      </HeadingTag>
-    );
-  };
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -592,60 +788,14 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
         onScroll={handlePreviewScroll}
       >
         <div className="markdown-body">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeHighlight]}
-            components={{
-              h1: (props) => renderHeading('h1', props),
-              h2: (props) => renderHeading('h2', props),
-              h3: (props) => renderHeading('h3', props),
-              h4: (props) => renderHeading('h4', props),
-              h5: (props) => renderHeading('h5', props),
-              h6: (props) => renderHeading('h6', props),
-              pre: ({ children, node, ...props }) => {
-                void node;
-                return <MarkdownCodeBlock {...props}>{children}</MarkdownCodeBlock>;
-              },
-              input: ({ type, checked, disabled, ...props }) => {
-                if (type !== 'checkbox') {
-                  return <input type={type} checked={checked} disabled={disabled} {...props} />;
-                }
-
-                const taskIndex = taskCheckboxIndex;
-                taskCheckboxIndex += 1;
-                const item = taskDocument?.items[taskIndex] ?? null;
-                const canApplyItem = taskApplyAvailable && !!item && !item.completed;
-                const checkbox = (
-                  <input
-                    {...props}
-                    type="checkbox"
-                    checked={checked}
-                    disabled={taskCheckboxDisabled}
-                    onChange={(event) => {
-                      event.preventDefault();
-                      if (!taskCheckboxDisabled) {
-                        onTaskCheckboxToggle?.(taskIndex);
-                      }
-                    }}
-                  />
-                );
-
-                if (!canApplyItem || !item) return checkbox;
-
-                return (
-                  <span className="markdown-task-checkbox-control">
-                    {checkbox}
-                    {canApplyItem && renderTaskApplyButton(
-                      { kind: 'item', item },
-                      `Apply task item：${item.text}`,
-                    )}
-                  </span>
-                );
-              },
-            }}
-          >
-            {content}
-          </ReactMarkdown>
+          <MarkdownRenderedContent
+            content={content}
+            taskDocument={taskDocument}
+            taskApplyAvailable={taskApplyAvailable}
+            taskCheckboxDisabled={taskCheckboxDisabled}
+            onTaskCheckboxToggle={onTaskCheckboxToggle}
+            onTaskApply={onTaskApply}
+          />
         </div>
         {commentMarkers.map((marker) => (
           <button
