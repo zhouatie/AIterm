@@ -178,7 +178,7 @@ interface TerminalPanelProps {
   onActiveSessionChange?: (sessionId: string) => void;
 }
 
-const SIDEBAR_WIDTH = 240;
+const SIDEBAR_WIDTH = 224;
 const SIDEBAR_HEADER_HEIGHT = 40;
 const SIDEBAR_FOOTER_HEIGHT = 38;
 const ROW_HEIGHT = 30;
@@ -2623,7 +2623,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
                 {workspace.isExpanded && (
                   <div
-                    style={{ marginTop: 2, paddingLeft: 8 }}
+                    style={{ marginTop: 2, paddingLeft: 6 }}
                     onDragOver={(event) => {
                       if (!dragState) return;
                       if (workspace.sessions.length > 0) return;
@@ -2684,8 +2684,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                             height: ROW_HEIGHT,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 6,
-                            padding: '0 8px 0 14px',
+                            gap: 4,
+                            padding: '0 6px 0 10px',
                             marginTop: 1,
                             marginBottom: 1,
                             borderRadius: 8,
@@ -2725,20 +2725,37 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                           }}
                         >
                              <span
+                               style={{
+                                 width: 10,
+                                 flexShrink: 0,
+                                 fontSize: 10,
+                                 fontVariantNumeric: 'tabular-nums',
+                                 fontFamily: 'monospace',
+                                 color: 'var(--color-text-muted)',
+                                 opacity: isCmdHeld ? 0.75 : 0,
+                                 textAlign: 'right',
+                                 transition: 'opacity 0.1s ease',
+                                 lineHeight: 1,
+                               }}
+                             >
+                               {getTabShortcutNumber(session.id)}
+                             </span>
+                             <span
                                title={agentStatusTitle}
                                style={{
-                                 width: 8,
+                                 width: 6,
                                  height: 13,
                                  display: 'inline-flex',
                                  alignItems: 'center',
                                  justifyContent: 'center',
                                  flexShrink: 0,
+                                 marginRight: 6,
                                }}
                              >
                                <span
                                  style={{
-                                   width: 6,
-                                   height: 6,
+                                   width: 5,
+                                   height: 5,
                                    borderRadius: agentStatus?.state === 'completed' ? 2 : '50%',
                                    backgroundColor: agentStatusColor,
                                    boxShadow: hasAgentStatus
@@ -2753,22 +2770,6 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                        : 'none',
                                  }}
                                />
-                             </span>
-                             <span
-                               style={{
-                                 width: '1rem',
-                                 flexShrink: 0,
-                                 fontSize: 10,
-                                 fontVariantNumeric: 'tabular-nums',
-                                 fontFamily: 'monospace',
-                                 color: 'var(--color-text-muted)',
-                                 opacity: isCmdHeld ? 0.75 : 0,
-                                 textAlign: 'right',
-                                 transition: 'opacity 0.1s ease',
-                                 lineHeight: 1,
-                               }}
-                             >
-                               {getTabShortcutNumber(session.id)}
                              </span>
                             {isRenamingSession ? (
                               <input
@@ -2826,8 +2827,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                 }}
                                 title={closeSessionTitle}
                                 style={{
-                                  width: 16,
-                                  height: 16,
+                                  width: 14,
+                                  height: 14,
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -2853,7 +2854,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                                   event.currentTarget.style.color = 'var(--color-text-muted)';
                                 }}
                               >
-                                <X size={11} />
+                                <X size={10} />
                               </button>
                             )}
                         </div>
