@@ -471,6 +471,7 @@ function deleteTerminalTranscript(transcriptId: string): TerminalTranscriptMutat
   }
 }
 
+/* eslint-disable no-control-regex -- ANSI escape sequence stripping intentionally matches ESC control characters. */
 function stripAnsiAndControlSequences(raw: string): string {
   return raw
     .replace(/\x1b\][\s\S]*?(?:\x07|\x1b\\)/g, '')
@@ -478,6 +479,7 @@ function stripAnsiAndControlSequences(raw: string): string {
     .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
     .replace(/\x1b[@-_]/g, '');
 }
+/* eslint-enable no-control-regex */
 
 function applyCommonTerminalRewrites(input: string): string {
   const lines = [''];
