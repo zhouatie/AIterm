@@ -1,0 +1,168 @@
+openspec/specs/panel-layout/spec.md
+  63a77606e5b71499 29-56
+package.json
+  63a77606e5b71499 4
+src/components/HelpGuidePanel.tsx
+  63a77606e5b71499 1-316
+openspec/changes/archive/2026-06-26-add-titlebar-help-guide/specs/app-help/spec.md
+  63a77606e5b71499 1-71
+openspec/changes/archive/2026-06-26-add-titlebar-help-guide/.openspec.yaml
+  63a77606e5b71499 1-2
+openspec/changes/archive/2026-06-26-add-titlebar-help-guide/proposal.md
+  63a77606e5b71499 1-27
+src/App.tsx
+  63a77606e5b71499 13,21,132,162,286,399-400,520-522,566-579,632-635
+src/index.css
+  63a77606e5b71499 1073-1434
+openspec/specs/app-help/spec.md
+  63a77606e5b71499 1-75
+openspec/changes/archive/2026-06-26-add-titlebar-help-guide/design.md
+  63a77606e5b71499 1-57
+openspec/changes/archive/2026-06-26-add-titlebar-help-guide/specs/panel-layout/spec.md
+  63a77606e5b71499 1-29
+openspec/changes/archive/2026-06-26-add-titlebar-help-guide/tasks.md
+  63a77606e5b71499 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "542955036280f420dd96a487040401cf751e6f35",
+  "prompts": {
+    "63a77606e5b71499": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efeec-6056-71c1-84c9-85dc8f439f90",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 1273,
+      "total_deletions": 32,
+      "accepted_lines": 1031,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/specs/app-help/spec.md": {
+          "additions": 75,
+          "accepted_lines": 75
+        },
+        "openspec/changes/archive/2026-06-26-add-titlebar-help-guide/specs/panel-layout/spec.md": {
+          "additions": 29,
+          "accepted_lines": 29
+        },
+        "openspec/changes/add-titlebar-help-guide/specs/panel-layout/spec.md": {
+          "additions": 29
+        },
+        "src/components/HelpGuidePanel.tsx": {
+          "additions": 316,
+          "accepted_lines": 316
+        },
+        "openspec/changes/archive/2026-06-26-add-titlebar-help-guide/design.md": {
+          "additions": 57,
+          "accepted_lines": 57
+        },
+        "openspec/changes/add-titlebar-help-guide/tasks.md": {
+          "additions": 44,
+          "deletions": 13
+        },
+        "openspec/specs/panel-layout/spec.md": {
+          "additions": 28,
+          "accepted_lines": 28
+        },
+        "openspec/changes/archive/2026-06-26-add-titlebar-help-guide/proposal.md": {
+          "additions": 27,
+          "accepted_lines": 27
+        },
+        "src/index.css": {
+          "additions": 362,
+          "accepted_lines": 362
+        },
+        "openspec/changes/add-titlebar-help-guide/proposal.md": {
+          "additions": 27
+        },
+        "openspec/changes/archive/2026-06-26-add-titlebar-help-guide/tasks.md": {
+          "additions": 31,
+          "accepted_lines": 31
+        },
+        "src/App.tsx": {
+          "additions": 42,
+          "deletions": 16,
+          "accepted_lines": 32
+        },
+        "package.json": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        },
+        "openspec/changes/add-titlebar-help-guide/.openspec.yaml": {
+          "additions": 2
+        },
+        "openspec/changes/archive/2026-06-26-add-titlebar-help-guide/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-26-add-titlebar-help-guide/specs/app-help/spec.md": {
+          "additions": 71,
+          "accepted_lines": 71
+        },
+        "openspec/changes/add-titlebar-help-guide/design.md": {
+          "additions": 59,
+          "deletions": 2
+        },
+        "openspec/changes/add-titlebar-help-guide/specs/app-help/spec.md": {
+          "additions": 71
+        }
+      }
+    },
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 270,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/design.md": {
+          "accepted_lines": 118
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/tasks.md": {
+          "accepted_lines": 22
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/file-preview/spec.md": {
+          "accepted_lines": 54
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/proposal.md": {
+          "accepted_lines": 34
+        }
+      }
+    },
+    "c5eb665234c5bb88": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efe78-4b45-7d50-98db-107e5885ec86",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "dist/index.html": {
+          "accepted_lines": 3
+        }
+      }
+    }
+  }
+}
