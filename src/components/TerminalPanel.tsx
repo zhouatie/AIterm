@@ -37,6 +37,7 @@ import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './Contex
 import TerminalInstance from './TerminalInstance';
 import type { TerminalInstanceHandle, TerminalScrollState } from './TerminalInstance';
 import TerminalSearchBar from './TerminalSearchBar';
+import TerminalTranscriptViewer from './TerminalTranscriptViewer';
 import { useTerminalUi } from '../contexts/terminal-ui';
 import { useAgentStatus, type TerminalSessionSummary } from '../contexts/agent-status';
 import {
@@ -56,7 +57,16 @@ interface WorkspaceNode {
   currentPath: string | null;
   lastActiveSessionId: string | null;
   isExpanded: boolean;
-  sessions: TerminalSessionInfo[];
+  sessions: TerminalPanelSessionInfo[];
+}
+
+interface TerminalPanelSessionInfo extends TerminalSessionInfo {
+  transcriptId: string;
+}
+
+interface TranscriptViewerTarget {
+  transcriptId: string;
+  title: string;
 }
 
 type SidebarMode = 'terminal' | 'spec';
@@ -350,10 +360,19 @@ function getSpecSkillOptions(change: OpenSpecChangeSummary): SpecSkillOption[] {
   }));
 }
 
-function createPlaceholderSessionInfo(id: string, cwd?: string): TerminalSessionInfo {
+function createTranscriptId(): string {
+  return crypto.randomUUID();
+}
+
+function createPlaceholderSessionInfo(
+  id: string,
+  cwd: string | undefined,
+  transcriptId: string,
+): TerminalPanelSessionInfo {
   const resolvedCwd = cwd || '';
   return {
     id,
+    transcriptId,
     cwd: resolvedCwd,
     isGitRepo: false,
     branchName: null,
@@ -684,6 +703,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const [pendingSpecTerminalSelect, setPendingSpecTerminalSelect] = useState<PendingSpecTerminalSelect | null>(null);
   const [pendingSpecSkillSelect, setPendingSpecSkillSelect] = useState<PendingSpecSkillSelect | null>(null);
   const [pendingSpecAction, setPendingSpecAction] = useState<PendingSpecAction | null>(null);
+  const [transcriptViewerTarget, setTranscriptViewerTarget] = useState<TranscriptViewerTarget | null>(null);
   const [menuState, setMenuState] = useState<SidebarMenuState | null>(null);
   const [renameState, setRenameState] = useState<RenameState | null>(null);
   const [hoveredWorkspaceId, setHoveredWorkspaceId] = useState<string | null>(null);
@@ -711,6 +731,10 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     bindings,
     actionId: 'toggle-terminal-sidebar',
   });
+  const activeSession = useMemo(() => (
+    workspaces.flatMap((workspace) => workspace.sessions)
+      .find((session) => session.id === activeSessionId) ?? null
+  ), [activeSessionId, workspaces]);
 
   workspacesRef.current = workspaces;
   sessionNameOverridesRef.current = sessionNameOverrides;
@@ -835,7 +859,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         if (!hasTarget) return workspace;
 
         const nextSessions = workspace.sessions.map((session) =>
-          session.id === info.id ? info : session,
+          session.id === info.id ? { ...info, transcriptId: session.transcriptId } : session,
         );
         const nextCurrentPath =
           workspace.lastActiveSessionId === info.id
@@ -854,10 +878,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const createWorkspace = useCallback(async (cwd?: string) => {
     const workspaceName = `workspace_${workspaceCounterRef.current++}`;
     const workspaceId = crypto.randomUUID();
+    const transcriptId = createTranscriptId();
 
     try {
-      const { id: sessionId } = await window.terminalApi.create(80, 24, cwd);
-      const placeholderSession = createPlaceholderSessionInfo(sessionId, cwd);
+      const { id: sessionId } = await window.terminalApi.create(80, 24, cwd, transcriptId);
+      const placeholderSession = createPlaceholderSessionInfo(sessionId, cwd, transcriptId);
 
       setWorkspaces((prev) => [
         ...prev,
@@ -885,10 +910,20 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const createSessionInWorkspace = useCallback(async (workspaceId: string) => {
     const workspace = workspacesRef.current.find((item) => item.id === workspaceId);
     if (!workspace) return;
+    const transcriptId = createTranscriptId();
 
     try {
-      const { id: sessionId } = await window.terminalApi.create(80, 24, workspace.currentPath || undefined);
-      const placeholderSession = createPlaceholderSessionInfo(sessionId, workspace.currentPath || undefined);
+      const { id: sessionId } = await window.terminalApi.create(
+        80,
+        24,
+        workspace.currentPath || undefined,
+        transcriptId,
+      );
+      const placeholderSession = createPlaceholderSessionInfo(
+        sessionId,
+        workspace.currentPath || undefined,
+        transcriptId,
+      );
 
       setWorkspaces((prev) =>
         prev.map((item) => {
@@ -920,6 +955,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     const restoreFromPersistedState = async () => {
       const persisted = await loadTabState();
       if (!persisted) {
+        window.terminalApi.cleanupTranscripts([]);
         void createWorkspace(initialDirectory);
         return;
       }
@@ -929,19 +965,37 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         const restoredWorkspaces: WorkspaceNode[] = [];
 
         for (const pWorkspace of persisted.workspaces) {
-          const restoredSessions: TerminalSessionInfo[] = [];
+          const restoredSessions: TerminalPanelSessionInfo[] = [];
 
           for (const pSession of pWorkspace.sessions) {
             try {
-              const { id: newSessionId } = await window.terminalApi.create(80, 24, pSession.cwd || undefined);
+              const { id: newSessionId } = await window.terminalApi.create(
+                80,
+                24,
+                pSession.cwd || undefined,
+                pSession.transcriptId,
+              );
               idMap.set(pSession.id, newSessionId);
-              restoredSessions.push(createPlaceholderSessionInfo(newSessionId, pSession.cwd || undefined));
+              restoredSessions.push(createPlaceholderSessionInfo(
+                newSessionId,
+                pSession.cwd || undefined,
+                pSession.transcriptId,
+              ));
             } catch {
               // cwd may not exist; retry with no cwd (HOME directory)
               try {
-                const { id: newSessionId } = await window.terminalApi.create(80, 24);
+                const { id: newSessionId } = await window.terminalApi.create(
+                  80,
+                  24,
+                  undefined,
+                  pSession.transcriptId,
+                );
                 idMap.set(pSession.id, newSessionId);
-                restoredSessions.push(createPlaceholderSessionInfo(newSessionId));
+                restoredSessions.push(createPlaceholderSessionInfo(
+                  newSessionId,
+                  undefined,
+                  pSession.transcriptId,
+                ));
               } catch {
                 // Skip this session entirely
               }
@@ -968,6 +1022,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         }
 
         if (restoredWorkspaces.length === 0) {
+          window.terminalApi.cleanupTranscripts([]);
           void createWorkspace(initialDirectory);
           return;
         }
@@ -999,6 +1054,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         setActiveSessionId(restoredActiveSessionId);
         setSessionNameOverrides(restoredOverrides);
         setSidebarCollapsed(persisted.sidebarCollapsed);
+        window.terminalApi.cleanupTranscripts(
+          restoredWorkspaces.flatMap((workspace) =>
+            workspace.sessions.map((session) => session.transcriptId),
+          ),
+        );
 
         // Fetch live session info for all restored sessions
         for (const ws of restoredWorkspaces) {
@@ -1009,6 +1069,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           }
         }
       } catch {
+        window.terminalApi.cleanupTranscripts([]);
         void createWorkspace(initialDirectory);
       }
     };
@@ -1081,6 +1142,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       sessions: ws.sessions.map((s) => ({
         id: s.id,
         cwd: s.cwd,
+        transcriptId: s.transcriptId,
       })),
     })),
     activeSessionId,
@@ -1344,7 +1406,18 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
     );
   }, []);
 
+  const handleOpenActiveTranscript = useCallback(() => {
+    if (!activeSession) return;
+    setTranscriptViewerTarget({
+      transcriptId: activeSession.transcriptId,
+      title: getSessionDisplayLabel(activeSession, sessionNameOverrides),
+    });
+  }, [activeSession, sessionNameOverrides]);
+
   const handleCloseSession = useCallback(async (workspaceId: string, sessionId: string) => {
+    const sessionToClose = workspacesRef.current
+      .find((workspace) => workspace.id === workspaceId)
+      ?.sessions.find((session) => session.id === sessionId);
     const {
       nextWorkspaces,
       nextActiveSessionId,
@@ -1360,6 +1433,12 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       await window.terminalApi.dispose(sessionId);
     } catch {
       // Ignore dispose failures for already-closed sessions.
+    }
+    if (sessionToClose) {
+      await window.terminalApi.deleteTranscript(sessionToClose.transcriptId);
+      setTranscriptViewerTarget((prev) =>
+        prev?.transcriptId === sessionToClose.transcriptId ? null : prev,
+      );
     }
     clearSessionAgentStatus(sessionId);
     setWorkspaces(nextWorkspaces);
@@ -1413,8 +1492,14 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
       } catch {
         // Ignore dispose failures for already-closed sessions.
       }
+      await window.terminalApi.deleteTranscript(session.transcriptId);
       clearSessionAgentStatus(session.id);
     }
+    setTranscriptViewerTarget((prev) =>
+      prev && workspaceToClose.sessions.some((session) => session.transcriptId === prev.transcriptId)
+        ? null
+        : prev,
+    );
     setWorkspaces(nextWorkspaces);
 
     setSessionNameOverrides((prev) => {
@@ -2281,6 +2366,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const showTerminalScrollControls = Boolean(
     activeScrollState?.isNormalBuffer && activeScrollState.hasScrollback,
   );
+  const showTerminalUtilityControls = Boolean(activeSession);
   const isScrollToTopDisabled = !activeScrollState || activeScrollState.isAtTop;
   const isScrollToBottomDisabled = !activeScrollState || activeScrollState.isAtBottom;
   const scrollControlTop = searchBarVisible ? 50 : 12;
@@ -3101,7 +3187,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
           )),
         )}
 
-        {showTerminalScrollControls && (
+        {showTerminalUtilityControls && (
           <div
             style={{
               position: 'absolute',
@@ -3121,6 +3207,31 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
               transition: 'top 0.16s ease, opacity 0.16s ease',
             }}
           >
+            <button
+              type="button"
+              aria-label="打开完整 Transcript"
+              title="打开完整 Transcript"
+              onClick={handleOpenActiveTranscript}
+              style={{
+                width: TERMINAL_SCROLL_CONTROL_SIZE,
+                height: TERMINAL_SCROLL_CONTROL_SIZE,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid transparent',
+                borderRadius: 6,
+                backgroundColor: 'var(--color-surface-content-elevated)',
+                color: 'var(--color-text-secondary)',
+                cursor: 'pointer',
+                opacity: 0.92,
+                padding: 0,
+                transition: 'background-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
+              }}
+            >
+              <FileText size={16} />
+            </button>
+            {showTerminalScrollControls && (
+              <>
             <button
               type="button"
               aria-label="滚动到最上"
@@ -3181,6 +3292,8 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             >
               <ChevronsDown size={16} />
             </button>
+              </>
+            )}
           </div>
         )}
 
@@ -3189,6 +3302,14 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             searchAddon={terminalInstanceRefs.current.get(activeSessionId)?.getSearchAddon() ?? null}
             initialQuery={terminalInstanceRefs.current.get(activeSessionId)?.getSelection() ?? ''}
             onClose={() => setSearchBarVisible(false)}
+          />
+        )}
+
+        {transcriptViewerTarget && (
+          <TerminalTranscriptViewer
+            transcriptId={transcriptViewerTarget.transcriptId}
+            title={transcriptViewerTarget.title}
+            onClose={() => setTranscriptViewerTarget(null)}
           />
         )}
       </div>

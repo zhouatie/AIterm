@@ -1,4 +1,4 @@
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 export interface PersistedWorkspace {
   id: string;
@@ -8,6 +8,7 @@ export interface PersistedWorkspace {
   sessions: Array<{
     id: string;
     cwd: string;
+    transcriptId: string;
   }>;
 }
 
@@ -78,7 +79,11 @@ export async function loadTabState(): Promise<PersistedTabState | null> {
         return null;
       }
       for (const session of workspace.sessions) {
-        if (typeof session.id !== 'string' || typeof session.cwd !== 'string') {
+        if (
+          typeof session.id !== 'string' ||
+          typeof session.cwd !== 'string' ||
+          typeof session.transcriptId !== 'string'
+        ) {
           return null;
         }
       }

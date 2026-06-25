@@ -13,7 +13,7 @@ import type {
 } from './utils/openspec-workflow';
 
 export interface TerminalApi {
-  create(cols: number, rows: number, cwd?: string): Promise<{ id: string }>;
+  create(cols: number, rows: number, cwd: string | undefined, transcriptId: string): Promise<{ id: string }>;
   input(id: string, data: string): void;
   resize(id: string, cols: number, rows: number): void;
   dispose(id: string): Promise<void>;
@@ -32,6 +32,11 @@ export interface TerminalApi {
   saveBuffer(sessionId: string, content: string): void;
   loadBuffer(sessionId: string): Promise<string | null>;
   cleanupBuffers(activeSessionIds: string[]): void;
+  readTranscript(transcriptId: string): Promise<TerminalTranscriptReadResult>;
+  searchTranscript(transcriptId: string, query: string): Promise<TerminalTranscriptSearchResult>;
+  exportTranscript(transcriptId: string): Promise<TerminalTranscriptExportResult>;
+  deleteTranscript(transcriptId: string): Promise<TerminalTranscriptMutationResult>;
+  cleanupTranscripts(activeTranscriptIds: string[]): void;
 }
 
 export type {
@@ -48,6 +53,57 @@ export interface TerminalSessionInfo {
   gitRoot: string | null;
   displayLabel: string;
 }
+
+export interface TerminalTranscriptReadSuccess {
+  ok: true;
+  content: string;
+  byteLength: number;
+  updatedAt: number | null;
+}
+
+export interface TerminalTranscriptFailure {
+  ok: false;
+  error: string;
+}
+
+export type TerminalTranscriptReadResult =
+  | TerminalTranscriptReadSuccess
+  | TerminalTranscriptFailure;
+
+export interface TerminalTranscriptSearchMatch {
+  index: number;
+  line: number;
+  column: number;
+  preview: string;
+}
+
+export interface TerminalTranscriptSearchSuccess {
+  ok: true;
+  query: string;
+  matches: TerminalTranscriptSearchMatch[];
+}
+
+export type TerminalTranscriptSearchResult =
+  | TerminalTranscriptSearchSuccess
+  | TerminalTranscriptFailure;
+
+export interface TerminalTranscriptExportSuccess {
+  ok: true;
+  canceled: boolean;
+  filePath: string | null;
+}
+
+export type TerminalTranscriptExportResult =
+  | TerminalTranscriptExportSuccess
+  | TerminalTranscriptFailure;
+
+export interface TerminalTranscriptMutationSuccess {
+  ok: true;
+}
+
+export type TerminalTranscriptMutationResult =
+  | TerminalTranscriptMutationSuccess
+  | TerminalTranscriptFailure;
 
 export interface DirEntry {
   name: string;
@@ -151,8 +207,8 @@ export interface FileApi {
 }
 
 contextBridge.exposeInMainWorld('terminalApi', {
-  create: (cols: number, rows: number, cwd?: string) =>
-    ipcRenderer.invoke('terminal:create', { cols, rows, cwd }),
+  create: (cols: number, rows: number, cwd: string | undefined, transcriptId: string) =>
+    ipcRenderer.invoke('terminal:create', { cols, rows, cwd, transcriptId }),
 
   input: (id: string, data: string) =>
     ipcRenderer.send('terminal:input', { id, data }),
@@ -252,6 +308,21 @@ contextBridge.exposeInMainWorld('terminalApi', {
 
   cleanupBuffers: (activeSessionIds: string[]) =>
     ipcRenderer.send('terminal:cleanupBuffers', { activeSessionIds }),
+
+  readTranscript: (transcriptId: string) =>
+    ipcRenderer.invoke('terminal:transcript:read', { transcriptId }),
+
+  searchTranscript: (transcriptId: string, query: string) =>
+    ipcRenderer.invoke('terminal:transcript:search', { transcriptId, query }),
+
+  exportTranscript: (transcriptId: string) =>
+    ipcRenderer.invoke('terminal:transcript:export', { transcriptId }),
+
+  deleteTranscript: (transcriptId: string) =>
+    ipcRenderer.invoke('terminal:transcript:delete', { transcriptId }),
+
+  cleanupTranscripts: (activeTranscriptIds: string[]) =>
+    ipcRenderer.send('terminal:transcript:cleanup', { activeTranscriptIds }),
 } satisfies TerminalApi);
 
 contextBridge.exposeInMainWorld('fileApi', {

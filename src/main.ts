@@ -1,4 +1,13 @@
-import { app, BrowserWindow, ipcMain, shell, nativeTheme, Notification, dialog } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  shell,
+  nativeTheme,
+  Notification,
+  dialog,
+  type SaveDialogOptions,
+} from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import type { Dirent } from 'node:fs';
@@ -109,6 +118,41 @@ interface TerminalStreamState {
   pendingOutput: string;
   liveBatch: string;
   flushTimer: ReturnType<typeof setTimeout> | null;
+}
+
+interface TerminalTranscriptReadSuccess {
+  ok: true;
+  content: string;
+  byteLength: number;
+  updatedAt: number | null;
+}
+
+interface TerminalTranscriptFailure {
+  ok: false;
+  error: string;
+}
+
+interface TerminalTranscriptSearchMatch {
+  index: number;
+  line: number;
+  column: number;
+  preview: string;
+}
+
+interface TerminalTranscriptSearchSuccess {
+  ok: true;
+  query: string;
+  matches: TerminalTranscriptSearchMatch[];
+}
+
+interface TerminalTranscriptExportSuccess {
+  ok: true;
+  canceled: boolean;
+  filePath: string | null;
+}
+
+interface TerminalTranscriptMutationSuccess {
+  ok: true;
 }
 
 function getUpdateErrorMessage(error: unknown): string {
@@ -275,6 +319,9 @@ async function checkForManualUpdate(): Promise<AppUpdateCheckResult> {
 }
 
 const terminalStreamStates = new Map<string, TerminalStreamState>();
+const terminalTranscriptBySessionId = new Map<string, string>();
+const terminalTranscriptsDir = path.join(app.getPath('userData'), 'terminal-transcripts');
+const TRANSCRIPT_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 function getTerminalOutputChannel(id: string): string {
   return `terminal:output:${id}`;
@@ -357,6 +404,227 @@ function clearTerminalStreamState(id: string): void {
 function clearAllTerminalStreamStates(): void {
   for (const id of terminalStreamStates.keys()) {
     clearTerminalStreamState(id);
+  }
+}
+
+function getTranscriptErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Transcript 操作失败';
+}
+
+function isValidTranscriptId(transcriptId: unknown): transcriptId is string {
+  return typeof transcriptId === 'string'
+    && transcriptId.length > 0
+    && transcriptId.length <= 128
+    && TRANSCRIPT_ID_PATTERN.test(transcriptId);
+}
+
+function ensureTranscriptsDir(): void {
+  fs.mkdirSync(terminalTranscriptsDir, { recursive: true });
+}
+
+function getTranscriptPath(transcriptId: string): string {
+  if (!isValidTranscriptId(transcriptId)) {
+    throw new Error('无效的 transcript 标识');
+  }
+  return path.join(terminalTranscriptsDir, `${transcriptId}.raw`);
+}
+
+function touchTranscript(transcriptId: string): void {
+  ensureTranscriptsDir();
+  fs.closeSync(fs.openSync(getTranscriptPath(transcriptId), 'a'));
+}
+
+function registerTerminalTranscriptSession(sessionId: string, transcriptId: string): void {
+  touchTranscript(transcriptId);
+  terminalTranscriptBySessionId.set(sessionId, transcriptId);
+}
+
+function unregisterTerminalTranscriptSession(sessionId: string): void {
+  terminalTranscriptBySessionId.delete(sessionId);
+}
+
+function appendTerminalTranscriptById(transcriptId: string, data: string): void {
+  if (!data) return;
+  try {
+    ensureTranscriptsDir();
+    fs.appendFileSync(getTranscriptPath(transcriptId), data, 'utf-8');
+  } catch (error) {
+    console.warn('[main] Failed to append terminal transcript:', error);
+  }
+}
+
+function appendTerminalTranscript(sessionId: string, data: string): void {
+  const transcriptId = terminalTranscriptBySessionId.get(sessionId);
+  if (!transcriptId) return;
+  appendTerminalTranscriptById(transcriptId, data);
+}
+
+function deleteTerminalTranscript(transcriptId: string): TerminalTranscriptMutationSuccess | TerminalTranscriptFailure {
+  try {
+    const transcriptPath = getTranscriptPath(transcriptId);
+    if (fs.existsSync(transcriptPath)) {
+      fs.unlinkSync(transcriptPath);
+    }
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: getTranscriptErrorMessage(error) };
+  }
+}
+
+function stripAnsiAndControlSequences(raw: string): string {
+  return raw
+    .replace(/\x1b\][\s\S]*?(?:\x07|\x1b\\)/g, '')
+    .replace(/\x1b[PX^_][\s\S]*?\x1b\\/g, '')
+    .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
+    .replace(/\x1b[@-_]/g, '');
+}
+
+function applyCommonTerminalRewrites(input: string): string {
+  const lines = [''];
+  let lineIndex = 0;
+  let column = 0;
+
+  for (const char of input) {
+    if (char === '\n') {
+      lineIndex += 1;
+      lines[lineIndex] = '';
+      column = 0;
+      continue;
+    }
+    if (char === '\r') {
+      column = 0;
+      continue;
+    }
+    if (char === '\b') {
+      column = Math.max(0, column - 1);
+      continue;
+    }
+    if (char === '\t') {
+      const spaces = 4 - (column % 4);
+      for (let i = 0; i < spaces; i++) {
+        const currentLine = lines[lineIndex] ?? '';
+        lines[lineIndex] = currentLine.slice(0, column) + ' ' + currentLine.slice(column + 1);
+        column += 1;
+      }
+      continue;
+    }
+    if (char < ' ' && char !== '\f') {
+      continue;
+    }
+
+    const currentLine = lines[lineIndex] ?? '';
+    lines[lineIndex] = currentLine.slice(0, column) + char + currentLine.slice(column + 1);
+    column += 1;
+  }
+
+  return lines.join('\n');
+}
+
+function normalizeTranscriptText(raw: string): string {
+  return applyCommonTerminalRewrites(stripAnsiAndControlSequences(raw).replace(/\r\n/g, '\n'));
+}
+
+function readNormalizedTranscript(transcriptId: string): TerminalTranscriptReadSuccess | TerminalTranscriptFailure {
+  try {
+    const transcriptPath = getTranscriptPath(transcriptId);
+    if (!fs.existsSync(transcriptPath)) {
+      return { ok: false, error: 'Transcript 不存在' };
+    }
+    const stat = fs.statSync(transcriptPath);
+    const raw = fs.readFileSync(transcriptPath, 'utf-8');
+    return {
+      ok: true,
+      content: normalizeTranscriptText(raw),
+      byteLength: stat.size,
+      updatedAt: stat.mtimeMs,
+    };
+  } catch (error) {
+    return { ok: false, error: getTranscriptErrorMessage(error) };
+  }
+}
+
+function searchTranscript(
+  transcriptId: string,
+  query: string,
+): TerminalTranscriptSearchSuccess | TerminalTranscriptFailure {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) {
+    return { ok: true, query: trimmedQuery, matches: [] };
+  }
+
+  const readResult = readNormalizedTranscript(transcriptId);
+  if ('error' in readResult) return readResult;
+
+  const content = readResult.content;
+  const haystack = content.toLocaleLowerCase();
+  const needle = trimmedQuery.toLocaleLowerCase();
+  const matches: TerminalTranscriptSearchMatch[] = [];
+  let fromIndex = 0;
+
+  while (fromIndex <= haystack.length) {
+    const index = haystack.indexOf(needle, fromIndex);
+    if (index === -1) break;
+
+    const before = content.slice(0, index);
+    const line = before.split('\n').length;
+    const lastLineBreak = before.lastIndexOf('\n');
+    const column = index - lastLineBreak;
+    const previewStart = Math.max(0, index - 80);
+    const previewEnd = Math.min(content.length, index + trimmedQuery.length + 80);
+    const preview = content.slice(previewStart, previewEnd).replace(/\s+/g, ' ').trim();
+
+    matches.push({ index, line, column, preview });
+    fromIndex = index + Math.max(1, needle.length);
+  }
+
+  return { ok: true, query: trimmedQuery, matches };
+}
+
+async function exportTranscript(
+  transcriptId: string,
+): Promise<TerminalTranscriptExportSuccess | TerminalTranscriptFailure> {
+  const readResult = readNormalizedTranscript(transcriptId);
+  if ('error' in readResult) return readResult;
+
+  try {
+    const defaultPath = `terminal-transcript-${transcriptId}.txt`;
+    const options: SaveDialogOptions = {
+      title: '导出 Transcript',
+      defaultPath,
+      filters: [{ name: 'Text', extensions: ['txt'] }],
+    };
+    const result = mainWindow && !mainWindow.isDestroyed()
+      ? await dialog.showSaveDialog(mainWindow, options)
+      : await dialog.showSaveDialog(options);
+
+    if (result.canceled || !result.filePath) {
+      return { ok: true, canceled: true, filePath: null };
+    }
+
+    fs.writeFileSync(result.filePath, readResult.content, 'utf-8');
+    return { ok: true, canceled: false, filePath: result.filePath };
+  } catch (error) {
+    return { ok: false, error: getTranscriptErrorMessage(error) };
+  }
+}
+
+function cleanupTerminalTranscripts(activeTranscriptIds: string[]): void {
+  try {
+    ensureTranscriptsDir();
+    const activeSet = new Set(activeTranscriptIds.filter(isValidTranscriptId));
+    const files = fs.readdirSync(terminalTranscriptsDir);
+    for (const file of files) {
+      const transcriptId = path.basename(file, '.raw');
+      if (!activeSet.has(transcriptId)) {
+        try {
+          fs.unlinkSync(path.join(terminalTranscriptsDir, file));
+        } catch {
+          // Ignore individual cleanup failures.
+        }
+      }
+    }
+  } catch {
+    // Directory may not exist yet.
   }
 }
 
@@ -772,12 +1040,31 @@ ipcMain.handle('external-link:open', async (_event, url: unknown) => {
 // terminal:create — create a PTY session and return the session ID
 ipcMain.handle(
   'terminal:create',
-  async (_event, { cols, rows, cwd }: { cols: number; rows: number; cwd?: string }) => {
+  async (
+    _event,
+    {
+      cols,
+      rows,
+      cwd,
+      transcriptId,
+    }: {
+      cols: number;
+      rows: number;
+      cwd?: string;
+      transcriptId: string;
+    },
+  ) => {
+    if (!isValidTranscriptId(transcriptId)) {
+      throw new Error('Invalid transcriptId');
+    }
+
     const session = await createSession(cols, rows, cwd, getAttentionNotificationEnv());
     ensureTerminalStreamState(session.id);
+    registerTerminalTranscriptSession(session.id, transcriptId);
 
     // Push PTY stdout to renderer
     session.ptyProcess.onData((data: string) => {
+      appendTerminalTranscript(session.id, data);
       queueTerminalOutput(session.id, data);
     });
 
@@ -807,6 +1094,8 @@ ipcMain.handle(
       ({ exitCode, signal }: { exitCode: number; signal?: number }) => {
         clearTerminalAgentStatus(session.id);
         manualInterruptBySessionId.delete(session.id);
+        const exitMessage = `\r\n[Process exited with code ${exitCode}]`;
+        appendTerminalTranscript(session.id, exitMessage);
         const streamState = terminalStreamStates.get(session.id);
         if (streamState) {
           flushTerminalOutput(session.id);
@@ -816,7 +1105,7 @@ ipcMain.handle(
               signal,
             });
           } else {
-            streamState.pendingOutput += `\r\n[Process exited with code ${exitCode}]`;
+            streamState.pendingOutput += exitMessage;
           }
         }
       },
@@ -860,6 +1149,7 @@ ipcMain.handle('terminal:dispose', (_event, { id }: { id: string }) => {
   clearTerminalAgentStatus(id);
   manualInterruptBySessionId.delete(id);
   clearTerminalStreamState(id);
+  unregisterTerminalTranscriptSession(id);
   disposeSession(id);
 });
 
@@ -907,6 +1197,34 @@ ipcMain.handle(
       // File doesn't exist or is corrupted — silently skip
     }
     return null;
+  },
+);
+
+ipcMain.handle(
+  'terminal:transcript:read',
+  (_event, { transcriptId }: { transcriptId: string }) => readNormalizedTranscript(transcriptId),
+);
+
+ipcMain.handle(
+  'terminal:transcript:search',
+  (_event, { transcriptId, query }: { transcriptId: string; query: string }) =>
+    searchTranscript(transcriptId, query),
+);
+
+ipcMain.handle(
+  'terminal:transcript:export',
+  (_event, { transcriptId }: { transcriptId: string }) => exportTranscript(transcriptId),
+);
+
+ipcMain.handle(
+  'terminal:transcript:delete',
+  (_event, { transcriptId }: { transcriptId: string }) => deleteTerminalTranscript(transcriptId),
+);
+
+ipcMain.on(
+  'terminal:transcript:cleanup',
+  (_event, { activeTranscriptIds }: { activeTranscriptIds: string[] }) => {
+    cleanupTerminalTranscripts(activeTranscriptIds);
   },
 );
 
