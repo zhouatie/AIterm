@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Wrench,
   Bell,
+  CircleQuestionMark,
 } from 'lucide-react';
 import TerminalPanel from './components/TerminalPanel';
 import FilePreviewPanel from './components/FilePreviewPanel';
@@ -17,6 +18,7 @@ import SettingsPanel from './components/SettingsPanel';
 import LiveViewPanel from './components/LiveViewPanel';
 import UtilityToolsPanel from './components/UtilityToolsPanel';
 import AgentInboxPanel from './components/AgentInboxPanel';
+import HelpGuidePanel from './components/HelpGuidePanel';
 import SplitLayout from './components/SplitLayout';
 import { ShortcutProvider, useKeyboardShortcuts } from './ShortcutContext';
 import { useTheme } from './ThemeContext';
@@ -127,6 +129,7 @@ const toggleButtonStyle = {
 const titleBarMetaStyle: React.CSSProperties = {
   marginLeft: 'auto',
   minWidth: 0,
+  overflow: 'hidden',
   display: 'flex',
   alignItems: 'center',
   gap: 6,
@@ -156,7 +159,7 @@ const updateStatusLabelStyle: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 600,
   letterSpacing: 0,
-  flexShrink: 0,
+  flexShrink: 1,
 };
 
 type UpdateUiState =
@@ -280,6 +283,7 @@ const AppContent: React.FC = () => {
   const [liveViewActive, setLiveViewActive] = useState(false);
   const [isUtilityToolsOpen, setIsUtilityToolsOpen] = useState(false);
   const [isAgentInboxOpen, setIsAgentInboxOpen] = useState(false);
+  const [isHelpGuideOpen, setIsHelpGuideOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -390,6 +394,10 @@ const AppContent: React.FC = () => {
 
   const toggleAgentInbox = useCallback(() => {
     setIsAgentInboxOpen((prev) => !prev);
+  }, []);
+
+  const openHelpGuide = useCallback(() => {
+    setIsHelpGuideOpen(true);
   }, []);
 
   useEffect(() => {
@@ -509,8 +517,9 @@ const AppContent: React.FC = () => {
             )}
           </div>
 
-          {appInfo && (
-            <div style={titleBarMetaStyle}>
+          <div style={titleBarMetaStyle}>
+            {appInfo && (
+              <>
               <div
                 title={`当前版本：${appInfo.name} v${appInfo.version}`}
                 style={versionLabelStyle}
@@ -554,8 +563,20 @@ const AppContent: React.FC = () => {
                   <ExternalLink size={16} />
                 </button>
               )}
-            </div>
-          )}
+              </>
+            )}
+
+            <button
+              onClick={openHelpGuide}
+              title="帮助指南"
+              aria-label="帮助指南"
+              style={toggleButtonStyle}
+              onMouseEnter={(e) => applyChromeButtonHover(e.currentTarget)}
+              onMouseLeave={(e) => resetChromeButtonHover(e.currentTarget)}
+            >
+              <CircleQuestionMark size={16} />
+            </button>
+          </div>
         </div>
 
         <div
@@ -607,6 +628,11 @@ const AppContent: React.FC = () => {
       <AgentInboxPanel
         isOpen={isAgentInboxOpen}
         onClose={() => setIsAgentInboxOpen(false)}
+      />
+
+      <HelpGuidePanel
+        isOpen={isHelpGuideOpen}
+        onClose={() => setIsHelpGuideOpen(false)}
       />
       </>
     </TerminalUiContext.Provider>
