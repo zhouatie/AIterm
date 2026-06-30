@@ -125,7 +125,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
   const [refreshKey, setRefreshKey] = useState(0);
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [fileTreeVisible, setFileTreeVisible] = useState(readFileTreeVisible);
-  const [previewMode, setPreviewMode] = useState<FilePreviewMode>('files');
+  const [previewMode, setPreviewMode] = useState<FilePreviewMode>('openspec');
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [findQuery, setFindQuery] = useState('');
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
@@ -1152,20 +1152,20 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ activeSessionId, vi
           <button
             type="button"
             role="tab"
-            aria-selected={previewMode === 'files'}
-            className={'file-preview-mode-button' + (previewMode === 'files' ? ' active' : '')}
-            onClick={() => setPreviewMode('files')}
-          >
-            Files
-          </button>
-          <button
-            type="button"
-            role="tab"
             aria-selected={previewMode === 'openspec'}
             className={'file-preview-mode-button' + (previewMode === 'openspec' ? ' active' : '')}
             onClick={() => setPreviewMode('openspec')}
           >
             OpenSpec
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={previewMode === 'files'}
+            className={'file-preview-mode-button' + (previewMode === 'files' ? ' active' : '')}
+            onClick={() => setPreviewMode('files')}
+          >
+            Files
           </button>
         </div>
       </div>

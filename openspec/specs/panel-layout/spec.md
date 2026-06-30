@@ -55,11 +55,12 @@
 - **AND** 版本号或更新状态文本 SHALL 通过收缩或省略号避免与帮助入口重叠
 
 ### Requirement: 主内容区面板容器
-应用 SHALL 提供一个左右分栏布局，左栏为文件预览面板，右栏为面板容器（承载终端等功能面板）。
+应用 SHALL 提供一个左右分栏布局，左栏为左侧工作区（承载 OpenSpec Change Dashboard 与文件预览模式），右栏为面板容器（承载终端等功能面板）。
 
 #### Scenario: 默认显示终端面板
 - **WHEN** 应用启动完成
-- **THEN** 右栏面板容器 SHALL 默认显示终端面板，左栏 SHALL 显示文件预览面板
+- **THEN** 右栏面板容器 SHALL 默认显示终端面板
+- **AND** 左栏 SHALL 默认显示 OpenSpec Change Dashboard
 
 #### Scenario: 面板占满右栏可用空间
 - **WHEN** 面板被激活显示
