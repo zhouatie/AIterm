@@ -102,6 +102,7 @@ const ARTIFACT_LABELS: Record<OpenSpecArtifactId, string> = {
   specs: 'specs',
   tasks: 'tasks',
   task: 'TASK',
+  change: 'CHANGE',
 };
 
 const HIGH_RISK_ACTIONS = new Set<SddCommandAction>(['apply', 'archive']);
@@ -140,6 +141,7 @@ function isSyncRequest(normalizedText: string): boolean {
 }
 
 function detectArtifact(normalizedText: string): OpenSpecArtifactId | null {
+  if (includesAny(normalizedText, ['change.md', 'CHANGE.md'.toLowerCase(), 'change 文件', 'change文档', 'change'])) return 'change';
   if (includesAny(normalizedText, ['prd', '需求文档'])) return 'prd';
   if (includesAny(normalizedText, ['proposal', '提案'])) return 'proposal';
   if (includesAny(normalizedText, ['design', '设计'])) return 'design';
@@ -147,6 +149,14 @@ function detectArtifact(normalizedText: string): OpenSpecArtifactId | null {
   if (includesAny(normalizedText, ['task.md', 'TASK.md'.toLowerCase()])) return 'task';
   if (includesAny(normalizedText, ['tasks', 'task', '任务'])) return 'tasks';
   return null;
+}
+
+function getDefaultOpenArtifact(
+  workflow: SddWorkflow,
+  change: OpenSpecChangeSummary | null,
+): OpenSpecArtifactId {
+  if (change?.mode === 'fast-change') return 'change';
+  return workflow === 'raven' ? 'task' : 'tasks';
 }
 
 function detectAction(normalizedText: string, artifact: OpenSpecArtifactId | null): SddCommandAction {
@@ -235,11 +245,14 @@ export function mapNextActionToCommandAction(nextAction: OpenSpecNextAction): Sd
   return 'continue';
 }
 
-export function createDashboardCommandText(nextAction: OpenSpecNextAction): string {
+export function createDashboardCommandText(
+  nextAction: OpenSpecNextAction,
+  change?: OpenSpecChangeSummary | null,
+): string {
   const action = mapNextActionToCommandAction(nextAction);
   if (action === 'apply') return '执行当前';
   if (action === 'verify') return '验证当前';
-  if (action === 'open-artifact') return '打开当前任务';
+  if (action === 'open-artifact') return change?.mode === 'fast-change' ? '打开当前CHANGE' : '打开当前任务';
   return '继续当前';
 }
 
@@ -332,11 +345,14 @@ export function parseSddCommand({
   }
 
   if (!changeName && needsChange) {
+    const defaultArtifact = action === 'open-artifact' && !artifact
+      ? getDefaultOpenArtifact(workflow, currentChangeSummary)
+      : artifact;
     return {
       workflow,
       action,
       changeName: null,
-      artifact: action === 'open-artifact' && !artifact ? (workflow === 'raven' ? 'task' : 'tasks') : artifact,
+      artifact: defaultArtifact,
       originalText,
       normalizedText,
       confidence: 'ambiguous',
@@ -369,7 +385,9 @@ export function parseSddCommand({
     workflow,
     action,
     changeName,
-    artifact: action === 'open-artifact' && !artifact ? (workflow === 'raven' ? 'task' : 'tasks') : artifact,
+    artifact: action === 'open-artifact' && !artifact
+      ? getDefaultOpenArtifact(workflow, currentChangeSummary)
+      : artifact,
     originalText,
     normalizedText,
     confidence: action === 'propose' && !includesAny(normalizedText, ['提案', 'proposal', 'propose'])

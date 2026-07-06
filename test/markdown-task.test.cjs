@@ -22,6 +22,8 @@ const {
 } = require('../src/utils/markdown-task.ts');
 const {
   buildScopedSddApplyPayload,
+  createDashboardCommandText,
+  parseSddCommand,
 } = require('../src/utils/sdd-command-router.ts');
 
 test('parseMarkdownTaskDocument tracks task items, completion, lines, and heading groups', () => {
@@ -123,4 +125,50 @@ test('buildScopedSddApplyPayload scopes RavenSpec group apply', () => {
   assert.match(payload.preview, /L3: one/);
   assert.match(payload.preview, /L5: two/);
   assert.doesNotMatch(payload.preview, /done/);
+});
+
+test('parseSddCommand opens RavenSpec fast-change CHANGE artifact from dashboard inspect action', () => {
+  const change = {
+    workflow: 'raven',
+    mode: 'fast-change',
+    name: 'skip-polaroid-paid-task-fetch',
+    path: '/repo/ravenspec/changes/skip-polaroid-paid-task-fetch',
+    artifacts: {
+      change: {
+        id: 'change',
+        state: 'present',
+        path: '/repo/ravenspec/changes/skip-polaroid-paid-task-fetch/CHANGE.md',
+      },
+    },
+    artifactIds: ['change'],
+    specsCount: 0,
+    taskProgress: {
+      kind: 'verification',
+      total: 2,
+      completed: 1,
+      hasProgressFile: true,
+      hasCheckboxes: true,
+    },
+    nextAction: 'inspect',
+    mtime: 1,
+  };
+
+  const text = createDashboardCommandText(change.nextAction, change);
+  const intent = parseSddCommand({
+    text,
+    rootPath: '/repo',
+    currentChange: {
+      workflow: 'raven',
+      changeName: change.name,
+      rootPath: '/repo',
+    },
+    changes: [change],
+    nextActionChange: change,
+  });
+
+  assert.equal(text, '打开当前CHANGE');
+  assert.equal(intent.action, 'open-artifact');
+  assert.equal(intent.workflow, 'raven');
+  assert.equal(intent.changeName, change.name);
+  assert.equal(intent.artifact, 'change');
 });

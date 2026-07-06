@@ -53,6 +53,7 @@ const ARTIFACT_LABELS: Record<OpenSpecArtifactId, string> = {
   specs: 'specs',
   tasks: 'tasks',
   task: 'TASK',
+  change: 'CHANGE',
 };
 
 function getWorkflowLabel(workflow: OpenSpecChangeSummary['workflow']): string {
@@ -70,9 +71,19 @@ function getArtifactPath(artifact: OpenSpecArtifactStatus): string | null {
 
 function getTaskProgressLabel(change: OpenSpecChangeSummary): string {
   const progress = change.taskProgress;
-  if (!progress.hasTasksFile) return 'tasks 缺失';
+  if (progress.kind === 'verification') {
+    if (!progress.hasProgressFile) return 'CHANGE 缺失';
+    if (!progress.hasCheckboxes) return '无可统计验证项';
+    return `验证 ${progress.completed}/${progress.total}`;
+  }
+  if (!progress.hasProgressFile) return 'tasks 缺失';
   if (!progress.hasCheckboxes) return '无可统计任务';
   return `${progress.completed}/${progress.total}`;
+}
+
+function getNextActionLabel(change: OpenSpecChangeSummary): string {
+  if (change.nextAction === 'inspect' && change.mode === 'fast-change') return '检查 CHANGE';
+  return ACTION_LABELS[change.nextAction];
 }
 
 function getArtifactTitle(artifact: OpenSpecArtifactStatus): string {
@@ -277,7 +288,7 @@ const OpenSpecDashboard: React.FC<OpenSpecDashboardProps> = ({ rootPath, activeS
   }, []);
 
   const handlePrepareNextAction = useCallback((change: OpenSpecChangeSummary) => {
-    const text = createDashboardCommandText(change.nextAction);
+    const text = createDashboardCommandText(change.nextAction, change);
     setCurrentChangeKey(getChangeKey(change));
     setCommandText(text);
     prepareCommand(text, change);
@@ -464,7 +475,7 @@ const OpenSpecDashboard: React.FC<OpenSpecDashboardProps> = ({ rootPath, activeS
                     <span className="openspec-current-change">当前</span>
                   )}
                   <div className="openspec-next-action">
-                    {ACTION_LABELS[change.nextAction]}
+                    {getNextActionLabel(change)}
                   </div>
                 </div>
               </div>

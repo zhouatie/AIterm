@@ -49,8 +49,10 @@ import type {
 import type {
   OpenSpecArtifactId,
   OpenSpecArtifactStatus,
+  OpenSpecChangeMode,
   OpenSpecChangeSummary,
   OpenSpecNextAction,
+  OpenSpecProgressKind,
   OpenSpecTaskProgress,
   OpenSpecWorkflowId,
   OpenSpecWorkflowSummary,
@@ -1835,12 +1837,17 @@ async function collectOpenSpecFiles(dirPath: string): Promise<string[]> {
   return result;
 }
 
-function parseOpenSpecTaskProgress(content: string | null, hasTasksFile: boolean): OpenSpecTaskProgress {
-  if (!hasTasksFile || content === null) {
+function parseOpenSpecTaskProgress(
+  content: string | null,
+  hasProgressFile: boolean,
+  kind: OpenSpecProgressKind,
+): OpenSpecTaskProgress {
+  if (!hasProgressFile || content === null) {
     return {
+      kind,
       total: 0,
       completed: 0,
-      hasTasksFile: false,
+      hasProgressFile: false,
       hasCheckboxes: false,
     };
   }
@@ -1855,9 +1862,10 @@ function parseOpenSpecTaskProgress(content: string | null, hasTasksFile: boolean
   }
 
   return {
+    kind,
     total,
     completed,
-    hasTasksFile: true,
+    hasProgressFile: true,
     hasCheckboxes: total > 0,
   };
 }
@@ -1887,6 +1895,7 @@ interface SddWorkflowProviderConfig {
   firstArtifactId: OpenSpecArtifactId;
   taskArtifactId: OpenSpecArtifactId;
   artifacts: SddWorkflowArtifactConfig[];
+  supportsFastChange?: boolean;
 }
 
 const SDD_WORKFLOW_PROVIDERS: SddWorkflowProviderConfig[] = [
@@ -1907,6 +1916,7 @@ const SDD_WORKFLOW_PROVIDERS: SddWorkflowProviderConfig[] = [
     directoryName: 'ravenspec',
     firstArtifactId: 'prd',
     taskArtifactId: 'task',
+    supportsFastChange: true,
     artifacts: [
       { id: 'prd', fileName: 'PRD.md' },
       { id: 'design', fileName: 'DESIGN.md' },
@@ -1916,11 +1926,42 @@ const SDD_WORKFLOW_PROVIDERS: SddWorkflowProviderConfig[] = [
   },
 ];
 
+const RAVEN_FAST_CHANGE_ARTIFACT: SddWorkflowArtifactConfig = { id: 'change', fileName: 'CHANGE.md' };
+const RAVEN_SDD_CORE_FILE_NAMES = ['PRD.md', 'DESIGN.md', 'TASK.md'];
+
+async function resolveOpenSpecChangeMode(
+  provider: SddWorkflowProviderConfig,
+  changePath: string,
+): Promise<OpenSpecChangeMode> {
+  if (!provider.supportsFastChange) return 'sdd';
+
+  const changeFilePath = path.join(changePath, RAVEN_FAST_CHANGE_ARTIFACT.fileName ?? '');
+  if (!await fileExistsAt(changeFilePath)) return 'sdd';
+
+  const hasSddCoreArtifact = (await Promise.all(
+    RAVEN_SDD_CORE_FILE_NAMES.map((fileName) => fileExistsAt(path.join(changePath, fileName))),
+  )).some(Boolean);
+
+  return hasSddCoreArtifact ? 'sdd' : 'fast-change';
+}
+
+function getOpenSpecArtifactConfigs(
+  provider: SddWorkflowProviderConfig,
+  mode: OpenSpecChangeMode,
+  specsCount: number,
+): SddWorkflowArtifactConfig[] {
+  if (mode !== 'fast-change') return provider.artifacts;
+  return specsCount > 0 ? [RAVEN_FAST_CHANGE_ARTIFACT, { id: 'specs' }] : [RAVEN_FAST_CHANGE_ARTIFACT];
+}
+
 function resolveOpenSpecNextAction(
   provider: SddWorkflowProviderConfig,
+  mode: OpenSpecChangeMode,
   artifacts: Partial<Record<OpenSpecArtifactId, OpenSpecArtifactStatus>>,
   taskProgress: OpenSpecTaskProgress,
 ): OpenSpecNextAction {
+  if (mode === 'fast-change') return 'inspect';
+
   const firstArtifact = artifacts[provider.firstArtifactId];
   if (firstArtifact?.state === 'missing') {
     return provider.firstArtifactId === 'prd' ? 'create-prd' : 'create-proposal';
@@ -1940,9 +1981,15 @@ async function readOpenSpecChangeSummary(
   name: string,
 ): Promise<OpenSpecChangeSummary> {
   const specsPath = path.join(changePath, 'specs');
-  const artifactChecks = provider.artifacts.map(async (artifact) => {
+  const [specFiles, changeStat, mode] = await Promise.all([
+    collectOpenSpecFiles(specsPath),
+    fs.promises.stat(changePath),
+    resolveOpenSpecChangeMode(provider, changePath),
+  ]);
+  const specsCount = specFiles.length;
+  const artifactConfigs = getOpenSpecArtifactConfigs(provider, mode, specsCount);
+  const artifactChecks = artifactConfigs.map(async (artifact) => {
     if (artifact.id === 'specs') {
-      const specFiles = await collectOpenSpecFiles(specsPath);
       return {
         artifact,
         filePath: specFiles[0] ?? null,
@@ -1959,24 +2006,21 @@ async function readOpenSpecChangeSummary(
       count: undefined,
     };
   });
-  const [artifactResults, specFiles, changeStat] = await Promise.all([
-    Promise.all(artifactChecks),
-    collectOpenSpecFiles(specsPath),
-    fs.promises.stat(changePath),
-  ]);
+  const artifactResults = await Promise.all(artifactChecks);
 
-  const taskResult = artifactResults.find((result) => result.artifact.id === provider.taskArtifactId);
-  let tasksContent: string | null = null;
-  if (taskResult?.present && taskResult.filePath) {
+  const progressArtifactId = mode === 'fast-change' ? RAVEN_FAST_CHANGE_ARTIFACT.id : provider.taskArtifactId;
+  const progressKind: OpenSpecProgressKind = mode === 'fast-change' ? 'verification' : 'tasks';
+  const progressResult = artifactResults.find((result) => result.artifact.id === progressArtifactId);
+  let progressContent: string | null = null;
+  if (progressResult?.present && progressResult.filePath) {
     try {
-      tasksContent = await fs.promises.readFile(taskResult.filePath, 'utf-8');
+      progressContent = await fs.promises.readFile(progressResult.filePath, 'utf-8');
     } catch {
-      tasksContent = '';
+      progressContent = '';
     }
   }
 
-  const taskProgress = parseOpenSpecTaskProgress(tasksContent, !!taskResult?.present);
-  const specsCount = specFiles.length;
+  const taskProgress = parseOpenSpecTaskProgress(progressContent, !!progressResult?.present, progressKind);
   const artifacts = artifactResults.reduce<Partial<Record<OpenSpecArtifactId, OpenSpecArtifactStatus>>>(
     (acc, result) => {
       acc[result.artifact.id] = createOpenSpecArtifactStatus(
@@ -1992,13 +2036,14 @@ async function readOpenSpecChangeSummary(
 
   return {
     workflow: provider.workflow,
+    mode,
     name,
     path: changePath,
     artifacts,
-    artifactIds: provider.artifacts.map((artifact) => artifact.id),
+    artifactIds: artifactConfigs.map((artifact) => artifact.id),
     specsCount,
     taskProgress,
-    nextAction: resolveOpenSpecNextAction(provider, artifacts, taskProgress),
+    nextAction: resolveOpenSpecNextAction(provider, mode, artifacts, taskProgress),
     mtime: changeStat.mtimeMs,
   };
 }

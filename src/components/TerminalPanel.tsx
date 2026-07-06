@@ -226,6 +226,7 @@ const SPEC_ARTIFACT_LABELS: Record<OpenSpecArtifactId, string> = {
   specs: 'specs',
   tasks: 'tasks',
   task: 'TASK',
+  change: 'CHANGE',
 };
 
 const SPEC_MAIN_SKILL_FLOW: readonly SpecSelectableSkillAction[] = [
@@ -264,9 +265,19 @@ function isAgentCandidateStatus(status: TerminalAgentStatus | undefined): boolea
 
 function getTaskProgressLabel(change: OpenSpecChangeSummary): string {
   const progress = change.taskProgress;
-  if (!progress.hasTasksFile) return 'tasks 缺失';
+  if (progress.kind === 'verification') {
+    if (!progress.hasProgressFile) return 'CHANGE 缺失';
+    if (!progress.hasCheckboxes) return '无可统计验证项';
+    return `验证 ${progress.completed}/${progress.total}`;
+  }
+  if (!progress.hasProgressFile) return 'tasks 缺失';
   if (!progress.hasCheckboxes) return '无可统计任务';
   return `${progress.completed}/${progress.total}`;
+}
+
+function getSpecNextActionLabel(change: OpenSpecChangeSummary): string {
+  if (change.nextAction === 'inspect' && change.mode === 'fast-change') return '检查 CHANGE';
+  return SPEC_ACTION_LABELS[change.nextAction];
 }
 
 function getArtifactTitle(artifact: OpenSpecArtifactStatus): string {
@@ -2260,7 +2271,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             <span className="terminal-spec-workflow">{getWorkflowLabel(change.workflow)}</span>
             <span>{change.name}</span>
           </div>
-          <span className="terminal-spec-next-action">{SPEC_ACTION_LABELS[change.nextAction]}</span>
+          <span className="terminal-spec-next-action">{getSpecNextActionLabel(change)}</span>
         </div>
 
         <div className="terminal-spec-artifact-grid">
@@ -2305,7 +2316,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             type="button"
             className="terminal-spec-next-step"
             onClick={(event) => handleOpenSpecSkillSelect(event, project, change, changes)}
-            title={`选择下一步 Skill：${SPEC_ACTION_LABELS[change.nextAction]}，目标 ${targetSessionLabel}`}
+            title={`选择下一步 Skill：${getSpecNextActionLabel(change)}，目标 ${targetSessionLabel}`}
           >
             <ChevronRight size={11} />
             <span>下一步</span>
@@ -3018,7 +3029,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
                   <div className="terminal-spec-confirm-meta">
                     <span>{pendingSpecSkillSelect.changeLabel}</span>
                     <span>目标：{pendingSpecSkillSelect.targetSessionLabel}</span>
-                    <span>推荐：{SPEC_ACTION_LABELS[pendingSpecSkillSelect.change.nextAction]}</span>
+                    <span>推荐：{getSpecNextActionLabel(pendingSpecSkillSelect.change)}</span>
                   </div>
                   <div className="terminal-spec-skill-options">
                     {pendingSpecSkillSelect.options.map((option) => (

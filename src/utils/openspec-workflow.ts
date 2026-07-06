@@ -1,8 +1,12 @@
 export type OpenSpecWorkflowId = 'openspec' | 'raven';
 
-export type OpenSpecArtifactId = 'proposal' | 'prd' | 'design' | 'specs' | 'tasks' | 'task';
+export type OpenSpecChangeMode = 'sdd' | 'fast-change';
+
+export type OpenSpecArtifactId = 'proposal' | 'prd' | 'design' | 'specs' | 'tasks' | 'task' | 'change';
 
 export type OpenSpecArtifactState = 'present' | 'missing';
+
+export type OpenSpecProgressKind = 'tasks' | 'verification';
 
 export type OpenSpecNextAction =
   | 'create-proposal'
@@ -21,14 +25,16 @@ export interface OpenSpecArtifactStatus {
 }
 
 export interface OpenSpecTaskProgress {
+  kind: OpenSpecProgressKind;
   total: number;
   completed: number;
-  hasTasksFile: boolean;
+  hasProgressFile: boolean;
   hasCheckboxes: boolean;
 }
 
 export interface OpenSpecChangeSummary {
   workflow: OpenSpecWorkflowId;
+  mode: OpenSpecChangeMode;
   name: string;
   path: string;
   artifacts: Partial<Record<OpenSpecArtifactId, OpenSpecArtifactStatus>>;
