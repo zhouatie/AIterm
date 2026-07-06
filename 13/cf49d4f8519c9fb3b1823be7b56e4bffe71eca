@@ -1,0 +1,168 @@
+openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/.openspec.yaml
+  7d72ba272ce82059 1-2
+openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/specs/sdd-workflow-panels/spec.md
+  7d72ba272ce82059 1-195
+src/utils/openspec-workflow.ts
+  7d72ba272ce82059 3,5,9,28,31,37
+openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/design.md
+  7d72ba272ce82059 1-66
+openspec/specs/sdd-workflow-panels/spec.md
+  7d72ba272ce82059 69,83,85,90-103,115,125-126,132-137,140-141,145-151,153-154,167-170,181,184,191-192,195-199,202-203,208-209,214-215,220-221
+openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/proposal.md
+  7d72ba272ce82059 1-25
+test/markdown-task.test.cjs
+  7d72ba272ce82059 25-26,129-173
+src/components/TerminalPanel.tsx
+  7d72ba272ce82059 229,268-273,278-280,2274,2319,3032
+openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/tasks.md
+  7d72ba272ce82059 1-26
+src/components/OpenSpecDashboard.tsx
+  7d72ba272ce82059 56,74-79,84-88,291,478
+src/main.ts
+  7d72ba272ce82059 52,55,1840-1845,1847,1850,1865,1868,1898,1919,1929-1956,1959,1963-1964,1984-1991,2009,2011-2015,2017,2019,2023,2039,2043,2046
+src/utils/sdd-command-router.ts
+  7d72ba272ce82059 105,144,154-161,248-251,255,348-350,355,388-390
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "13cf49d4f8519c9fb3b1823be7b56e4bffe71eca",
+  "prompts": {
+    "7d72ba272ce82059": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f35f4-55b6-7fb2-b1ef-04897d3245b8",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 879,
+      "total_deletions": 63,
+      "accepted_lines": 549,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/specs/sdd-workflow-panels/spec.md": {
+          "additions": 62,
+          "deletions": 13,
+          "accepted_lines": 62
+        },
+        "src/utils/openspec-workflow.ts": {
+          "additions": 8,
+          "deletions": 2,
+          "accepted_lines": 8
+        },
+        "openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/design.md": {
+          "additions": 66,
+          "accepted_lines": 66
+        },
+        "src/main.ts": {
+          "additions": 66,
+          "deletions": 21,
+          "accepted_lines": 66
+        },
+        "openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 15,
+          "deletions": 4,
+          "accepted_lines": 15
+        },
+        "openspec/changes/support-fast-change-spec-cards/specs/sdd-workflow-panels/spec.md": {
+          "additions": 195
+        },
+        "src/components/OpenSpecDashboard.tsx": {
+          "additions": 14,
+          "deletions": 3,
+          "accepted_lines": 14
+        },
+        "src/utils/sdd-command-router.ts": {
+          "additions": 23,
+          "deletions": 5,
+          "accepted_lines": 22
+        },
+        "openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/specs/sdd-workflow-panels/spec.md": {
+          "additions": 195,
+          "accepted_lines": 195
+        },
+        "openspec/changes/support-fast-change-spec-cards/.openspec.yaml": {
+          "additions": 2
+        },
+        "test/markdown-task.test.cjs": {
+          "additions": 48,
+          "accepted_lines": 48
+        },
+        "openspec/changes/support-fast-change-spec-cards/proposal.md": {
+          "additions": 25
+        },
+        "openspec/changes/support-fast-change-spec-cards/tasks.md": {
+          "additions": 41,
+          "deletions": 15
+        },
+        "openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/tasks.md": {
+          "additions": 26,
+          "accepted_lines": 26
+        },
+        "openspec/changes/archive/2026-07-06-support-fast-change-spec-cards/proposal.md": {
+          "additions": 25,
+          "accepted_lines": 25
+        },
+        "openspec/changes/support-fast-change-spec-cards/design.md": {
+          "additions": 66
+        }
+      }
+    },
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 270,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/design.md": {
+          "accepted_lines": 118
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/file-preview/spec.md": {
+          "accepted_lines": 54
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/tasks.md": {
+          "accepted_lines": 22
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/proposal.md": {
+          "accepted_lines": 34
+        }
+      }
+    },
+    "c5eb665234c5bb88": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efe78-4b45-7d50-98db-107e5885ec86",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "dist/index.html": {
+          "accepted_lines": 3
+        }
+      }
+    }
+  }
+}
