@@ -1,0 +1,133 @@
+openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/specs/terminal-tabs/spec.md
+  7d72ba272ce82059 1-43
+openspec/specs/terminal-tabs/spec.md
+  7d72ba272ce82059 111,116-117,119-129,131-139,144-145,150
+openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/proposal.md
+  7d72ba272ce82059 1-24
+openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/design.md
+  7d72ba272ce82059 1-49
+src/components/TerminalInstance.tsx
+  7d72ba272ce82059 195-199,478,481-486
+openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/tasks.md
+  7d72ba272ce82059 1-19
+openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/.openspec.yaml
+  7d72ba272ce82059 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "5afd27bd5c651aa4adcad37e697dbc22a7c823b1",
+  "prompts": {
+    "7d72ba272ce82059": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f35f4-55b6-7fb2-b1ef-04897d3245b8",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 323,
+      "total_deletions": 16,
+      "accepted_lines": 175,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/specs/terminal-tabs/spec.md": {
+          "additions": 26,
+          "deletions": 5,
+          "accepted_lines": 26
+        },
+        "openspec/changes/scroll-terminal-to-bottom-on-tab-switch/tasks.md": {
+          "additions": 30,
+          "deletions": 11
+        },
+        "openspec/changes/scroll-terminal-to-bottom-on-tab-switch/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/components/TerminalInstance.tsx": {
+          "additions": 12,
+          "accepted_lines": 12
+        },
+        "openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/proposal.md": {
+          "additions": 24,
+          "accepted_lines": 24
+        },
+        "openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/tasks.md": {
+          "additions": 19,
+          "accepted_lines": 19
+        },
+        "openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/specs/terminal-tabs/spec.md": {
+          "additions": 43,
+          "accepted_lines": 43
+        },
+        "openspec/changes/scroll-terminal-to-bottom-on-tab-switch/design.md": {
+          "additions": 49
+        },
+        "openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/design.md": {
+          "additions": 49,
+          "accepted_lines": 49
+        },
+        "openspec/changes/archive/2026-07-06-scroll-terminal-to-bottom-on-tab-switch/.openspec.yaml": {
+          "additions": 2,
+          "accepted_lines": 2
+        },
+        "openspec/changes/scroll-terminal-to-bottom-on-tab-switch/specs/terminal-tabs/spec.md": {
+          "additions": 43
+        },
+        "openspec/changes/scroll-terminal-to-bottom-on-tab-switch/proposal.md": {
+          "additions": 24
+        }
+      }
+    },
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 270,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/tasks.md": {
+          "accepted_lines": 22
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/file-preview/spec.md": {
+          "accepted_lines": 54
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/.openspec.yaml": {
+          "accepted_lines": 2
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/proposal.md": {
+          "accepted_lines": 34
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/design.md": {
+          "accepted_lines": 118
+        }
+      }
+    },
+    "c5eb665234c5bb88": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efe78-4b45-7d50-98db-107e5885ec86",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "dist/index.html": {
+          "accepted_lines": 3
+        }
+      }
+    }
+  }
+}
