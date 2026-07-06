@@ -28,6 +28,11 @@ import {
   type MarkdownTaskApplyTarget,
   type SddTaskDocumentContext,
 } from '../utils/markdown-task';
+import {
+  parseMarkdownFrontmatter,
+  type MarkdownFrontmatterBlock,
+  type MarkdownFrontmatterEntry,
+} from '../utils/markdown-frontmatter';
 
 interface MarkdownPreviewProps {
   content: string | null;
@@ -113,6 +118,10 @@ interface MarkdownMermaidBlockProps {
   source: string;
 }
 
+interface MarkdownFrontmatterPanelProps {
+  block: MarkdownFrontmatterBlock;
+}
+
 type MermaidRenderState = 'loading' | 'ready' | 'error';
 type MarkdownTaskDocument = ReturnType<typeof parseMarkdownTaskDocument>;
 
@@ -178,6 +187,10 @@ function getTextFromReactNode(node: React.ReactNode): string {
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function getFrontmatterEntryValue(entry: MarkdownFrontmatterEntry): string {
+  return entry.kind === 'property' ? entry.value : entry.text;
 }
 
 function getCodeElementFromPreChildren(children: React.ReactNode): React.ReactElement<MarkdownCodeElementProps> | null {
@@ -341,6 +354,46 @@ const MarkdownMermaidBlock: React.FC<MarkdownMermaidBlockProps> = ({ source }) =
   );
 };
 
+const MarkdownFrontmatterPanel: React.FC<MarkdownFrontmatterPanelProps> = ({ block }) => (
+  <section className="markdown-frontmatter-panel" aria-label="文档属性">
+    <div className="markdown-frontmatter-title">文档属性</div>
+    {block.entries.length > 0 ? (
+      <div className="markdown-frontmatter-list">
+        {block.entries.map((entry, index) => {
+          const value = getFrontmatterEntryValue(entry);
+          return (
+            <div
+              key={`${entry.raw}-${index}`}
+              className={
+                'markdown-frontmatter-row'
+                + (entry.kind === 'raw' ? ' raw' : '')
+                + (!value ? ' is-empty' : '')
+              }
+              style={{ paddingLeft: Math.min(entry.indent, 8) * 10 }}
+            >
+              {entry.kind === 'property' ? (
+                <>
+                  <span className="markdown-frontmatter-key">{entry.key}</span>
+                  {value && (
+                    <>
+                      <span className="markdown-frontmatter-separator">:</span>
+                      <span className="markdown-frontmatter-value">{value}</span>
+                    </>
+                  )}
+                </>
+              ) : (
+                <span className="markdown-frontmatter-raw">{entry.text}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <div className="markdown-frontmatter-empty">空属性块</div>
+    )}
+  </section>
+);
+
 const MarkdownRenderedContent = React.memo(function MarkdownRenderedContent({
   content,
   taskDocument,
@@ -494,6 +547,11 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   const [previewWidth, setPreviewWidth] = useState(0);
   const [commentLayoutVersion, setCommentLayoutVersion] = useState(0);
   const commentGutterAvailable = !commentGutterHidden && previewWidth >= MARKDOWN_COMMENT_GUTTER_MIN_WIDTH;
+  const parsedMarkdown = useMemo(() => (
+    content ? parseMarkdownFrontmatter(content) : null
+  ), [content]);
+  const renderedMarkdownContent = parsedMarkdown?.body ?? '';
+  const frontmatterBlock = parsedMarkdown?.frontmatter ?? null;
   const taskDocument = useMemo(() => (
     sddTaskContext && content ? parseMarkdownTaskDocument(content) : null
   ), [content, sddTaskContext]);
@@ -788,8 +846,9 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
         onScroll={handlePreviewScroll}
       >
         <div className="markdown-body">
+          {frontmatterBlock && <MarkdownFrontmatterPanel block={frontmatterBlock} />}
           <MarkdownRenderedContent
-            content={content}
+            content={renderedMarkdownContent}
             taskDocument={taskDocument}
             taskApplyAvailable={taskApplyAvailable}
             taskCheckboxDisabled={taskCheckboxDisabled}

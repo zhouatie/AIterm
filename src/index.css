@@ -2098,6 +2098,81 @@ html, body {
   margin-bottom: 16px;
 }
 
+.markdown-frontmatter-panel {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 6px;
+  background: var(--color-surface-content);
+  color: var(--color-text-secondary);
+}
+
+.markdown-frontmatter-title {
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text-tertiary);
+}
+
+.markdown-frontmatter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.markdown-frontmatter-row {
+  display: grid;
+  grid-template-columns: 120px 8px minmax(0, 1fr);
+  min-width: 0;
+  align-items: start;
+  column-gap: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.markdown-frontmatter-row.raw {
+  grid-template-columns: minmax(0, 1fr);
+  font-family: 'JetBrainsMono Nerd Font', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: var(--color-text-tertiary);
+}
+
+.markdown-frontmatter-key {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text-heading);
+}
+
+.markdown-frontmatter-separator {
+  color: var(--color-text-muted);
+}
+
+.markdown-frontmatter-value,
+.markdown-frontmatter-raw,
+.markdown-frontmatter-empty {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.markdown-frontmatter-value {
+  color: var(--color-text-secondary);
+}
+
+.markdown-frontmatter-row.is-empty .markdown-frontmatter-key {
+  grid-column: 1 / -1;
+  color: var(--color-text-secondary);
+}
+
+.markdown-frontmatter-empty {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
 .markdown-body a {
   color: var(--color-accent-link);
   text-decoration: none;
