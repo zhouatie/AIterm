@@ -192,6 +192,11 @@ function getScrollStateFromTerminal(terminal: Terminal): TerminalScrollState {
   };
 }
 
+function scrollNormalBufferToBottom(terminal: Terminal): void {
+  if (terminal.buffer.active.type !== 'normal') return;
+  terminal.scrollToBottom();
+}
+
 // --- Public handle interface ---
 
 export interface TerminalInstanceHandle {
@@ -470,8 +475,15 @@ const TerminalInstance = forwardRef<TerminalInstanceHandle, TerminalInstanceProp
           requestAnimationFrame(() => {
             if (terminalRef.current && !cancelled) {
               fitTerminal(terminalRef.current);
+              scrollNormalBufferToBottom(terminalRef.current);
               terminalRef.current.focus();
               emitScrollState();
+
+              requestAnimationFrame(() => {
+                if (!terminalRef.current || cancelled) return;
+                scrollNormalBufferToBottom(terminalRef.current);
+                emitScrollState();
+              });
             }
           });
         };
