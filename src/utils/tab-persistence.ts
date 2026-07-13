@@ -1,4 +1,4 @@
-const CURRENT_VERSION = 2;
+export const CURRENT_TAB_STATE_VERSION = 2;
 
 export interface PersistedWorkspace {
   id: string;
@@ -13,11 +13,22 @@ export interface PersistedWorkspace {
 }
 
 export interface PersistedTabState {
-  version: number;
+  version: typeof CURRENT_TAB_STATE_VERSION;
   workspaces: PersistedWorkspace[];
   activeSessionId: string;
   sessionNameOverrides: Record<string, string>;
   sidebarCollapsed: boolean;
+}
+
+export type PersistedTabStateSnapshot = Omit<PersistedTabState, 'version'>;
+
+export function createPersistedTabState(
+  snapshot: PersistedTabStateSnapshot,
+): PersistedTabState {
+  return {
+    ...snapshot,
+    version: CURRENT_TAB_STATE_VERSION,
+  };
 }
 
 /**
@@ -58,7 +69,7 @@ export async function loadTabState(): Promise<PersistedTabState | null> {
     if (
       typeof parsed !== 'object' ||
       parsed === null ||
-      parsed.version !== CURRENT_VERSION ||
+      parsed.version !== CURRENT_TAB_STATE_VERSION ||
       !Array.isArray(parsed.workspaces) ||
       parsed.workspaces.length === 0 ||
       typeof parsed.activeSessionId !== 'string' ||

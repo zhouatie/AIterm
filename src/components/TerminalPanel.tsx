@@ -28,10 +28,10 @@ import type {
 import { isTerminalKeyboardTarget, useKeyboardShortcuts } from '../ShortcutContext';
 import { getIconButtonTooltip } from '../utils/icon-button-tooltips';
 import {
+  createPersistedTabState,
   loadTabState,
   saveTabState,
   saveTabStateSync,
-  type PersistedTabState,
 } from '../utils/tab-persistence';
 import ContextMenu, { createPathMenuItems, type ContextMenuItem } from './ContextMenu';
 import TerminalInstance from './TerminalInstance';
@@ -1143,8 +1143,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
   }, [scrollActiveTerminal]);
 
   // Build the persisted state snapshot from current React state
-  const buildPersistedState = useCallback((): PersistedTabState => ({
-    version: 1,
+  const buildPersistedState = useCallback(() => createPersistedTabState({
     workspaces: workspacesRef.current.map((ws) => ({
       id: ws.id,
       name: ws.name,
