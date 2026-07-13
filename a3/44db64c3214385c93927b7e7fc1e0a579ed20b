@@ -1,0 +1,195 @@
+.codex/skills/openspec-archive-change/SKILL.md
+  0001ee022d0ff5d8 9
+.codex/skills/openspec-ff-change/SKILL.md
+  0001ee022d0ff5d8 9
+.codex/skills/openspec-sync-specs/SKILL.md
+  0001ee022d0ff5d8 9
+test/tab-persistence.test.cjs
+  84e8dba7b22e7c3f 1-98
+.codex/skills/openspec-continue-change/SKILL.md
+  0001ee022d0ff5d8 9
+src/components/TerminalPanel.tsx
+  84e8dba7b22e7c3f 31,1146
+.codex/skills/openspec-new-change/SKILL.md
+  0001ee022d0ff5d8 9
+.codex/skills/openspec-apply-change/SKILL.md
+  0001ee022d0ff5d8 9,42,54
+src/utils/tab-persistence.ts
+  84e8dba7b22e7c3f 1,16,23-33,72
+.codex/skills/openspec-explore/SKILL.md
+  0001ee022d0ff5d8 9,59-62,117-124,230
+.codex/skills/openspec-bulk-archive-change/SKILL.md
+  0001ee022d0ff5d8 9,87
+.codex/skills/openspec-propose/SKILL.md
+  0001ee022d0ff5d8 9
+.codex/skills/openspec-verify-change/SKILL.md
+  0001ee022d0ff5d8 9,42,56,95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8-ntes.9",
+  "base_commit_sha": "a344db64c3214385c93927b7e7fc1e0a579ed20b",
+  "prompts": {
+    "0001ee022d0ff5d8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5b57-f297-75c0-92da-4d1105aada24",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 29,
+      "total_deletions": 29,
+      "accepted_lines": 29,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        ".codex/skills/openspec-propose/SKILL.md": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        },
+        ".codex/skills/openspec-verify-change/SKILL.md": {
+          "additions": 4,
+          "deletions": 4,
+          "accepted_lines": 4
+        },
+        ".codex/skills/openspec-explore/SKILL.md": {
+          "additions": 14,
+          "deletions": 14,
+          "accepted_lines": 14
+        },
+        ".codex/skills/openspec-continue-change/SKILL.md": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        },
+        ".codex/skills/openspec-archive-change/SKILL.md": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        },
+        ".codex/skills/openspec-ff-change/SKILL.md": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        },
+        ".codex/skills/openspec-apply-change/SKILL.md": {
+          "additions": 3,
+          "deletions": 3,
+          "accepted_lines": 3
+        },
+        ".codex/skills/openspec-bulk-archive-change/SKILL.md": {
+          "additions": 2,
+          "deletions": 2,
+          "accepted_lines": 2
+        },
+        ".codex/skills/openspec-sync-specs/SKILL.md": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        },
+        ".codex/skills/openspec-new-change/SKILL.md": {
+          "additions": 1,
+          "deletions": 1,
+          "accepted_lines": 1
+        }
+      }
+    },
+    "84e8dba7b22e7c3f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f56bf-a707-7322-bb4c-0aae192f598a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 274,
+      "total_deletions": 14,
+      "accepted_lines": 114,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "test/tab-persistence.test.cjs": {
+          "additions": 98,
+          "accepted_lines": 98
+        },
+        "openspec/changes/fix-tab-state-version-mismatch/design.md": {
+          "additions": 50
+        },
+        "src/utils/tab-persistence.ts": {
+          "additions": 14,
+          "deletions": 3,
+          "accepted_lines": 14
+        },
+        "openspec/changes/fix-tab-state-version-mismatch/.openspec.yaml": {
+          "additions": 2
+        },
+        "src/components/TerminalPanel.tsx": {
+          "additions": 2,
+          "deletions": 3,
+          "accepted_lines": 2
+        },
+        "openspec/changes/fix-tab-state-version-mismatch/proposal.md": {
+          "additions": 26
+        },
+        "openspec/changes/fix-tab-state-version-mismatch/specs/terminal-tabs/spec.md": {
+          "additions": 58
+        },
+        "openspec/changes/fix-tab-state-version-mismatch/tasks.md": {
+          "additions": 24,
+          "deletions": 8
+        }
+      }
+    },
+    "a59945050aece1d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ef986-f86b-7912-8b0b-22fac2b1f52a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 270,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/tasks.md": {
+          "accepted_lines": 22
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/design.md": {
+          "accepted_lines": 118
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/sdd-command-router/spec.md": {
+          "accepted_lines": 40
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/specs/file-preview/spec.md": {
+          "accepted_lines": 54
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/proposal.md": {
+          "accepted_lines": 34
+        },
+        "openspec/changes/archive/2026-06-24-add-task-apply-button/.openspec.yaml": {
+          "accepted_lines": 2
+        }
+      }
+    },
+    "c5eb665234c5bb88": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efe78-4b45-7d50-98db-107e5885ec86",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhouatie",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "per_file_stats": {
+        "dist/index.html": {
+          "accepted_lines": 3
+        }
+      }
+    }
+  }
+}
